@@ -1,43 +1,52 @@
-import Link from "next/link";
-import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import styles from "@/app/HomePage.module.css"; // Reutilizamos estilos
+import Link from "next/link";
 
-export default function Login({
-  searchParams,
-}: {
-  searchParams: { message: string };
-}) {
-  const signIn = async (formData: FormData) => {
-    "use server";
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
 
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const supabase = createClient();
-
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      return redirect("/login?message=Could not authenticate user");
+      setError(error.message);
+    } else {
+      router.push("/");
+      router.refresh();
     }
-
-    return redirect("/");
   };
 
   return (
     <div className={styles.authContainer}>
-      <form action={signIn} className={styles.authForm}>
+      <form onSubmit={handleSignIn} className={styles.authForm}>
         <h2>Iniciar Sesión</h2>
         <label htmlFor="email">Email</label>
-        <input name="email" placeholder="you@example.com" required />
+        <input
+          name="email"
+          onChange={(e) => setEmail(e.target.value)}
+          value={email}
+          placeholder="you@example.com"
+          required
+        />
         <label htmlFor="password">Contraseña</label>
         <input
           type="password"
           name="password"
+          onChange={(e) => setPassword(e.target.value)}
+          value={password}
           placeholder="••••••••"
           required
         />
@@ -45,9 +54,7 @@ export default function Login({
         <p>
           ¿No tienes cuenta? <Link href="/register">Regístrate</Link>
         </p>
-        {searchParams?.message && (
-          <p className={styles.errorMessage}>{searchParams.message}</p>
-        )}
+        {error && <p className={styles.errorMessage}>{error}</p>}
       </form>
     </div>
   );

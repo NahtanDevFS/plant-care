@@ -1,48 +1,57 @@
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import styles from "@/app/HomePage.module.css"; // Reutilizamos estilos
 
-export default function Register({
-  searchParams,
-}: {
-  searchParams: { message: string };
-}) {
-  const signUp = async (formData: FormData) => {
-    "use server";
+export default function RegisterPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const supabase = createClient();
 
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const supabase = createClient();
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
 
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${headers().get("origin")}/auth/callback`,
+        emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
 
     if (error) {
-      return redirect("/register?message=Could not authenticate user");
+      setError(error.message);
+    } else {
+      setMessage(
+        "¡Registro exitoso! Revisa tu correo para confirmar tu cuenta."
+      );
     }
-
-    return redirect(
-      "/register?message=Check email to continue sign in process"
-    );
   };
 
   return (
     <div className={styles.authContainer}>
-      <form action={signUp} className={styles.authForm}>
+      <form onSubmit={handleSignUp} className={styles.authForm}>
         <h2>Crear Cuenta</h2>
         <label htmlFor="email">Email</label>
-        <input name="email" placeholder="you@example.com" required />
+        <input
+          name="email"
+          onChange={(e) => setEmail(e.target.value)}
+          value={email}
+          placeholder="you@example.com"
+          required
+        />
         <label htmlFor="password">Contraseña</label>
         <input
           type="password"
           name="password"
+          onChange={(e) => setPassword(e.target.value)}
+          value={password}
           placeholder="••••••••"
           required
         />
@@ -50,9 +59,8 @@ export default function Register({
         <p>
           ¿Ya tienes cuenta? <Link href="/login">Inicia Sesión</Link>
         </p>
-        {searchParams?.message && (
-          <p className={styles.successMessage}>{searchParams.message}</p>
-        )}
+        {error && <p className={styles.errorMessage}>{error}</p>}
+        {message && <p className={styles.successMessage}>{message}</p>}
       </form>
     </div>
   );

@@ -1,5 +1,6 @@
+// middleware.ts
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -16,43 +17,42 @@ export async function middleware(request: NextRequest) {
         get(name: string) {
           return request.cookies.get(name)?.value;
         },
-        set(name: string, value: string, options) {
-          request.cookies.set({ name, value, ...options });
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          });
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           });
-          response.cookies.set({ name, value, ...options });
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
         },
-        remove(name: string, options) {
-          request.cookies.set({ name, value: "", ...options });
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           });
-          response.cookies.set({ name, value: "", ...options });
+          response.cookies.delete(name);
         },
       },
     }
   );
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const { pathname } = request.nextUrl;
-
-  // Proteger rutas
-  if (!session && (pathname === "/" || pathname.startsWith("/my-plants"))) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
-  // Redirigir si está logueado y va a login/register
-  if (session && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
+  // Refresca la sesión del usuario si ha expirado.
+  await supabase.auth.getSession();
 
   return response;
 }
@@ -60,10 +60,10 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * Coincide con todas las rutas de petición excepto las que empiezan por:
+     * - _next/static (archivos estáticos)
+     * - _next/image (optimización de imágenes)
+     * - favicon.ico (archivo de favicon)
      */
     "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
