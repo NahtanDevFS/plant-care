@@ -1,8 +1,13 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState, useEffect } from "react";
+import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import styles from "./HomePage.module.css";
-import { createClient } from "@/lib/supabase/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,46 +19,80 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Plant Care",
-  description: "Cuidado de las plantas",
-};
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    const getSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
+
+    getSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      router.refresh();
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [supabase, router]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   return (
-    <html lang="es">
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <div className={styles.appContainer}>
-          {/* --- LÓGICA CORREGIDA --- */}
-          {/* Solo mostramos el sidebar si el objeto 'user' existe (si el usuario está logueado) */}
-          {user && (
+          {/* Muestra el sidebar con contenido diferente si el usuario está logueado o no */}
+          {!loading && (
             <aside className={styles.sidebar}>
               <div className={styles.sidebarHeader}>
                 <h2>🌿 Mi Jardín</h2>
               </div>
-              <nav className={styles.sidebarNav}>
-                <a href="/">Identificar</a>
-                <a href="/my-plants">Mis Plantas</a>
-              </nav>
-              <div className={styles.sidebarUser}>
-                <span>{user.email}</span>
-                <form action="/auth/sign-out" method="post">
-                  <button className={styles.logoutButton}>Cerrar Sesión</button>
-                </form>
-              </div>
+              {user ? (
+                <>
+                  <nav className={styles.sidebarNav}>
+                    <Link href="/">Identificar</Link>
+                    <Link href="/my-plants">Mis Plantas</Link>
+                  </nav>
+                  <div className={styles.sidebarUser}>
+                    <span>{user.email}</span>
+                    <button
+                      onClick={handleSignOut}
+                      className={styles.logoutButton}
+                    >
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className={styles.sidebarUser}>
+                  <Link href="/login" className={styles.loginButton}>
+                    Iniciar Sesión
+                  </Link>
+                </div>
+              )}
             </aside>
           )}
 
-          {/* El área de contenido principal siempre se muestra */}
           <main className={styles.contentArea}>{children}</main>
         </div>
       </body>

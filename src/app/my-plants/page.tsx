@@ -1,22 +1,64 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import styles from "@/app/HomePage.module.css";
 import Image from "next/image";
 
-export default async function MyPlants() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// Definimos un tipo para la planta para mayor claridad
+type Plant = {
+  id: number;
+  name: string;
+  image_url: string;
+  care_instructions: string;
+};
 
-  if (!user) {
-    return <p>Inicia sesión para ver tus plantas.</p>;
+export default function MyPlants() {
+  const supabase = createClient();
+  const [plants, setPlants] = useState<Plant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data, error } = await supabase
+          .from("plants")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          setError("No se pudieron cargar tus plantas.");
+        } else {
+          setPlants(data || []);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchPlants();
+  }, [supabase]);
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <h2>Cargando tus plantas...</h2>
+      </div>
+    );
   }
 
-  const { data: plants, error } = await supabase
-    .from("plants")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <p className={styles.errorMessage}>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -25,7 +67,7 @@ export default async function MyPlants() {
         <p>Aquí encontrarás todas las plantas que has identificado.</p>
       </div>
 
-      {plants && plants.length > 0 ? (
+      {plants.length > 0 ? (
         <div className={styles.myPlantsGrid}>
           {plants.map((plant) => (
             <div key={plant.id} className={styles.plantCard}>

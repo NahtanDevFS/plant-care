@@ -1,16 +1,15 @@
 // src/app/api/save-plant/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { GoogleGenerativeAI } from "@google/generative-ai"; // <-- 1. Importar la librería
+// Importamos las herramientas correctas de @supabase/ssr
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Inicializa el SDK de Google
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-// <-- 2. Función de Gemini REESCRITA Y CORREGIDA
 async function getCareInstructions(plantName: string): Promise<string> {
   try {
-    // Usamos un modelo reciente y potente como 'gemini-2.5-flash'
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `Proporciona una guía de cuidados completa y fácil de entender para la planta "${plantName}". Organiza la información en las siguientes secciones separadas por un título claro: Riego, Luz, Sustrato, Fertilizante y Humedad. Sé claro y conciso.`;
@@ -25,7 +24,6 @@ async function getCareInstructions(plantName: string): Promise<string> {
       "No se pudo obtener la información de cuidados de Gemini:",
       error
     );
-    // Devolvemos un mensaje de error claro para que el frontend lo sepa
     throw new Error(
       "No se pudo generar la información de cuidados desde Gemini."
     );
@@ -33,7 +31,19 @@ async function getCareInstructions(plantName: string): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = createClient();
+  // Creamos un cliente de Supabase para el servidor DENTRO de la ruta de API
+  // Esto es necesario para que pueda acceder a las cookies de la petición
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+      },
+    }
+  );
 
   // Obtenemos la sesión del usuario
   const {
