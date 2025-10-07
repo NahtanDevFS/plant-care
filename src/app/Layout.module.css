@@ -1,0 +1,12 @@
+.appContainer {
+  display: flex;
+  min-height: 100vh;
+}
+
+.contentArea {
+  flex-grow: 1;
+  width: 100%; /* Asegura que ocupe todo el ancho si no hay sidebar */
+  overflow-y: auto;
+  display: flex; /* Añadido para ayudar a centrar el contenido */
+  flex-direction: column; /* Añadido para que el contenido fluya verticalmente */
+}

@@ -133,7 +133,7 @@ export default function HomePage() {
       {/* Usamos un Fragment <> para poder tener el modal al mismo nivel que main */}
       <main className={styles.container}>
         <div className={styles.header}>
-          <h1>Mi Jardín Digital</h1>
+          <h1>PlantCare</h1>
           <p>Identifica tus plantas y aprende a cuidarlas al instante.</p>
         </div>
 
