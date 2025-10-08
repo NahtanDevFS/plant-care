@@ -31,6 +31,11 @@
   margin-bottom: 2rem;
 }
 
+.fileInput {
+  width: 100%;
+  text-align: center;
+}
+
 /* Estilo para el botón de carga de archivos */
 .fileInput::file-selector-button {
   background-color: var(--color-secondary);
@@ -42,6 +47,8 @@
   color: var(--color-text);
   cursor: pointer;
   transition: background-color 0.2s ease;
+  margin: 0 auto;
+  display: block;
 }
 
 .fileInput::file-selector-button:hover {
@@ -88,17 +95,30 @@
 
 .resultItem {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  gap: 1rem;
   padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  text-align: center;
+}
+
+@media (min-width: 500px) {
+  .resultItem {
+    flex-direction: row;
+    text-align: left;
+  }
 }
 
 .resultItem:hover {
   border-color: var(--color-primary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.resultItemInfo {
+  flex-grow: 1;
 }
 
 .resultItemInfo strong {
@@ -119,6 +139,15 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 500px) {
+  .selectButton {
+    width: auto;
+    margin-top: 0;
+  }
 }
 
 .selectButton:hover {
@@ -154,7 +183,7 @@
 .imagePreview {
   width: 150px;
   height: 150px;
-  object-fit: cover; /* Asegura que la imagen no se deforme */
+  object-fit: cover;
   border-radius: calc(var(--border-radius) / 2);
 }
 
@@ -162,46 +191,21 @@
   border-radius: var(--border-radius);
   object-fit: cover;
   border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-/* Modificamos el item para que tenga más espacio */
-.resultItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem; /* Añadimos espacio entre elementos */
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-/* Alineamos la información de la planta a la izquierda */
-.resultItemInfo {
-  flex-grow: 1; /* Hace que este div ocupe el espacio sobrante */
-  text-align: left;
+.suggestionImage:hover {
+  transform: scale(1.05);
 }
 
 .commonName {
   font-style: italic;
   color: #666;
-  text-transform: capitalize; /* Pone la primera letra en mayúscula */
-}
-
-.suggestionImage {
-  border-radius: var(--border-radius);
-  object-fit: cover;
-  border: 1px solid var(--color-border);
-  cursor: pointer; /* <-- Añadido */
-  transition: transform 0.2s ease; /* <-- Añadido */
-}
-
-.suggestionImage:hover {
-  transform: scale(1.05); /* <-- Añadido */
+  text-transform: capitalize;
 }
 
 /* --- ESTILOS PARA EL MODAL DE IMAGEN AMPLIADA --- */
-
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -245,13 +249,14 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* --- Estilos Auth --- */
 .authContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  flex-grow: 1; /* Hace que ocupe todo el alto disponible en contentArea */
-  padding: 2rem;
+  flex-grow: 1;
+  padding: 1rem;
 }
 
 .authForm {
@@ -285,119 +290,61 @@
   text-align: center;
 }
 
-.errorMessage {
-  color: #d32f2f;
-  background-color: #ffcdd2;
+.errorMessage,
+.successMessage {
   padding: 0.75rem;
   border-radius: var(--border-radius);
   text-align: center;
+  margin-top: 0.5rem;
+}
+
+.errorMessage {
+  color: #d32f2f;
+  background-color: #ffcdd2;
 }
 
 .successMessage {
   color: #388e3c;
   background-color: #c8e6c9;
-  padding: 0.75rem;
-  border-radius: var(--border-radius);
-  text-align: center;
-}
-
-/* --- Estilos My Plants Page --- */
-.myPlantsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-}
-
-.plantCard {
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.plantCard:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow);
-}
-
-.plantCardImage {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
-
-.plantCardContent {
-  padding: 1rem;
-}
-
-.plantCardContent h3 {
-  margin-top: 0;
-  color: var(--color-text);
-}
-
-.plantCardContent details {
-  margin-top: 1rem;
-}
-
-.plantCardContent summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.plantCardContent pre {
-  margin-top: 0.5rem;
-  white-space: pre-wrap;
-  font-family: var(--font-main);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  background-color: #f9f9f9;
-  padding: 0.75rem;
-  border-radius: var(--border-radius);
-}
-
-.careInfo {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background-color: #f8fff8;
-  border: 1px solid #d1e7d2;
-  border-left: 5px solid var(--color-primary);
-  border-radius: var(--border-radius);
-}
-
-.careInfo pre {
-  white-space: pre-wrap;
-  font-family: var(--font-main);
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--color-text-light);
 }
 
 .careSection {
   margin-bottom: 1rem;
 }
-
 .careSection h3 {
   color: var(--color-primary);
   margin-bottom: 0.5rem;
   font-size: 1.2rem;
 }
-
-.careSection h4 {
-  color: var(--color-primary);
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-}
-
 .careSection p {
   line-height: 1.6;
   color: var(--color-text-light);
 }
 
-/* --- Estilos My Plants Page --- */
-.myPlantsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
+/* --- Media Queries Adicionales --- */
+@media (max-width: 768px) {
+  .container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    margin: 0.5rem;
+    padding: 1rem;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .header h1 {
+    font-size: 1.8rem;
+  }
+  .header p {
+    font-size: 1rem;
+  }
+
+  .authForm {
+    padding: 1.5rem;
+  }
 }

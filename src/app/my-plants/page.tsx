@@ -120,7 +120,7 @@ export default function MyPlants() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>🌿 Mis Plantas Guardadas</h1>
+        <h1>🌿 Mis Plantas</h1>
         <p>
           Aquí encontrarás todas las plantas que has identificado y sus cuidados
           personalizados.
@@ -130,7 +130,12 @@ export default function MyPlants() {
       {plants.length > 0 ? (
         <div className={styles.myPlantsGrid}>
           {plants.map((plant) => (
-            <div key={plant.id} className={styles.plantCard}>
+            <div
+              key={plant.id}
+              className={`${styles.plantCard} ${
+                expandedPlant === plant.id ? styles.plantCardExpanded : ""
+              }`}
+            >
               <div className={styles.plantImageWrapper}>
                 <Image
                   src={plant.image_url}

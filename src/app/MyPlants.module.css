@@ -4,8 +4,7 @@
   max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background-color: var(--color-background);
-  min-height: calc(100vh - 4rem);
+  /* Eliminamos el fondo para que las tarjetas expandidas no se vean raras */
 }
 
 .header {
@@ -88,6 +87,13 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: max-content; /* Asegura que la altura se ajuste al contenido */
+}
+
+/* --- NUEVO: Estilo para la tarjeta expandida --- */
+.plantCardExpanded {
+  /* Hace que el elemento ocupe todas las columnas de la cuadrícula */
+  grid-column: 1 / -1;
 }
 
 .plantCard:hover {
@@ -163,7 +169,7 @@
 /* --- Care Instructions --- */
 .careInstructionsWrapper {
   margin-top: 1.5rem;
-  animation: slideDown 0.3s ease-out;
+  animation: slideDown 0.5s ease-out;
 }
 
 @keyframes slideDown {
@@ -179,23 +185,31 @@
 
 .careGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr; /* Una columna por defecto */
   gap: 1rem;
 }
 
+/* A partir de 600px, muestra 2 columnas */
+@media (min-width: 600px) {
+  .plantCardExpanded .careGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* A partir de 1024px, muestra 3 columnas */
+@media (min-width: 1024px) {
+  .plantCardExpanded .careGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .careCard {
-  background-color: white;
+  background-color: #fcfcfc;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
-}
-
-.careCard:hover {
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .careHeader {
@@ -224,7 +238,6 @@
   line-height: 1.7;
   color: var(--color-text-light);
   margin: 0;
-  text-align: justify;
   flex: 1;
 }
 
@@ -264,6 +277,11 @@
     gap: 1.5rem;
   }
 
+  /* En móvil, la tarjeta expandida no necesita la regla de columna */
+  .plantCardExpanded {
+    grid-column: auto;
+  }
+
   .plantImageWrapper {
     height: 220px;
   }
@@ -277,7 +295,8 @@
     font-size: 0.9rem;
   }
 
-  .careGrid {
+  .careGrid,
+  .plantCardExpanded .careGrid {
     grid-template-columns: 1fr;
   }
 
@@ -298,11 +317,12 @@
 
 @media (max-width: 480px) {
   .container {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .header {
     margin-bottom: 1.5rem;
+    padding: 0 1rem;
   }
 
   .header h1 {

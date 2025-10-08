@@ -1,13 +1,8 @@
+/* src/app/Layout.module.css */
 .appContainer {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-}
-
-@media (min-width: 769px) {
-  .appContainer {
-    flex-direction: row;
-  }
 }
 
 .contentArea {
@@ -16,10 +11,18 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  /* Corregimos el padding para que coincida con la altura de la barra superior */
+  padding-top: 70px;
 }
 
+/* En pantallas grandes, volvemos al layout con sidebar lateral */
 @media (min-width: 769px) {
+  .appContainer {
+    flex-direction: row;
+  }
+
   .contentArea {
     margin-left: 250px;
+    padding-top: 0; /* Reseteamos el padding */
   }
 }

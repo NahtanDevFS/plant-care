@@ -136,7 +136,7 @@ export default function HomePage() {
 
       const data = await response.json();
       setCareInfo(data.careInstructions);
-      alert('¡Tu planta ha sido guardada en "Mi Jardín"!');
+      alert('¡Tu planta ha sido guardada en "Mis Plantas"!');
     } catch (error) {
       console.error(error);
       setCareInfo("");

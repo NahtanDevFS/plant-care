@@ -44,3 +44,11 @@ h2 {
   color: var(--color-primary);
   margin-bottom: 0.5em;
 }
+
+/* Media query para mejorar la legibilidad en dispositivos pequeños */
+@media (max-width: 768px) {
+  html,
+  body {
+    font-size: 95%;
+  }
+}

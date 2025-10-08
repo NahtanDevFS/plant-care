@@ -1,6 +1,9 @@
+/* src/components/Sidebar.module.css */
+
+/* --- Estilos para la Barra Lateral (Escritorio) --- */
 .sidebar {
   width: 250px;
-  background-color: #f8f9fa;
+  background-color: #ffffff;
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -10,7 +13,7 @@
   left: 0;
   top: 0;
   z-index: 100;
-  overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
 }
 
 .sidebarHeader h2 {
@@ -32,11 +35,19 @@
   text-decoration: none;
   color: var(--color-text-light);
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .sidebarNav a:hover {
-  background-color: #e9ecef;
+  background-color: #e8f5e9;
+  color: var(--color-primary);
+}
+
+/* --- NUEVO: Estilo para el enlace activo --- */
+.sidebarNav a.active {
+  background-color: var(--color-primary);
+  color: white;
+  font-weight: 600;
 }
 
 .sidebarUser {
@@ -46,16 +57,18 @@
   font-size: 0.9rem;
 }
 
-.sidebarUser span {
+.userEmail {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   word-break: break-all;
+  color: var(--color-text-light);
+  font-size: 0.85rem;
 }
 
 .logoutButton,
 .loginButton {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.6rem;
   border: 1px solid var(--color-primary);
   background-color: transparent;
   color: var(--color-primary);
@@ -64,6 +77,7 @@
   font-weight: 600;
   text-decoration: none;
   display: inline-block;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .logoutButton:hover,
@@ -72,16 +86,116 @@
   color: white;
 }
 
+/* --- Estilos para la Barra Superior (Móvil) --- */
+.mobileHeader {
+  display: none; /* Oculto por defecto */
+}
+
+/* --- Overlay y Menú Desplegable (Móvil) --- */
+.mobileNavOverlay {
+  display: none; /* Oculto por defecto */
+}
+
+/* --- Media Queries para Responsividad --- */
 @media (max-width: 768px) {
+  /* Ocultamos la barra lateral en móvil */
   .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    border-right: none;
-    border-bottom: 1px solid var(--color-border);
-    padding: 1rem;
-    flex-direction: row;
+    display: none;
+  }
+
+  /* Mostramos y estilizamos la barra superior */
+  .mobileHeader {
+    display: flex;
     align-items: center;
     justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    padding: 0 1rem;
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  .mobileLogo h2 {
+    font-size: 1.25rem;
+    margin: 0;
+  }
+
+  /* Estilos del botón de hamburguesa */
+  .hamburgerButton {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--color-text);
+  }
+
+  /* Estilos para el overlay del menú móvil cuando está abierto */
+  .mobileNavOverlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  /* Contenido del menú que se desliza */
+  .mobileNavContent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease-in-out;
+  }
+
+  .mobileCloseButton {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    color: var(--color-text-light);
+    cursor: pointer;
+  }
+
+  /* Reutilizamos los estilos de la navegación y el usuario */
+  .mobileNavContent .sidebarNav,
+  .mobileNavContent .sidebarUser {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Animaciones para el menú móvil */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
   }
 }
