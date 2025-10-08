@@ -25,6 +25,29 @@ type IdentificationResponse = {
   suggestions: PlantSuggestion[];
 };
 
+// Nuevo componente para mostrar las instrucciones de cuidado
+const CareInstructions = ({ text }: { text: string }) => {
+  if (!text || text === "Obteniendo cuidados y guardando tu planta...") {
+    return <p>Cargando...</p>;
+  }
+
+  const sections = text.split("### ").filter((s) => s);
+
+  return (
+    <div>
+      {sections.map((section) => {
+        const [title, ...content] = section.split(":");
+        return (
+          <div key={title} className={styles.careSection}>
+            <h3>{title}</h3>
+            <p>{content.join(":").trim()}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 export default function HomePage() {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null); // Estado para la preview
@@ -208,11 +231,7 @@ export default function HomePage() {
         {selectedPlant && careInfo && (
           <div className={styles.careInfo}>
             <h2>Cuidados para: {selectedPlant.name}</h2>
-            <pre>
-              {careInfo === "Obteniendo cuidados y guardando tu planta..."
-                ? "Cargando..."
-                : careInfo}
-            </pre>
+            <CareInstructions text={careInfo} />
           </div>
         )}
       </main>

@@ -1,3 +1,5 @@
+// src/app/my-plants/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,6 +13,25 @@ type Plant = {
   name: string;
   image_url: string;
   care_instructions: string;
+};
+
+// Nuevo componente para mostrar las instrucciones de cuidado
+const CareInstructions = ({ text }: { text: string }) => {
+  const sections = text.split("### ").filter((s) => s);
+
+  return (
+    <div>
+      {sections.map((section) => {
+        const [title, ...content] = section.split(":");
+        return (
+          <div key={title} className={styles.careSection}>
+            <h4>{title}</h4>
+            <p>{content.join(":").trim()}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 export default function MyPlants() {
@@ -83,7 +104,7 @@ export default function MyPlants() {
                 <h3>{plant.name}</h3>
                 <details>
                   <summary>Ver Cuidados</summary>
-                  <pre>{plant.care_instructions}</pre>
+                  <CareInstructions text={plant.care_instructions} />
                 </details>
               </div>
             </div>

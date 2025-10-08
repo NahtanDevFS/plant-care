@@ -12,7 +12,7 @@ async function getCareInstructions(plantName: string): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = `Proporciona una guía de cuidados completa y fácil de entender para la planta "${plantName}". Organiza la información en las siguientes secciones separadas por un título claro: Riego, Luz, Sustrato, Fertilizante y Humedad. Sé claro y conciso.`;
+    const prompt = `Proporciona una guía de cuidados para la planta "${plantName}". Utiliza el siguiente formato: Inicia con "### Riego:", seguido de la descripción. Luego, "### Luz:", y su descripción. Continúa con "### Sustrato:", "### Fertilizante:", y "### Humedad:", cada uno con su respectiva descripción. No incluyas texto introductorio ni final, solo las secciones solicitadas.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
