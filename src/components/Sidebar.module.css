@@ -210,6 +210,15 @@
   }
 }
 
+/* Agrégalo al final de src/components/Sidebar.module.css */
+.userEmail {
+  font-size: 0.8rem;
+  color: #ccc;
+  word-break: break-all; /* Para evitar que emails largos rompan el diseño */
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
+
 /* Animaciones para el menú móvil */
 @keyframes fadeIn {
   from {

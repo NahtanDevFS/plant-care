@@ -1,10 +1,10 @@
 // src/components/ClientLayout.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation"; // 1. Importar usePathname
 import { createClient } from "@/lib/supabase/client";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "./Sidebar";
 import styles from "@/app/Layout.module.css";
 import type { User } from "@supabase/supabase-js";
 
@@ -15,57 +15,57 @@ export default function ClientLayout({
 }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const pathname = usePathname();
+  const pathname = usePathname(); // 2. Obtener la ruta actual
   const supabase = createClient();
 
-  useEffect(() => {
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
-    };
-    getSession();
+  // 3. Definir las rutas donde NO queremos el sidebar
+  const authRoutes = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ];
 
+  useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
-    return () => {
-      subscription?.unsubscribe();
+    const checkInitialSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user ?? null);
+      setLoading(false);
     };
-  }, [supabase]);
 
-  const isAuthPage = pathname === "/login" || pathname === "/register";
-  const showSidebar = !isAuthPage && user;
+    checkInitialSession();
 
-  if (loading) {
-    // Muestra un loader de página completa para evitar parpadeos
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-        }}
-      >
-        <h2>Cargando...</h2>
-      </div>
-    );
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
+
+  // 4. Comprobar si la ruta actual es una de autenticación
+  const isAuthRoute = authRoutes.includes(pathname);
+
+  // Si es una ruta de autenticación, renderiza solo el contenido de la página
+  if (isAuthRoute) {
+    return <>{children}</>;
   }
 
+  // Si no hay usuario (y no es una ruta de auth), renderiza solo el contenido
+  // El middleware ya se encarga de redirigir si es una ruta protegida
+  if (!user) {
+    return <>{children}</>;
+  }
+
+  // En cualquier otro caso (ruta protegida con usuario), muestra el layout completo
   return (
-    <div className={styles.appContainer}>
-      {showSidebar && <Sidebar />}
-      <main
-        className={showSidebar ? styles.contentArea : styles.contentAreaFull}
-      >
-        {children}
-      </main>
+    <div className={styles.layout}>
+      <Sidebar user={user} />
+      <main className={styles.mainContent}>{children}</main>
     </div>
   );
 }
