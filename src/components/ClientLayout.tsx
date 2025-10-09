@@ -64,7 +64,7 @@ export default function ClientLayout({
   // En cualquier otro caso (ruta protegida con usuario), muestra el layout completo
   return (
     <div className={styles.layout}>
-      <Sidebar user={user} />
+      <Sidebar />
       <main className={styles.mainContent}>{children}</main>
     </div>
   );
