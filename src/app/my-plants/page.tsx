@@ -17,15 +17,20 @@ type Plant = {
   fertilizing_frequency_days: number | null;
 };
 
-// ... (El componente CareInstructions no necesita cambios)
+// --- CONFIGURACIÓN DE ICONOS ACTUALIZADA ---
 const careConfig = {
   Riego: { icon: "💧", color: "#2196F3", bgColor: "#E3F2FD" },
   Luz: { icon: "☀️", color: "#FF9800", bgColor: "#FFF3E0" },
   Sustrato: { icon: "🌱", color: "#795548", bgColor: "#EFEBE9" },
   Fertilizante: { icon: "🧪", color: "#9C27B0", bgColor: "#F3E5F5" },
   Humedad: { icon: "💨", color: "#00BCD4", bgColor: "#E0F7FA" },
+  "Plagas Comunes": { icon: "🐞", color: "#d32f2f", bgColor: "#ffcdd2" },
+  "Enfermedades Comunes": { icon: "🍄", color: "#7B1FA2", bgColor: "#E1BEE7" },
 };
+// ---------------------------------------------
+
 type CareKey = keyof typeof careConfig;
+
 const CareInstructions = ({ text }: { text: string }) => {
   const sections = text.split("### ").filter((s) => s);
   return (
@@ -109,7 +114,6 @@ export default function MyPlants() {
     }
 
     try {
-      // 1. Actualizar la tabla 'plants'
       const plantUpdate =
         careType === "Riego"
           ? { watering_frequency_days: frequency }
@@ -123,8 +127,6 @@ export default function MyPlants() {
 
       if (plantError) throw plantError;
 
-      // --- LÓGICA CORREGIDA: Volvemos a usar UPSERT ---
-      // 2. Crear o actualizar la tabla 'reminders'
       const today = new Date();
       const next_reminder_date = new Date(
         today.getTime() + frequency * 24 * 60 * 60 * 1000
@@ -140,12 +142,11 @@ export default function MyPlants() {
           frequency_days: frequency,
           next_reminder_date: next_reminder_date,
         },
-        { onConflict: "plant_id, care_type" } // Esto ahora funciona gracias a la restricción UNIQUE
+        { onConflict: "plant_id, care_type" }
       );
 
       if (reminderError) throw reminderError;
 
-      // 3. Actualizar el estado local
       setPlants(
         plants.map((p) => {
           if (p.id === plantId) {
@@ -162,6 +163,53 @@ export default function MyPlants() {
         errorMessage = `Error: ${error.message}`;
       }
       alert(errorMessage);
+    }
+  };
+
+  // --- NUEVA FUNCIÓN PARA ELIMINAR LA PLANTA ---
+  const handleDeletePlant = async (plantId: number, imageUrl: string) => {
+    if (
+      !window.confirm(
+        "¿Estás seguro de que quieres eliminar esta planta? Esta acción es irreversible."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      // 1. Extraer el path del archivo de la URL para borrarlo del Storage
+      const filePath = imageUrl.substring(
+        imageUrl.indexOf("plant_images/") + "plant_images/".length
+      );
+
+      // 2. Borrar la imagen del Storage de Supabase
+      const { error: storageError } = await supabase.storage
+        .from("plant_images")
+        .remove([filePath]);
+
+      if (storageError) {
+        // Logueamos el error pero continuamos, para que el usuario pueda borrar la planta
+        // de la base de datos aunque la imagen no se encuentre en el storage.
+        console.error("Error al borrar la imagen del storage:", storageError);
+      }
+
+      // 3. Borrar la planta de la tabla 'plants'
+      // Gracias a 'ON DELETE CASCADE', los recordatorios se borrarán automáticamente.
+      const { error: dbError } = await supabase
+        .from("plants")
+        .delete()
+        .eq("id", plantId);
+
+      if (dbError) throw dbError;
+
+      // 4. Actualizar la UI para remover la planta eliminada
+      setPlants((currentPlants) =>
+        currentPlants.filter((p) => p.id !== plantId)
+      );
+      alert("Planta eliminada con éxito.");
+    } catch (error) {
+      console.error("Error al eliminar la planta:", error);
+      alert("No se pudo eliminar la planta. Inténtalo de nuevo.");
     }
   };
 
@@ -218,22 +266,22 @@ export default function MyPlants() {
               </div>
 
               <div className={styles.plantCardContent}>
-                <button
-                  onClick={() => togglePlant(plant.id)}
-                  className={styles.toggleButton}
-                >
-                  {expandedPlant === plant.id ? (
-                    <>
-                      <span>Ocultar Cuidados</span>
-                      <span className={styles.arrow}>▲</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Ver Guía de Cuidados</span>
-                      <span className={styles.arrow}>▼</span>
-                    </>
-                  )}
-                </button>
+                {/* --- SECCIÓN DE BOTONES ACTUALIZADA --- */}
+                <div className={styles.buttonGroup}>
+                  <button
+                    onClick={() => togglePlant(plant.id)}
+                    className={styles.toggleButton}
+                  >
+                    {expandedPlant === plant.id ? "Ocultar" : "Ver Cuidados"}
+                  </button>
+                  <button
+                    onClick={() => handleDeletePlant(plant.id, plant.image_url)}
+                    className={styles.deleteButton}
+                    title="Eliminar planta"
+                  >
+                    🗑️
+                  </button>
+                </div>
 
                 {expandedPlant === plant.id && (
                   <div className={styles.careInstructionsWrapper}>

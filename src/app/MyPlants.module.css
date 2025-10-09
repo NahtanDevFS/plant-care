@@ -273,6 +273,38 @@
   display: inline-block;
 }
 
+.buttonGroup {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.toggleButton {
+  flex-grow: 1; /* Hacemos que el botón principal ocupe el espacio disponible */
+}
+
+.deleteButton {
+  flex-shrink: 0; /* Evitamos que el botón se encoja */
+  width: 45px;
+  height: 45px;
+  border: 2px solid #e57373;
+  background-color: transparent;
+  color: #e57373;
+  border-radius: var(--border-radius);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteButton:hover {
+  background-color: #e57373;
+  color: white;
+  transform: scale(1.05);
+}
+
 /* --- Responsive Design --- */
 @media (max-width: 1200px) {
   .myPlantsGrid {

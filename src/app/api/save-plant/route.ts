@@ -1,7 +1,6 @@
 // src/app/api/save-plant/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-// Importamos las herramientas correctas de @supabase/ssr
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -10,9 +9,31 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 async function getCareInstructions(plantName: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Usamos un modelo más reciente si está disponible
 
-    const prompt = `Proporciona una guía de cuidados para la planta "${plantName}". Utiliza el siguiente formato: Inicia con "### Riego:", seguido de la descripción. Luego, "### Luz:", y su descripción. Continúa con "### Sustrato:", "### Fertilizante:", y "### Humedad:", cada uno con su respectiva descripción. No incluyas texto introductorio ni final, solo las secciones solicitadas.`;
+    // --- PROMPT MEJORADO Y MÁS DETALLADO ---
+    const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando un clima templado a subtropical como el de Guatemala. La guía debe ser clara, específica y fácil de seguir. Utiliza el siguiente formato estricto, sin texto introductorio ni final:
+
+### Riego:
+Descripción del riego. Incluye una recomendación específica de frecuencia en días, por ejemplo: "Regar cada 7-10 días, o cuando los primeros 3cm de sustrato estén secos.".
+
+### Luz:
+Descripción detallada de las necesidades de luz (luz directa, indirecta brillante, sombra, etc.) y cuántas horas al día son ideales.
+
+### Sustrato:
+Descripción del tipo de sustrato ideal, mencionando componentes clave como perlita, turba o fibra de coco si son importantes.
+
+### Fertilizante:
+Descripción del fertilizante. Incluye una recomendación específica de frecuencia según la estación, por ejemplo: "Fertilizar cada 15 días durante la primavera y verano con un fertilizante balanceado.".
+
+### Humedad:
+Descripción de las necesidades de humedad ambiental y si es recomendable pulverizar las hojas.
+
+### Plagas Comunes:
+Lista de 1 a 2 plagas comunes para esta planta. Para cada una, describe los síntomas para detectarlas (ej. telarañas finas, manchas pegajosas) y un método de control o cura (ej. aceite de neem, jabón potásico).
+
+### Enfermedades Comunes:
+Lista de 1 a 2 enfermedades comunes (hongos, etc.). Para cada una, describe los síntomas para detectarlas (ej. manchas en las hojas, polvo blanco) y un método de control o cura (ej. mejorar ventilación, fungicida).`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -31,8 +52,6 @@ async function getCareInstructions(plantName: string): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
-  // Creamos un cliente de Supabase para el servidor DENTRO de la ruta de API
-  // Esto es necesario para que pueda acceder a las cookies de la petición
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -45,7 +64,6 @@ export async function POST(request: NextRequest) {
     }
   );
 
-  // Obtenemos la sesión del usuario
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -75,13 +93,12 @@ export async function POST(request: NextRequest) {
       data: { publicUrl },
     } = supabase.storage.from("plant_images").getPublicUrl(fileName);
 
-    // Guardamos la planta con el user_id
     const { error: dbError } = await supabase.from("plants").insert([
       {
         name: plantName,
         care_instructions: careInstructions,
         image_url: publicUrl,
-        user_id: user.id, // <-- Asociamos al usuario
+        user_id: user.id,
       },
     ]);
 
