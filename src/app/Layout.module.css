@@ -5,24 +5,30 @@
   flex-direction: column;
 }
 
+/* Para cuando el sidebar está visible */
 .contentArea {
   flex-grow: 1;
   width: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  /* Corregimos el padding para que coincida con la altura de la barra superior */
   padding-top: 70px;
 }
 
-/* En pantallas grandes, volvemos al layout con sidebar lateral */
-@media (min-width: 769px) {
-  .appContainer {
-    flex-direction: row;
-  }
+/* NUEVO: Para cuando el sidebar está oculto (pantalla completa) */
+.contentAreaFull {
+  flex-grow: 1;
+  width: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
 
+/* En pantallas grandes */
+@media (min-width: 769px) {
+  /* Aplicamos el margen solo al contentArea normal */
   .contentArea {
     margin-left: 250px;
-    padding-top: 0; /* Reseteamos el padding */
+    padding-top: 0;
   }
 }

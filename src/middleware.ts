@@ -1,4 +1,4 @@
-// middleware.ts
+// src/middleware.ts
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -61,10 +61,12 @@ export const config = {
   matcher: [
     /*
      * Coincide con todas las rutas de petición excepto las que empiezan por:
+     * - api (rutas de API)
      * - _next/static (archivos estáticos)
      * - _next/image (optimización de imágenes)
      * - favicon.ico (archivo de favicon)
+     * - sw.js (service worker)
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|sw.js).*)",
   ],
 };

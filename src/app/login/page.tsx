@@ -1,9 +1,10 @@
+// src/app/login/page.tsx
 "use client";
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import styles from "@/app/HomePage.module.css"; // Reutilizamos estilos
+import styles from "@/app/HomePage.module.css";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -24,6 +25,8 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
+      // --- VOLVEMOS AL MÉTODO CORRECTO ---
+      // Esto es más eficiente y es la forma recomendada por Next.js
       router.push("/");
       router.refresh();
     }

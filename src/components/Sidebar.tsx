@@ -8,6 +8,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
 
+// ... (El componente NotificationManager no necesita cambios)
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -18,30 +19,25 @@ function urlBase64ToUint8Array(base64String: string) {
   }
   return outputArray;
 }
-
 const NotificationManager = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
-
   useEffect(() => {
     const checkSubscription = async () => {
-      try {
-        if ("serviceWorker" in navigator && "PushManager" in window) {
+      if ("serviceWorker" in navigator) {
+        try {
           const registration = await navigator.serviceWorker.ready;
           const subscription = await registration.pushManager.getSubscription();
           setIsSubscribed(!!subscription);
+        } catch (error) {
+          console.error("Error al comprobar la suscripción:", error);
         }
-      } catch (err) {
-        console.error("Error al comprobar la suscripción:", err);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
     checkSubscription();
   }, []);
-
   const subscribeUser = async () => {
     const {
       data: { user },
@@ -50,107 +46,45 @@ const NotificationManager = () => {
       alert("Debes iniciar sesión para activar las notificaciones.");
       return;
     }
-
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-
     if (!vapidPublicKey) {
-      setError("Las notificaciones no están configuradas correctamente.");
-      console.error("VAPID public key no definida en .env.local");
-      alert(
-        "Las notificaciones no están disponibles. Configúralas en el servidor."
-      );
+      console.error("La clave pública VAPID no está definida en .env.local");
+      alert("Error de configuración: Faltan las claves de notificación.");
       return;
     }
-
     try {
-      setIsLoading(true);
-      setError(null);
-
-      // Asegurar que el Service Worker está registrado
-      let registration: ServiceWorkerRegistration;
-      try {
-        registration = await navigator.serviceWorker.ready;
-      } catch (err) {
-        console.error("Service Worker no está listo:", err);
-        setError("El Service Worker no está disponible.");
-        return;
-      }
-
-      // Solicitar permiso de notificaciones
-      if (Notification.permission !== "granted") {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          setError("Permiso de notificaciones denegado.");
-          alert("Debes permitir las notificaciones para continuar.");
-          return;
-        }
-      }
-
-      // Suscribirse a push notifications
+      const registration = await navigator.serviceWorker.ready;
       const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-
-      let subscription = await registration.pushManager.getSubscription();
-
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey,
-        });
-      }
-
-      // Guardar la suscripción en la base de datos
-      const { error: dbError } = await supabase
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey,
+      });
+      const { error } = await supabase
         .from("push_subscriptions")
         .upsert(
-          {
-            user_id: user.id,
-            subscription_data: subscription,
-          },
+          { user_id: user.id, subscription_data: subscription },
           { onConflict: "user_id" }
         );
-
-      if (dbError) {
-        console.error("Error al guardar la suscripción:", dbError);
-        throw dbError;
-      }
-
+      if (error) throw error;
       setIsSubscribed(true);
-      alert("¡Notificaciones activadas correctamente!");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error("Error al suscribirse:", errorMessage);
-      setError(errorMessage);
-      alert(`Error: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
+      alert("¡Notificaciones activadas!");
+    } catch (error) {
+      console.error("Error al suscribirse a las notificaciones:", error);
+      alert("No se pudieron activar las notificaciones.");
     }
   };
-
   if (typeof window !== "undefined" && !("PushManager" in window)) {
-    return null; // Push Manager no disponible
+    return null;
   }
-
   if (isLoading) return null;
-
   return (
-    <>
-      <button
-        onClick={subscribeUser}
-        disabled={isSubscribed || isLoading}
-        className={styles.notificationButton}
-      >
-        {isSubscribed
-          ? "🔔 Notificaciones Activadas"
-          : "Activar Notificaciones"}
-      </button>
-      {error && (
-        <p
-          style={{ fontSize: "0.8rem", color: "#d32f2f", marginTop: "0.5rem" }}
-        >
-          {error}
-        </p>
-      )}
-    </>
+    <button
+      onClick={subscribeUser}
+      disabled={isSubscribed}
+      className={styles.notificationButton}
+    >
+      {isSubscribed ? "🔔 Notificaciones Activadas" : "Activar Notificaciones"}
+    </button>
   );
 };
 
@@ -170,14 +104,16 @@ export default function Sidebar() {
       setUser(session?.user ?? null);
       setLoading(false);
     };
-
     getSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setMobileMenuOpen(false);
+      if (!session) {
+        // Si el usuario cierra sesión, redirigir a /login
+        router.push("/login");
+      }
       router.refresh();
     });
 
@@ -186,15 +122,26 @@ export default function Sidebar() {
     };
   }, [supabase, router]);
 
+  // --- FUNCIÓN DE CERRAR SESIÓN ACTUALIZADA ---
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    setMobileMenuOpen(false);
-    router.push("/login");
+    // Redirigimos manualmente después de cerrar sesión
+    window.location.assign("/login");
   };
+  // ---------------------------------------------
 
   const handleLinkClick = () => {
     setMobileMenuOpen(false);
   };
+
+  if (loading) {
+    return null;
+  }
+
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+  if (!user || isAuthPage) {
+    return null;
+  }
 
   const NavLinks = () => (
     <nav className={styles.sidebarNav}>
@@ -243,28 +190,10 @@ export default function Sidebar() {
       <div className={styles.sidebarHeader}>
         <h2>🌿 PlantCare</h2>
       </div>
-      {user ? (
-        <>
-          <NavLinks />
-          <UserSection />
-        </>
-      ) : (
-        <div className={styles.sidebarUser}>
-          <Link
-            href="/login"
-            onClick={handleLinkClick}
-            className={styles.loginButton}
-          >
-            Iniciar Sesión
-          </Link>
-        </div>
-      )}
+      <NavLinks />
+      <UserSection />
     </div>
   );
-
-  if (loading) {
-    return <aside className={styles.sidebar}></aside>;
-  }
 
   return (
     <>
@@ -272,18 +201,8 @@ export default function Sidebar() {
         <div className={styles.sidebarHeader}>
           <h2>🌿 PlantCare</h2>
         </div>
-        {user ? (
-          <>
-            <NavLinks />
-            <UserSection />
-          </>
-        ) : (
-          <div className={styles.sidebarUser}>
-            <Link href="/login" className={styles.loginButton}>
-              Iniciar Sesión
-            </Link>
-          </div>
-        )}
+        <NavLinks />
+        <UserSection />
       </aside>
 
       <header className={styles.mobileHeader}>
