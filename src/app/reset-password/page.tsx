@@ -11,23 +11,38 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSessionReady, setIsSessionReady] = useState(false); // Nuevo estado para controlar la UI
+  const [isSessionReady, setIsSessionReady] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    // Este efecto escucha el evento específico que se dispara después de que Supabase
-    // procesa el token de recuperación de contraseña de la URL.
+    // Variable para evitar múltiples ejecuciones si el componente se re-renderiza rápido
+    let sessionChecked = false;
+
+    const checkSession = async () => {
+      // Obtenemos la sesión actual. Si el usuario viene de un enlace de recuperación,
+      // esta sesión contendrá la identidad del usuario pero requerirá una actualización.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session && !sessionChecked) {
+        setIsSessionReady(true);
+      }
+      sessionChecked = true;
+    };
+
+    checkSession();
+
+    // También mantenemos el listener por si el evento llega después del primer render
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        // Ahora sabemos que hay una sesión de recuperación válida y activa.
-        // Habilitamos el formulario para el usuario.
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" && session) {
         setIsSessionReady(true);
       }
     });
 
+    // Limpiamos la suscripción al desmontar el componente
     return () => {
       subscription?.unsubscribe();
     };
@@ -37,7 +52,7 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     if (!isSessionReady) {
       setError(
-        "La sesión de recuperación no es válida. Por favor, utiliza el enlace de tu correo de nuevo."
+        "La sesión de recuperación no es válida o ha expirado. Por favor, solicita un nuevo enlace desde la página de 'Olvidé mi contraseña'."
       );
       return;
     }
@@ -53,6 +68,8 @@ export default function ResetPasswordPage() {
       setMessage(
         "¡Tu contraseña ha sido actualizada con éxito! Serás redirigido para iniciar sesión."
       );
+      // Forzamos el cierre de sesión para que el usuario deba loguearse con la nueva contraseña
+      await supabase.auth.signOut();
       setTimeout(() => {
         router.push("/login");
       }, 3000);
