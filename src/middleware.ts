@@ -40,23 +40,10 @@ export async function middleware(request: NextRequest) {
   );
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // --- LÓGICA DE RECUPERACIÓN DE CONTRASEÑA (NUEVO) ---
-  const { pathname, searchParams } = request.nextUrl;
-  const code = searchParams.get("code");
-
-  // Si el usuario está en la página de reseteo Y hay un 'code' en la URL
-  if (code && pathname === "/reset-password") {
-    // Supabase usa el 'code' para establecer la sesión de recuperación
-    // La sesión estará disponible en la próxima petición
-    return NextResponse.redirect(new URL("/reset-password", request.url));
-  }
-  // --- FIN DE LA LÓGICA NUEVA ---
-
-  // --- LÓGICA DE PROTECCIÓN DE RUTAS ---
+  // Rutas de autenticación y protegidas
   const authRoutes = [
     "/login",
     "/register",
@@ -64,22 +51,15 @@ export async function middleware(request: NextRequest) {
     "/reset-password",
   ];
   const protectedRoutes = ["/", "/my-plants", "/calendar"];
+  const { pathname } = request.nextUrl;
 
+  // Si no hay usuario y la ruta está protegida, redirige a /login
   if (!user && protectedRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Si hay usuario y la ruta es de autenticación, redirige a la página principal
   if (user && authRoutes.includes(pathname)) {
-    // Excepción: Permitir acceso a reset-password si hay una sesión de recuperación
-    const {
-      data: { user: recoveryUser },
-    } = await supabase.auth.getUser();
-    const isRecoverySession = recoveryUser?.aud === "authenticated"; // Esto puede variar, pero la idea es detectar si la sesión es para recuperación
-
-    if (pathname === "/reset-password" && isRecoverySession) {
-      return response;
-    }
-
     return NextResponse.redirect(new URL("/", request.url));
   }
 

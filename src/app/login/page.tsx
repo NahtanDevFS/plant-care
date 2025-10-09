@@ -31,7 +31,7 @@ export default function LoginPage() {
       return;
     }
 
-    // El middleware se encargará de la redirección, pero refrescamos para asegurar
+    // Forzamos un refresh para que el middleware se ejecute con la nueva sesión
     router.refresh();
   };
 
@@ -62,7 +62,6 @@ export default function LoginPage() {
           disabled={isLoading}
         />
 
-        {/* --- ENLACE AÑADIDO --- */}
         <div className={styles.linkContainer}>
           <Link href="/forgot-password" className={styles.authLink}>
             ¿Olvidaste tu contraseña?
