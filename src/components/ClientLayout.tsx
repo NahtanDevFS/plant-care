@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation"; // 1. Importar usePathname
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Sidebar from "./Sidebar";
 import styles from "@/app/Layout.module.css";
@@ -15,16 +15,30 @@ export default function ClientLayout({
 }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const pathname = usePathname(); // 2. Obtener la ruta actual
+  const pathname = usePathname();
   const supabase = createClient();
 
-  // 3. Definir las rutas donde NO queremos el sidebar
   const authRoutes = [
     "/login",
     "/register",
     "/forgot-password",
     "/reset-password",
   ];
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((registration) => {
+            console.log("Service Worker registrado con éxito:", registration);
+          })
+          .catch((error) => {
+            console.log("Error al registrar el Service Worker:", error);
+          });
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const {
@@ -47,25 +61,20 @@ export default function ClientLayout({
     };
   }, [supabase.auth]);
 
-  // 4. Comprobar si la ruta actual es una de autenticación
   const isAuthRoute = authRoutes.includes(pathname);
 
-  // Si es una ruta de autenticación, renderiza solo el contenido de la página
   if (isAuthRoute) {
-    return <>{children}</>;
+    return <div className={styles.contentAreaFull}>{children}</div>;
   }
 
-  // Si no hay usuario (y no es una ruta de auth), renderiza solo el contenido
-  // El middleware ya se encarga de redirigir si es una ruta protegida
   if (!user) {
-    return <>{children}</>;
+    return <div className={styles.contentAreaFull}>{children}</div>;
   }
 
-  // En cualquier otro caso (ruta protegida con usuario), muestra el layout completo
   return (
-    <div className={styles.layout}>
+    <div className={styles.appContainer}>
       <Sidebar />
-      <main className={styles.mainContent}>{children}</main>
+      <main className={styles.contentArea}>{children}</main>
     </div>
   );
 }
