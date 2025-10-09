@@ -1,3 +1,4 @@
+// src/app/register/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -21,7 +22,8 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
+        // --- URL ACTUALIZADA ---
+        emailRedirectTo: `https://plant-care-mu.vercel.app/auth/callback`,
       },
     });
 
@@ -41,9 +43,10 @@ export default function RegisterPage() {
         <label htmlFor="email">Email</label>
         <input
           name="email"
+          type="email"
           onChange={(e) => setEmail(e.target.value)}
           value={email}
-          placeholder="you@example.com"
+          placeholder="tu@email.com"
           required
         />
         <label htmlFor="password">Contraseña</label>

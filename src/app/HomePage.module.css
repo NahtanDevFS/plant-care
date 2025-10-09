@@ -377,6 +377,23 @@
   font-style: italic;
 }
 
+.linkContainer {
+  text-align: right;
+  margin-top: -0.5rem; /* Ajusta el espacio sobre el botón */
+  margin-bottom: 1rem;
+}
+
+.authLink {
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: text-decoration 0.2s ease;
+}
+
+.authLink:hover {
+  text-decoration: underline;
+}
+
 /* --- Media Queries Adicionales --- */
 @media (max-width: 768px) {
   .container {

@@ -20,39 +20,19 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
 
-    try {
-      console.log("Iniciando sesión con:", email);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      console.log("Respuesta de Supabase:", { data, error });
-
-      if (error) {
-        console.error("Error de autenticación:", error.message);
-        setError(error.message);
-        setIsLoading(false);
-        return;
-      }
-
-      if (data?.session) {
-        console.log("Sesión iniciada exitosamente");
-        // Usar un pequeño delay para asegurar que la cookie se guarde
-        setTimeout(() => {
-          router.push("/");
-          router.refresh();
-        }, 500);
-      } else {
-        setError("No se estableció la sesión correctamente");
-        setIsLoading(false);
-      }
-    } catch (err) {
-      console.error("Error inesperado:", err);
-      setError("Error inesperado. Intenta de nuevo.");
+    if (error) {
+      setError(error.message);
       setIsLoading(false);
+      return;
     }
+
+    // El middleware se encargará de la redirección, pero refrescamos para asegurar
+    router.refresh();
   };
 
   return (
@@ -63,9 +43,10 @@ export default function LoginPage() {
         <input
           id="email"
           name="email"
+          type="email"
           onChange={(e) => setEmail(e.target.value)}
           value={email}
-          placeholder="you@example.com"
+          placeholder="tu@email.com"
           required
           disabled={isLoading}
         />
@@ -80,6 +61,14 @@ export default function LoginPage() {
           required
           disabled={isLoading}
         />
+
+        {/* --- ENLACE AÑADIDO --- */}
+        <div className={styles.linkContainer}>
+          <Link href="/forgot-password" className={styles.authLink}>
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
+
         <button className={styles.button} disabled={isLoading}>
           {isLoading ? "Cargando..." : "Iniciar Sesión"}
         </button>
