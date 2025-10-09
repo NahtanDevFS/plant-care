@@ -198,7 +198,7 @@ export default function CalendarPage() {
           <h3>¡Todo en orden!</h3>
           <p>
             No tienes tareas de cuidado pendientes. Configura los recordatorios
-            en "Mis Plantas".
+            en: Mis Plantas.
           </p>
         </div>
       )}
