@@ -229,7 +229,7 @@ export default function CalendarPage() {
         <div className={styles.emptyState}>
           <h3>No hay recordatorios configurados</h3>
           <p>
-            Ve a "Mis Plantas" para configurar los recordatorios de riego y
+            Ve a: Mis Plantas para configurar los recordatorios de riego y
             fertilización.
           </p>
         </div>
