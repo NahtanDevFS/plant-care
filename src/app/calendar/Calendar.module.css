@@ -21,6 +21,17 @@
   font-size: 1.1rem;
 }
 
+/* --- Título para la sección de próximas tareas --- */
+.upcomingTitle {
+  text-align: center;
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+}
+
 /* --- Timeline / Agenda View --- */
 .timeline {
   display: flex;
