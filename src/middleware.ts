@@ -48,7 +48,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Rutas de autenticación (públicas para no logueados)
-  const authRoutes = ["/login", "/register"];
+  const authRoutes = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ];
   // Rutas protegidas (privadas, solo para logueados)
   const protectedRoutes = ["/", "/my-plants", "/calendar"];
 
