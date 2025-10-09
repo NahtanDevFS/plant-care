@@ -251,6 +251,28 @@
   margin-top: 2rem;
 }
 
+/* --- NUEVO: Estilos para la sección de Recordatorios --- */
+.remindersSection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.remindersSection h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.careTitle {
+  margin-top: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-primary);
+  display: inline-block;
+}
+
 /* --- Responsive Design --- */
 @media (max-width: 1200px) {
   .myPlantsGrid {

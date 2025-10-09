@@ -6,16 +6,18 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "@/app/MyPlants.module.css";
 import Image from "next/image";
+import ReminderSetup from "@/components/ReminderSetup";
 
-// Definimos un tipo para la planta para mayor claridad
 type Plant = {
   id: number;
   name: string;
   image_url: string;
   care_instructions: string;
+  watering_frequency_days: number | null;
+  fertilizing_frequency_days: number | null;
 };
 
-// Mapeo de iconos y colores para cada categoría de cuidado
+// ... (El componente CareInstructions no necesita cambios)
 const careConfig = {
   Riego: { icon: "💧", color: "#2196F3", bgColor: "#E3F2FD" },
   Luz: { icon: "☀️", color: "#FF9800", bgColor: "#FFF3E0" },
@@ -23,13 +25,9 @@ const careConfig = {
   Fertilizante: { icon: "🧪", color: "#9C27B0", bgColor: "#F3E5F5" },
   Humedad: { icon: "💨", color: "#00BCD4", bgColor: "#E0F7FA" },
 };
-
 type CareKey = keyof typeof careConfig;
-
-// Nuevo componente mejorado para mostrar las instrucciones de cuidado
 const CareInstructions = ({ text }: { text: string }) => {
   const sections = text.split("### ").filter((s) => s);
-
   return (
     <div className={styles.careGrid}>
       {sections.map((section) => {
@@ -40,7 +38,6 @@ const CareInstructions = ({ text }: { text: string }) => {
           color: "#4caf50",
           bgColor: "#E8F5E9",
         };
-
         return (
           <div
             key={title}
@@ -96,6 +93,76 @@ export default function MyPlants() {
 
   const togglePlant = (plantId: number) => {
     setExpandedPlant(expandedPlant === plantId ? null : plantId);
+  };
+
+  const handleSaveReminder = async (
+    plantId: number,
+    careType: "Riego" | "Fertilizante",
+    frequency: number
+  ) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      alert("Debes iniciar sesión para guardar recordatorios.");
+      return;
+    }
+
+    try {
+      // 1. Actualizar la tabla 'plants'
+      const plantUpdate =
+        careType === "Riego"
+          ? { watering_frequency_days: frequency }
+          : { fertilizing_frequency_days: frequency };
+
+      const { error: plantError } = await supabase
+        .from("plants")
+        .update(plantUpdate)
+        .eq("id", plantId)
+        .eq("user_id", user.id);
+
+      if (plantError) throw plantError;
+
+      // --- LÓGICA CORREGIDA: Volvemos a usar UPSERT ---
+      // 2. Crear o actualizar la tabla 'reminders'
+      const today = new Date();
+      const next_reminder_date = new Date(
+        today.getTime() + frequency * 24 * 60 * 60 * 1000
+      )
+        .toISOString()
+        .split("T")[0];
+
+      const { error: reminderError } = await supabase.from("reminders").upsert(
+        {
+          plant_id: plantId,
+          user_id: user.id,
+          care_type: careType,
+          frequency_days: frequency,
+          next_reminder_date: next_reminder_date,
+        },
+        { onConflict: "plant_id, care_type" } // Esto ahora funciona gracias a la restricción UNIQUE
+      );
+
+      if (reminderError) throw reminderError;
+
+      // 3. Actualizar el estado local
+      setPlants(
+        plants.map((p) => {
+          if (p.id === plantId) {
+            return { ...p, ...plantUpdate };
+          }
+          return p;
+        })
+      );
+    } catch (error) {
+      console.error("Error al guardar el recordatorio:", error);
+      let errorMessage =
+        "No se pudo guardar el recordatorio. Inténtalo de nuevo.";
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      alert(errorMessage);
+    }
   };
 
   if (loading) {
@@ -170,6 +237,30 @@ export default function MyPlants() {
 
                 {expandedPlant === plant.id && (
                   <div className={styles.careInstructionsWrapper}>
+                    <div className={styles.remindersSection}>
+                      <h3>Recordatorios</h3>
+                      <ReminderSetup
+                        plantId={plant.id}
+                        careType="Riego"
+                        initialFrequency={plant.watering_frequency_days}
+                        onSave={(frequency) =>
+                          handleSaveReminder(plant.id, "Riego", frequency)
+                        }
+                      />
+                      <ReminderSetup
+                        plantId={plant.id}
+                        careType="Fertilizante"
+                        initialFrequency={plant.fertilizing_frequency_days}
+                        onSave={(frequency) =>
+                          handleSaveReminder(
+                            plant.id,
+                            "Fertilizante",
+                            frequency
+                          )
+                        }
+                      />
+                    </div>
+                    <h3 className={styles.careTitle}>Guía de Cuidados</h3>
                     <CareInstructions text={plant.care_instructions} />
                   </div>
                 )}

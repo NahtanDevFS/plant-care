@@ -1,8 +1,11 @@
 // src/app/layout.tsx
+"use client"; // <-- AÑADE ESTA LÍNEA
+
+import { useEffect } from "react"; // <-- AÑADE ESTA LÍNEA
 import { Geist, Geist_Mono } from "next/font/google";
-import Sidebar from "@/components/Sidebar"; // Importa el nuevo componente
+import Sidebar from "@/components/Sidebar";
 import "./globals.css";
-import styles from "./Layout.module.css"; // Un nuevo archivo de estilos para el layout
+import styles from "./Layout.module.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,6 +22,24 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // --- AÑADE ESTE BLOQUE useEffect ---
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) =>
+          console.log(
+            "Service Worker registrado con éxito:",
+            registration.scope
+          )
+        )
+        .catch((error) =>
+          console.error("Error al registrar el Service Worker:", error)
+        );
+    }
+  }, []);
+  // ------------------------------------
+
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>

@@ -96,6 +96,35 @@
   display: none; /* Oculto por defecto */
 }
 
+/* ... al final de tu archivo src/components/Sidebar.module.css ... */
+
+/* --- Estilos para el botón de notificaciones --- */
+.notificationButton {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 0.75rem; /* Espacio antes del botón de cerrar sesión */
+  border: 1px solid #757575;
+  background-color: transparent;
+  color: #757575;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.notificationButton:hover:not(:disabled) {
+  background-color: #f1f1f1;
+  border-color: #333;
+  color: #333;
+}
+
+.notificationButton:disabled {
+  cursor: not-allowed;
+  background-color: #e8f5e9;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 /* --- Media Queries para Responsividad --- */
 @media (max-width: 768px) {
   /* Ocultamos la barra lateral en móvil */

@@ -1,0 +1,67 @@
+/* src/components/ReminderSetup.module.css */
+.reminderContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #f8f9fa;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.icon {
+  font-size: 1.2rem;
+}
+
+.reminderContainer p {
+  margin: 0;
+  flex-grow: 1;
+  color: var(--color-text-light);
+}
+
+.input {
+  width: 60px;
+  padding: 0.4rem;
+  border-radius: calc(var(--border-radius) / 2);
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.saveButton,
+.editButton,
+.cancelButton {
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.editButton {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.editButton:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.saveButton {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.saveButton:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.cancelButton {
+  background-color: transparent;
+  color: #888;
+  padding: 0.5rem;
+}
