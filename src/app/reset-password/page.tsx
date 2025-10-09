@@ -20,34 +20,38 @@ export default function ResetPasswordPage() {
 
     const initializeRecovery = async () => {
       try {
-        // Primero intentamos obtener la sesión actual
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session && isMounted) {
-          console.log("Sesión de recuperación detectada");
-          setIsSessionReady(true);
-          return;
+        // Verificar si hay un hash en la URL (token de recuperación)
+        if (typeof window !== "undefined" && window.location.hash) {
+          console.log("Token detectado en URL");
         }
 
-        // Si no hay sesión, esperamos por el evento PASSWORD_RECOVERY
+        // Esperar a que Supabase procese el token del hash
         const {
           data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
+        } = supabase.auth.onAuthStateChange((event, session) => {
           if (!isMounted) return;
 
-          console.log("Auth event:", event);
+          console.log("Auth event:", event, "Session:", !!session);
 
-          if (event === "PASSWORD_RECOVERY" && session) {
-            console.log("Evento PASSWORD_RECOVERY recibido");
-            setIsSessionReady(true);
-          } else if (event === "SIGNED_IN" && session) {
-            // También capturamos SIGNED_IN por si el flujo viene así
-            console.log("Usuario autenticado");
+          // Aceptar INITIAL_SESSION, PASSWORD_RECOVERY, o SIGNED_IN
+          // Los tres indican que hay una sesión válida
+          if (
+            (event === "INITIAL_SESSION" ||
+              event === "PASSWORD_RECOVERY" ||
+              event === "SIGNED_IN") &&
+            session
+          ) {
+            console.log("Sesión de recuperación lista");
             setIsSessionReady(true);
           }
         });
+
+        // Primero intentamos obtener la sesión actual (por si ya la procesó)
+        const { data } = await supabase.auth.getSession();
+        if (data?.session && isMounted) {
+          console.log("Sesión encontrada inmediatamente");
+          setIsSessionReady(true);
+        }
 
         return () => {
           subscription?.unsubscribe();
