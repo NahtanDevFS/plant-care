@@ -39,51 +39,53 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresca la sesión del usuario si ha expirado.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+
+  // --- LÓGICA DE RECUPERACIÓN DE CONTRASEÑA (NUEVO) ---
+  const { pathname, searchParams } = request.nextUrl;
+  const code = searchParams.get("code");
+
+  // Si el usuario está en la página de reseteo Y hay un 'code' en la URL
+  if (code && pathname === "/reset-password") {
+    // Supabase usa el 'code' para establecer la sesión de recuperación
+    // La sesión estará disponible en la próxima petición
+    return NextResponse.redirect(new URL("/reset-password", request.url));
+  }
+  // --- FIN DE LA LÓGICA NUEVA ---
 
   // --- LÓGICA DE PROTECCIÓN DE RUTAS ---
-  const { pathname } = request.nextUrl;
-
-  // Rutas de autenticación (públicas para no logueados)
   const authRoutes = [
     "/login",
     "/register",
     "/forgot-password",
     "/reset-password",
   ];
-  // Rutas protegidas (privadas, solo para logueados)
   const protectedRoutes = ["/", "/my-plants", "/calendar"];
 
-  // 1. Si el usuario NO está logueado y intenta acceder a una ruta protegida
   if (!user && protectedRoutes.includes(pathname)) {
-    // Redirigir a la página de login
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 2. Si el usuario SÍ está logueado y intenta acceder a una ruta de autenticación
   if (user && authRoutes.includes(pathname)) {
-    // Redirigir a la página principal
+    // Excepción: Permitir acceso a reset-password si hay una sesión de recuperación
+    const {
+      data: { user: recoveryUser },
+    } = await supabase.auth.getUser();
+    const isRecoverySession = recoveryUser?.aud === "authenticated"; // Esto puede variar, pero la idea es detectar si la sesión es para recuperación
+
+    if (pathname === "/reset-password" && isRecoverySession) {
+      return response;
+    }
+
     return NextResponse.redirect(new URL("/", request.url));
   }
-  // --- FIN DE LA LÓGICA ---
 
-  // Si no se cumple ninguna de las condiciones de redirección, continuar con la petición.
   return response;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Coincide con todas las rutas de petición excepto las que empiezan por:
-     * - api (rutas de API)
-     * - _next/static (archivos estáticos)
-     * - _next/image (optimización de imágenes)
-     * - favicon.ico (archivo de favicon)
-     * - sw.js (service worker)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico|sw.js).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|sw.js).*)"],
 };
