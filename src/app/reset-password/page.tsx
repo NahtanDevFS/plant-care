@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import styles from "@/app/HomePage.module.css";
+import type { User } from "@supabase/supabase-js";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -12,54 +13,25 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">(
-    "loading"
-  );
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    // Parsea el fragmento de la URL para obtener los tokens
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    const errorParam = params.get("error");
+    // El middleware ya ha intercambiado el código por una sesión.
+    // Solo necesitamos verificar que la sesión de usuario existe.
+    const checkUserSession = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+      setCheckingSession(false);
+    };
 
-    if (errorParam) {
-      setError(`Error: ${params.get("error_description") || errorParam}`);
-      setStatus("error");
-      return;
-    }
-
-    if (accessToken && refreshToken) {
-      // Establece la sesión con los tokens
-      supabase.auth
-        .setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        })
-        .then(({ error }) => {
-          if (error) {
-            setError("Error al verificar el enlace: " + error.message);
-            setStatus("error");
-          } else {
-            setStatus("ready");
-          }
-        });
-    } else {
-      // Esto se ejecutará la primera vez que se cargue la página
-      // El middleware redirigirá y los tokens estarán en el hash
-      // Si después de la redirección no hay tokens, el enlace es inválido
-      const timer = setTimeout(() => {
-        if (status === "loading") {
-          setError("Enlace de recuperación inválido o expirado.");
-          setStatus("error");
-        }
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [supabase.auth, status]);
+    checkUserSession();
+  }, [supabase]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,47 +50,61 @@ export default function ResetPasswordPage() {
 
     const { error } = await supabase.auth.updateUser({ password });
 
+    setIsLoading(false);
     if (error) {
-      setError(`Error: ${error.message}`);
-      setIsLoading(false);
+      setError(`Error al actualizar la contraseña: ${error.message}`);
       return;
     }
 
     setMessage(
-      "¡Tu contraseña ha sido actualizada con éxito! Serás redirigido para iniciar sesión."
+      "¡Tu contraseña ha sido actualizada con éxito! Serás redirigido."
     );
+
+    // Después de actualizar, cerramos la sesión de recuperación y vamos a login.
     await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/login");
+      router.refresh(); // Forzamos un refresh para limpiar el estado.
     }, 3000);
   };
 
-  if (status === "loading") {
+  // Muestra un estado de carga mientras se valida la sesión.
+  if (checkingSession) {
     return (
       <div className={styles.authContainer}>
         <div className={styles.loadingState}>
           <div className={styles.loadingSpinnerSmall}></div>
-          <p className={styles.loadingMessage}>Verificando enlace...</p>
+          <p className={styles.loadingMessage}>
+            Validando sesión de recuperación...
+          </p>
         </div>
       </div>
     );
   }
 
-  if (status === "error") {
+  // Si no se encontró una sesión de usuario, el enlace es inválido.
+  if (!user) {
     return (
       <div className={styles.authContainer}>
         <div className={styles.authForm}>
           <h2>Enlace Inválido</h2>
-          <p className={styles.errorMessage}>{error}</p>
+          <p className={styles.errorMessage}>
+            El enlace de recuperación es inválido o ha expirado. Por favor,
+            solicita uno nuevo desde la página de login.
+          </p>
         </div>
       </div>
     );
   }
 
+  // Si hay sesión, muestra el formulario para cambiar la contraseña.
   return (
     <div className={styles.authContainer}>
       <form onSubmit={handleResetPassword} className={styles.authForm}>
         <h2>Crea una nueva contraseña</h2>
+        <p style={{ textAlign: "center", fontSize: "0.9rem", color: "#555" }}>
+          Estás en una sesión segura para actualizar tu contraseña.
+        </p>
         <label htmlFor="password">Nueva Contraseña</label>
         <input
           id="password"
@@ -145,7 +131,7 @@ export default function ResetPasswordPage() {
         />
         <button
           className={styles.button}
-          disabled={isLoading || !!message || !password}
+          disabled={isLoading || !!message || !password || password !== confirm}
         >
           {isLoading ? "Actualizando..." : "Actualizar Contraseña"}
         </button>
