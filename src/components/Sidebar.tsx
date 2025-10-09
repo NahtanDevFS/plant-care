@@ -22,20 +22,22 @@ function urlBase64ToUint8Array(base64String: string) {
 const NotificationManager = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
     const checkSubscription = async () => {
-      if ("serviceWorker" in navigator) {
-        try {
+      try {
+        if ("serviceWorker" in navigator && "PushManager" in window) {
           const registration = await navigator.serviceWorker.ready;
           const subscription = await registration.pushManager.getSubscription();
           setIsSubscribed(!!subscription);
-        } catch (error) {
-          console.error("Error al comprobar la suscripción:", error);
         }
+      } catch (err) {
+        console.error("Error al comprobar la suscripción:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     checkSubscription();
   }, []);
@@ -49,55 +51,106 @@ const NotificationManager = () => {
       return;
     }
 
-    // Usamos la clave pública directamente desde las variables de entorno
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-    // Solo comprobamos que la variable exista
     if (!vapidPublicKey) {
-      console.error("La clave pública VAPID no está definida en .env.local");
-      alert("Error de configuración: Faltan las claves de notificación.");
+      setError("Las notificaciones no están configuradas correctamente.");
+      console.error("VAPID public key no definida en .env.local");
+      alert(
+        "Las notificaciones no están disponibles. Configúralas en el servidor."
+      );
       return;
     }
 
     try {
-      const registration = await navigator.serviceWorker.ready;
+      setIsLoading(true);
+      setError(null);
+
+      // Asegurar que el Service Worker está registrado
+      let registration: ServiceWorkerRegistration;
+      try {
+        registration = await navigator.serviceWorker.ready;
+      } catch (err) {
+        console.error("Service Worker no está listo:", err);
+        setError("El Service Worker no está disponible.");
+        return;
+      }
+
+      // Solicitar permiso de notificaciones
+      if (Notification.permission !== "granted") {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          setError("Permiso de notificaciones denegado.");
+          alert("Debes permitir las notificaciones para continuar.");
+          return;
+        }
+      }
+
+      // Suscribirse a push notifications
       const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey,
-      });
+      let subscription = await registration.pushManager.getSubscription();
 
-      const { error } = await supabase
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+      }
+
+      // Guardar la suscripción en la base de datos
+      const { error: dbError } = await supabase
         .from("push_subscriptions")
-        .insert({ user_id: user.id, subscription_data: subscription });
+        .upsert(
+          {
+            user_id: user.id,
+            subscription_data: subscription,
+          },
+          { onConflict: "user_id" }
+        );
 
-      if (error && error.code !== "23505") {
-        throw error;
+      if (dbError) {
+        console.error("Error al guardar la suscripción:", dbError);
+        throw dbError;
       }
 
       setIsSubscribed(true);
-      alert("¡Notificaciones activadas!");
-    } catch (error) {
-      console.error("Error al suscribirse a las notificaciones:", error);
-      alert("No se pudieron activar las notificaciones.");
+      alert("¡Notificaciones activadas correctamente!");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error("Error al suscribirse:", errorMessage);
+      setError(errorMessage);
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   if (typeof window !== "undefined" && !("PushManager" in window)) {
-    return null;
+    return null; // Push Manager no disponible
   }
 
   if (isLoading) return null;
 
   return (
-    <button
-      onClick={subscribeUser}
-      disabled={isSubscribed}
-      className={styles.notificationButton}
-    >
-      {isSubscribed ? "🔔 Notificaciones Activadas" : "Activar Notificaciones"}
-    </button>
+    <>
+      <button
+        onClick={subscribeUser}
+        disabled={isSubscribed || isLoading}
+        className={styles.notificationButton}
+      >
+        {isSubscribed
+          ? "🔔 Notificaciones Activadas"
+          : "Activar Notificaciones"}
+      </button>
+      {error && (
+        <p
+          style={{ fontSize: "0.8rem", color: "#d32f2f", marginTop: "0.5rem" }}
+        >
+          {error}
+        </p>
+      )}
+    </>
   );
 };
 
