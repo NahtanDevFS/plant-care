@@ -44,12 +44,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Rutas de autenticación y protegidas
-  const authRoutes = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/reset-password",
-  ];
+  const authRoutes = ["/login", "/register", "/forgot-password"];
   const protectedRoutes = ["/", "/my-plants", "/calendar"];
   const { pathname } = request.nextUrl;
 
