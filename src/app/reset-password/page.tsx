@@ -16,65 +16,100 @@ export default function ResetPasswordPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    // Variable para evitar múltiples ejecuciones si el componente se re-renderiza rápido
-    let sessionChecked = false;
+    let isMounted = true;
 
-    const checkSession = async () => {
-      // Obtenemos la sesión actual. Si el usuario viene de un enlace de recuperación,
-      // esta sesión contendrá la identidad del usuario pero requerirá una actualización.
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session && !sessionChecked) {
-        setIsSessionReady(true);
+    const initializeRecovery = async () => {
+      try {
+        // Primero intentamos obtener la sesión actual
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session && isMounted) {
+          console.log("Sesión de recuperación detectada");
+          setIsSessionReady(true);
+          return;
+        }
+
+        // Si no hay sesión, esperamos por el evento PASSWORD_RECOVERY
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (!isMounted) return;
+
+          console.log("Auth event:", event);
+
+          if (event === "PASSWORD_RECOVERY" && session) {
+            console.log("Evento PASSWORD_RECOVERY recibido");
+            setIsSessionReady(true);
+          } else if (event === "SIGNED_IN" && session) {
+            // También capturamos SIGNED_IN por si el flujo viene así
+            console.log("Usuario autenticado");
+            setIsSessionReady(true);
+          }
+        });
+
+        return () => {
+          subscription?.unsubscribe();
+        };
+      } catch (err) {
+        console.error("Error en inicialización:", err);
+        if (isMounted) {
+          setError("Error al validar el enlace de recuperación");
+        }
       }
-      sessionChecked = true;
     };
 
-    checkSession();
+    const cleanup = initializeRecovery();
 
-    // También mantenemos el listener por si el evento llega después del primer render
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" && session) {
-        setIsSessionReady(true);
-      }
-    });
-
-    // Limpiamos la suscripción al desmontar el componente
     return () => {
-      subscription?.unsubscribe();
+      isMounted = false;
+      cleanup?.then((fn) => fn?.());
     };
   }, [supabase]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!isSessionReady) {
       setError(
-        "La sesión de recuperación no es válida o ha expirado. Por favor, solicita un nuevo enlace desde la página de 'Olvidé mi contraseña'."
+        "La sesión de recuperación no es válida o ha expirado. Por favor, solicita un nuevo enlace."
       );
       return;
     }
+
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
     setError(null);
     setMessage(null);
     setIsLoading(true);
 
-    const { error } = await supabase.auth.updateUser({ password });
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
 
-    if (error) {
-      setError(`Error: ${error.message}`);
-    } else {
+      if (error) {
+        setError(`Error: ${error.message}`);
+        setIsLoading(false);
+        return;
+      }
+
       setMessage(
         "¡Tu contraseña ha sido actualizada con éxito! Serás redirigido para iniciar sesión."
       );
-      // Forzamos el cierre de sesión para que el usuario deba loguearse con la nueva contraseña
+
+      // Cerramos la sesión para que inicie sesión con la nueva contraseña
       await supabase.auth.signOut();
+
       setTimeout(() => {
         router.push("/login");
-      }, 3000);
+      }, 2000);
+    } catch (err) {
+      setError("Ocurrió un error inesperado");
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -83,9 +118,12 @@ export default function ResetPasswordPage() {
         <h2>Crea una nueva contraseña</h2>
 
         {!isSessionReady ? (
-          <p className={styles.loadingMessage}>
-            Validando enlace de recuperación...
-          </p>
+          <div className={styles.loadingState}>
+            <div className={styles.loadingSpinnerSmall}></div>
+            <p className={styles.loadingMessage}>
+              Validando enlace de recuperación...
+            </p>
+          </div>
         ) : (
           <>
             <label htmlFor="password">Nueva Contraseña</label>
@@ -98,8 +136,12 @@ export default function ResetPasswordPage() {
               placeholder="••••••••"
               required
               disabled={isLoading || !!message}
+              minLength={6}
             />
-            <button className={styles.button} disabled={isLoading || !!message}>
+            <button
+              className={styles.button}
+              disabled={isLoading || !!message || !password}
+            >
               {isLoading ? "Actualizando..." : "Actualizar Contraseña"}
             </button>
           </>
