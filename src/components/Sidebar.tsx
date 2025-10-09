@@ -8,7 +8,6 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
 
-// --- NUEVO: Función para convertir la clave VAPID ---
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -20,7 +19,6 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-// --- Componente para manejar la lógica de notificaciones ---
 const NotificationManager = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,8 +49,10 @@ const NotificationManager = () => {
       return;
     }
 
-    // Asegúrate de que la clave VAPID exista
+    // Usamos la clave pública directamente desde las variables de entorno
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+    // Solo comprobamos que la variable exista
     if (!vapidPublicKey) {
       console.error("La clave pública VAPID no está definida en .env.local");
       alert("Error de configuración: Faltan las claves de notificación.");
@@ -61,13 +61,11 @@ const NotificationManager = () => {
 
     try {
       const registration = await navigator.serviceWorker.ready;
-
-      // --- CORRECCIÓN: Convertimos la clave al formato correcto ---
       const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey, // <-- Usamos la clave convertida
+        applicationServerKey,
       });
 
       const { error } = await supabase
@@ -103,7 +101,6 @@ const NotificationManager = () => {
   );
 };
 
-// ... El resto del componente Sidebar no cambia y puede permanecer como está ...
 export default function Sidebar() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
