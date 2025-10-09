@@ -1,10 +1,9 @@
 /* src/app/MyPlants.module.css */
 
 .container {
-  max-width: 95%;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  /* Eliminamos el fondo para que las tarjetas expandidas no se vean raras */
 }
 
 .header {
@@ -23,7 +22,7 @@
   font-size: 1.1rem;
 }
 
-/* --- Loading State --- */
+/* --- ESTADOS (LOADING, EMPTY, ERROR) --- */
 .loadingSpinner {
   display: flex;
   flex-direction: column;
@@ -48,7 +47,6 @@
   }
 }
 
-/* --- Empty State --- */
 .emptyState {
   text-align: center;
   padding: 4rem 2rem;
@@ -63,16 +61,62 @@
   margin-bottom: 1rem;
 }
 
-.emptyState h3 {
-  color: var(--color-text);
-  margin-bottom: 0.5rem;
+.errorMessage {
+  color: #d32f2f;
+  background-color: #ffcdd2;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  margin-top: 2rem;
 }
 
-.emptyState p {
+/* --- CONTROLES DE BÚSQUEDA Y FILTRO --- */
+.controlsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filterGroup label {
+  font-weight: 500;
+  font-size: 0.9rem;
   color: var(--color-text-light);
 }
 
-/* --- Plants Grid --- */
+.filterGroup select {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: white;
+  font-family: var(--font-main);
+  font-size: 1rem;
+}
+
+/* --- GRID DE PLANTAS --- */
 .myPlantsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -80,19 +124,16 @@
   margin-top: 2rem;
 }
 
-/* --- Plant Card --- */
 .plantCard {
   background-color: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  height: max-content; /* Asegura que la altura se ajuste al contenido */
+  height: max-content;
 }
 
-/* --- NUEVO: Estilo para la tarjeta expandida --- */
 .plantCardExpanded {
-  /* Hace que el elemento ocupe todas las columnas de la cuadrícula */
   grid-column: 1 / -1;
 }
 
@@ -135,12 +176,54 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* --- Plant Card Content --- */
+/* --- CONTENIDO DE LA TARJETA --- */
 .plantCardContent {
   padding: 1.5rem;
 }
 
+.generalInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.infoTag {
+  padding: 0.3rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.levelEasy {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+.levelMedia {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+.levelDifícil {
+  background-color: #ffcdd2;
+  color: #d32f2f;
+}
+.petFriendly {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+.isToxic {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .toggleButton {
+  flex-grow: 1;
   width: 100%;
   padding: 1rem;
   background-color: var(--color-primary);
@@ -150,23 +233,35 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .toggleButton:hover {
   background-color: var(--color-primary-dark);
-  transform: translateY(-2px);
 }
 
-.arrow {
-  font-size: 0.9rem;
-  transition: transform 0.3s ease;
+.deleteButton {
+  flex-shrink: 0;
+  width: 45px;
+  height: 45px;
+  border: 2px solid #e57373;
+  background-color: transparent;
+  color: #e57373;
+  border-radius: var(--border-radius);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* --- Care Instructions --- */
+.deleteButton:hover {
+  background-color: #e57373;
+  color: white;
+}
+
+/* --- SECCIÓN DE CUIDADOS (EXPANDIDA) --- */
 .careInstructionsWrapper {
   margin-top: 1.5rem;
   animation: slideDown 0.5s ease-out;
@@ -183,20 +278,39 @@
   }
 }
 
+.remindersSection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.remindersSection h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.careTitle {
+  margin-top: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-primary);
+  display: inline-block;
+}
+
 .careGrid {
   display: grid;
-  grid-template-columns: 1fr; /* Una columna por defecto */
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
-/* A partir de 600px, muestra 2 columnas */
 @media (min-width: 600px) {
   .plantCardExpanded .careGrid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* A partir de 1024px, muestra 3 columnas */
 @media (min-width: 1024px) {
   .plantCardExpanded .careGrid {
     grid-template-columns: repeat(3, 1fr);
@@ -222,9 +336,6 @@
 
 .careIcon {
   font-size: 1.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .careHeader h4 {
@@ -245,277 +356,48 @@
   margin: 0;
 }
 
-/* --- NUEVOS ESTILOS PARA EL CONTENIDO COMPLEJO --- */
 .careContentComplex {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* Espacio entre cada punto de la lista */
+  gap: 1rem;
 }
 
 .careContentDetail {
-  line-height: 1.6; /* Un poco más compacto para las listas */
+  line-height: 1.6;
 }
 
 .careContentDetail strong {
-  color: var(--color-text); /* Hacemos el texto en negrita un poco más oscuro */
-  margin-right: 0.25rem;
-}
-/* ------------------------------------------- */
-
-/* --- Error Message --- */
-.errorMessage {
-  color: #d32f2f;
-  background-color: #ffcdd2;
-  padding: 1rem;
-  border-radius: var(--border-radius);
-  text-align: center;
-  margin-top: 2rem;
+  color: var(--color-text);
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
-/* --- NUEVO: Estilos para la sección de Recordatorios --- */
-.remindersSection {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background-color: #ffffff;
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.pestSubsection {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  padding-left: 0.5rem;
 }
 
-.remindersSection h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--color-primary);
-}
-
-.careTitle {
-  margin-top: 2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--color-primary);
-  display: inline-block;
-}
-
-.buttonGroup {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.toggleButton {
-  flex-grow: 1; /* Hacemos que el botón principal ocupe el espacio disponible */
-}
-
-.deleteButton {
-  flex-shrink: 0; /* Evitamos que el botón se encoja */
-  width: 45px;
-  height: 45px;
-  border: 2px solid #e57373;
-  background-color: transparent;
-  color: #e57373;
-  border-radius: var(--border-radius);
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.deleteButton:hover {
-  background-color: #e57373;
-  color: white;
-  transform: scale(1.05);
-}
-
-.controlsContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background-color: #f8f9fa;
-  border-radius: var(--border-radius);
-}
-
-.searchInput {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-}
-
-.filterButtons {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.filterButtons button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
-  background-color: white;
-  color: var(--color-text-light);
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.filterButtons button:hover {
-  background-color: #e8f5e9;
-  border-color: var(--color-primary);
-}
-
-.filterButtons .activeFilter {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+.pestSubsection em {
+  font-style: normal;
   font-weight: 600;
+  color: var(--color-text);
 }
 
-/* --- NUEVOS ESTILOS PARA LA INFO GENERAL EN LA TARJETA --- */
-.generalInfo {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.infoTag {
-  padding: 0.3rem 0.75rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.levelEasy {
-  background-color: #e8f5e9;
-  color: #388e3c;
-}
-.levelMedium {
-  background-color: #fff3e0;
-  color: #f57c00;
-}
-.levelHard {
-  background-color: #ffcdd2;
-  color: #d32f2f;
-}
-.petFriendly {
-  background-color: #e3f2fd;
-  color: #1976d2;
-}
-.isToxic {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-}
-
-/* --- Responsive Design --- */
-@media (max-width: 1200px) {
-  .myPlantsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-}
-
+/* --- DISEÑO RESPONSIVE --- */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
     margin: 0;
   }
-
   .header h1 {
     font-size: 1.8rem;
   }
-
-  .header p {
-    font-size: 0.95rem;
-  }
-
-  .myPlantsGrid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  /* En móvil, la tarjeta expandida no necesita la regla de columna */
-  .plantCardExpanded {
-    grid-column: auto;
-  }
-
-  .plantImageWrapper {
-    height: 220px;
-  }
-
-  .plantNameOverlay h3 {
-    font-size: 1.2rem;
-  }
-
-  .toggleButton {
-    padding: 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .careGrid,
+  .myPlantsGrid,
   .plantCardExpanded .careGrid {
     grid-template-columns: 1fr;
   }
-
-  .careHeader {
-    padding: 0.75rem;
-  }
-
-  .careIcon {
-    font-size: 1.5rem;
-  }
-
-  .careContent {
-    padding: 0.75rem;
-    font-size: 0.9rem;
-    text-align: left;
-  }
-}
-
-@media (max-width: 480px) {
-  .container {
-    padding: 0.5rem;
-  }
-
-  .header {
-    margin-bottom: 1.5rem;
-    padding: 0 1rem;
-  }
-
-  .header h1 {
-    font-size: 1.5rem;
-  }
-
-  .header p {
-    font-size: 0.85rem;
-  }
-
-  .plantImageWrapper {
-    height: 180px;
-  }
-
-  .plantNameOverlay {
-    padding: 1.5rem 1rem 0.75rem;
-  }
-
-  .plantNameOverlay h3 {
-    font-size: 1rem;
-  }
-
-  .toggleButton {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.85rem;
-  }
-
-  .careHeader h4 {
-    font-size: 0.95rem;
-  }
-
-  .emptyIcon {
-    font-size: 3rem;
-  }
-
-  .emptyState {
-    padding: 2rem 1rem;
+  .plantCardExpanded {
+    grid-column: auto;
   }
 }
