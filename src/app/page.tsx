@@ -4,9 +4,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import styles from "./HomePage.module.css";
 
-// 1. CORRECCIÓN EN EL TIPO: de 'plant_name' a 'name'
 type PlantSuggestion = {
   name: string;
   probability: number;
@@ -25,7 +25,6 @@ type IdentificationResponse = {
   suggestions: PlantSuggestion[];
 };
 
-// Nuevo componente para mostrar las instrucciones de cuidado
 const CareInstructions = ({ text }: { text: string }) => {
   if (!text || text === "Obteniendo cuidados y guardando tu planta...") {
     return <p>Cargando...</p>;
@@ -48,23 +47,97 @@ const CareInstructions = ({ text }: { text: string }) => {
   );
 };
 
+// --- COMPONENTE DE PANTALLA DE CARGA ---
+const LoadingScreen = ({ plantName }: { plantName: string }) => {
+  return (
+    <div className={styles.loadingOverlay}>
+      <div className={styles.loadingContent}>
+        <div className={styles.loadingSpinnerAnimation}></div>
+        <h2>Guardando tu planta...</h2>
+        <p>{plantName}</p>
+        <p className={styles.loadingSubtext}>
+          Generando guía de cuidados personalizada
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// --- ESTILOS PARA PANTALLA DE CARGA ---
+// Agrega esto a tu HomePage.module.css:
+/* 
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.95), rgba(56, 142, 60, 0.95));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loadingContent {
+  text-align: center;
+  color: white;
+}
+
+.loadingSpinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 2rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingContent h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.loadingContent p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0.5rem 0;
+}
+
+.loadingSubtext {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+*/
+
 export default function HomePage() {
   const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null); // Estado para la preview
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [results, setResults] = useState<IdentificationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedPlant, setSelectedPlant] = useState<PlantSuggestion | null>(
     null
   );
   const [careInfo, setCareInfo] = useState<string>("");
-
+  const [isSavingPlant, setIsSavingPlant] = useState(false);
+  const [savingPlantName, setSavingPlantName] = useState<string>("");
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImage(file);
-      setImagePreview(URL.createObjectURL(file)); // Creamos la URL para la preview
+      setImagePreview(URL.createObjectURL(file));
       setResults(null);
       setSelectedPlant(null);
       setCareInfo("");
@@ -114,13 +187,13 @@ export default function HomePage() {
       return;
     }
 
-    setLoading(true);
+    setIsSavingPlant(true);
+    setSavingPlantName(suggestion.name);
     setSelectedPlant(suggestion);
     setCareInfo("Obteniendo cuidados y guardando tu planta...");
 
     const formData = new FormData();
     formData.append("image", image);
-    // 2. CORRECCIÓN AL ENVIAR DATOS: de 'suggestion.plant_name' a 'suggestion.name'
     formData.append("plantName", suggestion.name);
 
     try {
@@ -136,24 +209,30 @@ export default function HomePage() {
 
       const data = await response.json();
       setCareInfo(data.careInstructions);
-      alert('¡Tu planta ha sido guardada en "Mis Plantas"!');
+
+      // --- REDIRIGIR A MIS PLANTAS DESPUÉS DE 1 SEGUNDO ---
+      setTimeout(() => {
+        router.push("/my-plants");
+      }, 1000);
     } catch (error) {
       console.error(error);
       setCareInfo("");
+      setIsSavingPlant(false);
       alert(
         `Ocurrió un error: ${
           error instanceof Error ? error.message : "Error desconocido"
         }`
       );
-    } finally {
-      setLoading(false);
     }
   };
 
+  // --- NO MOSTRAR NADA SI SE ESTÁ GUARDANDO ---
+  if (isSavingPlant) {
+    return <LoadingScreen plantName={savingPlantName} />;
+  }
+
   return (
     <>
-      {" "}
-      {/* Usamos un Fragment <> para poder tener el modal al mismo nivel que main */}
       <main className={styles.container}>
         <div className={styles.header}>
           <h1>PlantCare</h1>
@@ -177,6 +256,7 @@ export default function HomePage() {
             accept="image/*"
             onChange={handleImageChange}
             className={styles.fileInput}
+            disabled={loading}
           />
           <button
             onClick={handleIdentifyClick}
@@ -193,7 +273,6 @@ export default function HomePage() {
             <ul className={styles.resultsList}>
               {results.suggestions.map((suggestion) => (
                 <li key={suggestion.name} className={styles.resultItem}>
-                  {/* --- MODIFICADO: Añadimos onClick para abrir el modal --- */}
                   <Image
                     src={suggestion.similar_images[0].url_small}
                     alt={suggestion.name}
@@ -203,7 +282,7 @@ export default function HomePage() {
                     unoptimized={true}
                     onClick={() =>
                       setModalImageUrl(suggestion.similar_images[0].url)
-                    } // Usamos la URL grande
+                    }
                   />
                   <div className={styles.resultItemInfo}>
                     <strong>{suggestion.name}</strong>
@@ -235,7 +314,6 @@ export default function HomePage() {
           </div>
         )}
       </main>
-      {/* --- NUEVO: JSX para mostrar el modal de la imagen ampliada --- */}
       {modalImageUrl && (
         <div
           className={styles.modalOverlay}

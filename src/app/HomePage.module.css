@@ -321,6 +321,62 @@
   color: var(--color-text-light);
 }
 
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.95),
+    rgba(56, 142, 60, 0.95)
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loadingContent {
+  text-align: center;
+  color: white;
+}
+
+.loadingSpinnerAnimation {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spinLoading 1s linear infinite;
+  margin: 0 auto 2rem;
+}
+
+@keyframes spinLoading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingContent h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.loadingContent p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0.5rem 0;
+}
+
+.loadingSubtext {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
 /* --- Media Queries Adicionales --- */
 @media (max-width: 768px) {
   .container {

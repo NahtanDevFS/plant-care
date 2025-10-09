@@ -1,7 +1,7 @@
 /* src/app/MyPlants.module.css */
 
 .container {
-  max-width: 1200px;
+  max-width: 95%;
   margin: 2rem auto;
   padding: 2rem;
   /* Eliminamos el fondo para que las tarjetas expandidas no se vean raras */
@@ -241,6 +241,27 @@
   flex: 1;
 }
 
+.careContent p {
+  margin: 0;
+}
+
+/* --- NUEVOS ESTILOS PARA EL CONTENIDO COMPLEJO --- */
+.careContentComplex {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* Espacio entre cada punto de la lista */
+}
+
+.careContentDetail {
+  line-height: 1.6; /* Un poco más compacto para las listas */
+}
+
+.careContentDetail strong {
+  color: var(--color-text); /* Hacemos el texto en negrita un poco más oscuro */
+  margin-right: 0.25rem;
+}
+/* ------------------------------------------- */
+
 /* --- Error Message --- */
 .errorMessage {
   color: #d32f2f;
@@ -303,6 +324,88 @@
   background-color: #e57373;
   color: white;
   transform: scale(1.05);
+}
+
+.controlsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.filterButtons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filterButtons button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  background-color: white;
+  color: var(--color-text-light);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterButtons button:hover {
+  background-color: #e8f5e9;
+  border-color: var(--color-primary);
+}
+
+.filterButtons .activeFilter {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* --- NUEVOS ESTILOS PARA LA INFO GENERAL EN LA TARJETA --- */
+.generalInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.infoTag {
+  padding: 0.3rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.levelEasy {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+.levelMedium {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+.levelHard {
+  background-color: #ffcdd2;
+  color: #d32f2f;
+}
+.petFriendly {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+.isToxic {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
 }
 
 /* --- Responsive Design --- */

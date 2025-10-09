@@ -9,31 +9,53 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 async function getCareInstructions(plantName: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Usamos un modelo más reciente si está disponible
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // --- PROMPT MEJORADO Y MÁS DETALLADO ---
-    const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando un clima templado a subtropical como el de Guatemala. La guía debe ser clara, específica y fácil de seguir. Utiliza el siguiente formato estricto, sin texto introductorio ni final:
+    const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando un clima templado a subtropical como el de Guatemala. La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
+
+### General:
+- Dificultad: [Fácil/Media/Difícil]
+- Apta para mascotas: [Sí/No]
+- Venenosa: [Sí/No - si es Sí, especificar para quién]
 
 ### Riego:
-Descripción del riego. Incluye una recomendación específica de frecuencia en días, por ejemplo: "Regar cada 7-10 días, o cuando los primeros 3cm de sustrato estén secos.".
+[Descripción clara del riego. Incluye frecuencia específica en días]
 
 ### Luz:
-Descripción detallada de las necesidades de luz (luz directa, indirecta brillante, sombra, etc.) y cuántas horas al día son ideales.
+[Descripción de necesidades de luz: tipo de luz (directa, indirecta, sombra) y horas recomendadas]
 
 ### Sustrato:
-Descripción del tipo de sustrato ideal, mencionando componentes clave como perlita, turba o fibra de coco si son importantes.
+[Descripción del sustrato ideal y componentes clave]
 
 ### Fertilizante:
-Descripción del fertilizante. Incluye una recomendación específica de frecuencia según la estación, por ejemplo: "Fertilizar cada 15 días durante la primavera y verano con un fertilizante balanceado.".
+[Descripción del fertilizante con frecuencia específica según estación]
 
 ### Humedad:
-Descripción de las necesidades de humedad ambiental y si es recomendable pulverizar las hojas.
+[Descripción de necesidades de humedad ambiental y si pulverizar]
 
 ### Plagas Comunes:
-Lista de 1 a 2 plagas comunes para esta planta. Para cada una, describe los síntomas para detectarlas (ej. telarañas finas, manchas pegajosas) y un método de control o cura (ej. aceite de neem, jabón potásico).
+1. [Nombre de plaga]
+Síntomas: [Lista de síntomas claros]
+Control: [Métodos de control o tratamiento]
+
+2. [Nombre de plaga]
+Síntomas: [Lista de síntomas claros]
+Control: [Métodos de control o tratamiento]
 
 ### Enfermedades Comunes:
-Lista de 1 a 2 enfermedades comunes (hongos, etc.). Para cada una, describe los síntomas para detectarlas (ej. manchas en las hojas, polvo blanco) y un método de control o cura (ej. mejorar ventilación, fungicida).`;
+1. [Nombre de enfermedad]
+Síntomas: [Lista de síntomas claros]
+Control: [Métodos de control o tratamiento]
+
+2. [Nombre de enfermedad]
+Síntomas: [Lista de síntomas claros]
+Control: [Métodos de control o tratamiento]
+
+IMPORTANTE: 
+- No uses asteriscos o negrita en ningún lado
+- Cada sección debe empezar exactamente con "### " 
+- En Plagas y Enfermedades, numera con 1. 2. etc
+- No incluyas texto introductorio ni final`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -49,6 +71,54 @@ Lista de 1 a 2 enfermedades comunes (hongos, etc.). Para cada una, describe los 
       "No se pudo generar la información de cuidados desde Gemini."
     );
   }
+}
+
+// --- FUNCIÓN PARA EXTRAER INFORMACIÓN DE LA SECCIÓN GENERAL ---
+function extractPlantMetadata(careInstructions: string): {
+  care_level: "Fácil" | "Media" | "Difícil" | null;
+  pet_friendly: boolean | null;
+  is_toxic: boolean | null;
+} {
+  const result = {
+    care_level: null as "Fácil" | "Media" | "Difícil" | null,
+    pet_friendly: null as boolean | null,
+    is_toxic: null as boolean | null,
+  };
+
+  // Buscar la sección General
+  const generalMatch = careInstructions.match(/### General:[\s\S]*?(?=###|$)/);
+  if (!generalMatch) return result;
+
+  const generalText = generalMatch[0];
+
+  // Extraer Dificultad
+  const difficultyMatch = generalText.match(
+    /Dificultad:\s*(Fácil|Media|Difícil)/i
+  );
+  if (difficultyMatch) {
+    const difficulty = difficultyMatch[1];
+    if (
+      difficulty === "Fácil" ||
+      difficulty === "Media" ||
+      difficulty === "Difícil"
+    ) {
+      result.care_level = difficulty;
+    }
+  }
+
+  // Extraer Apta para mascotas
+  const petMatch = generalText.match(/Apta para mascotas:\s*(Sí|No)/i);
+  if (petMatch) {
+    result.pet_friendly = petMatch[1].toLowerCase() === "sí";
+  }
+
+  // Extraer Venenosa
+  const toxicMatch = generalText.match(/Venenosa:\s*(Sí|No)/i);
+  if (toxicMatch) {
+    result.is_toxic = toxicMatch[1].toLowerCase() === "sí";
+  }
+
+  return result;
 }
 
 export async function POST(request: NextRequest) {
@@ -82,6 +152,9 @@ export async function POST(request: NextRequest) {
 
     const careInstructions = await getCareInstructions(plantName);
 
+    // --- EXTRAER METADATA ---
+    const metadata = extractPlantMetadata(careInstructions);
+
     const fileName = `${user.id}/${Date.now()}-${image.name}`;
     const { error: uploadError } = await supabase.storage
       .from("plant_images")
@@ -93,12 +166,16 @@ export async function POST(request: NextRequest) {
       data: { publicUrl },
     } = supabase.storage.from("plant_images").getPublicUrl(fileName);
 
+    // --- GUARDAR CON METADATA ---
     const { error: dbError } = await supabase.from("plants").insert([
       {
         name: plantName,
         care_instructions: careInstructions,
         image_url: publicUrl,
         user_id: user.id,
+        care_level: metadata.care_level,
+        pet_friendly: metadata.pet_friendly,
+        is_toxic: metadata.is_toxic,
       },
     ]);
 
@@ -107,6 +184,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "¡Planta guardada con éxito!",
       careInstructions,
+      metadata,
     });
   } catch (error) {
     console.error("Error en el endpoint POST /api/save-plant:", error);

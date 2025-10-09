@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "@/app/MyPlants.module.css";
 import Image from "next/image";
@@ -15,9 +15,11 @@ type Plant = {
   care_instructions: string;
   watering_frequency_days: number | null;
   fertilizing_frequency_days: number | null;
+  care_level: "Fácil" | "Media" | "Difícil" | null;
+  pet_friendly: boolean | null;
+  is_toxic: boolean | null;
 };
 
-// --- CONFIGURACIÓN DE ICONOS ACTUALIZADA ---
 const careConfig = {
   Riego: { icon: "💧", color: "#2196F3", bgColor: "#E3F2FD" },
   Luz: { icon: "☀️", color: "#FF9800", bgColor: "#FFF3E0" },
@@ -26,23 +28,80 @@ const careConfig = {
   Humedad: { icon: "💨", color: "#00BCD4", bgColor: "#E0F7FA" },
   "Plagas Comunes": { icon: "🐞", color: "#d32f2f", bgColor: "#ffcdd2" },
   "Enfermedades Comunes": { icon: "🍄", color: "#7B1FA2", bgColor: "#E1BEE7" },
+  General: { icon: "ℹ️", color: "#607D8B", bgColor: "#ECEFF1" },
 };
-// ---------------------------------------------
 
 type CareKey = keyof typeof careConfig;
+
+// --- PARSEADOR DE PLAGAS Y ENFERMEDADES ---
+const PestDiseaseParser = ({ text }: { text: string }) => {
+  // Dividir por números seguidos de punto (1., 2., etc.)
+  const items = text.split(/\d+\.\s+/).filter((s) => s.trim().length > 0);
+
+  return (
+    <div className={styles.careContentComplex}>
+      {items.map((item, index) => {
+        // Limpiar asteriscos del texto
+        const cleanItem = item.replace(/\*\*/g, "");
+
+        // Buscar el título (todo antes de "Síntomas:")
+        const titleMatch = cleanItem.match(
+          /^([\s\S]*?)(?=\nSíntomas:|Síntomas:)/
+        );
+        const title = titleMatch
+          ? titleMatch[1].trim()
+          : `Problema ${index + 1}`;
+
+        // Extraer síntomas
+        const symptomMatch = cleanItem.match(
+          /Síntomas:\s*([\s\S]*?)(?=\nControl:|Control:|$)/
+        );
+        const symptoms = symptomMatch ? symptomMatch[1].trim() : "";
+
+        // Extraer control
+        const controlMatch = cleanItem.match(/Control:\s*([\s\S]*?)$/);
+        const control = controlMatch ? controlMatch[1].trim() : "";
+
+        return (
+          <div key={index} className={styles.careContentDetail}>
+            <strong>{title}</strong>
+            {symptoms && (
+              <div className={styles.pestSubsection}>
+                <em>Síntomas:</em> {symptoms}
+              </div>
+            )}
+            {control && (
+              <div className={styles.pestSubsection}>
+                <em>Control:</em> {control}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const CareInstructions = ({ text }: { text: string }) => {
   const sections = text.split("### ").filter((s) => s);
   return (
     <div className={styles.careGrid}>
       {sections.map((section) => {
-        const [title, ...content] = section.split(":");
+        const [title, ...contentParts] = section.split(":");
+        const content = contentParts.join(":").trim();
         const trimmedTitle = title.trim() as CareKey;
         const config = careConfig[trimmedTitle] || {
           icon: "📋",
           color: "#4caf50",
           bgColor: "#E8F5E9",
         };
+
+        if (trimmedTitle === "General") return null;
+
+        const isComplex = ["Plagas Comunes", "Enfermedades Comunes"].includes(
+          trimmedTitle
+        );
+
         return (
           <div
             key={title}
@@ -56,7 +115,13 @@ const CareInstructions = ({ text }: { text: string }) => {
               <span className={styles.careIcon}>{config.icon}</span>
               <h4 style={{ color: config.color }}>{trimmedTitle}</h4>
             </div>
-            <p className={styles.careContent}>{content.join(":").trim()}</p>
+            <div className={styles.careContent}>
+              {isComplex ? (
+                <PestDiseaseParser text={content} />
+              ) : (
+                <p>{content}</p>
+              )}
+            </div>
           </div>
         );
       })}
@@ -70,13 +135,14 @@ export default function MyPlants() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedPlant, setExpandedPlant] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPlants = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
       if (user) {
         const { data, error } = await supabase
           .from("plants")
@@ -92,9 +158,30 @@ export default function MyPlants() {
       }
       setLoading(false);
     };
-
     fetchPlants();
   }, [supabase]);
+
+  const filteredPlants = useMemo(() => {
+    let filtered = plants;
+    if (searchTerm) {
+      filtered = filtered.filter((plant) =>
+        plant.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (activeFilter) {
+      switch (activeFilter) {
+        case "Fácil":
+          filtered = filtered.filter((plant) => plant.care_level === "Fácil");
+          break;
+        case "pet_friendly":
+          filtered = filtered.filter((plant) => plant.pet_friendly === true);
+          break;
+        default:
+          break;
+      }
+    }
+    return filtered;
+  }, [plants, searchTerm, activeFilter]);
 
   const togglePlant = (plantId: number) => {
     setExpandedPlant(expandedPlant === plantId ? null : plantId);
@@ -112,28 +199,23 @@ export default function MyPlants() {
       alert("Debes iniciar sesión para guardar recordatorios.");
       return;
     }
-
     try {
       const plantUpdate =
         careType === "Riego"
           ? { watering_frequency_days: frequency }
           : { fertilizing_frequency_days: frequency };
-
       const { error: plantError } = await supabase
         .from("plants")
         .update(plantUpdate)
         .eq("id", plantId)
         .eq("user_id", user.id);
-
       if (plantError) throw plantError;
-
       const today = new Date();
       const next_reminder_date = new Date(
         today.getTime() + frequency * 24 * 60 * 60 * 1000
       )
         .toISOString()
         .split("T")[0];
-
       const { error: reminderError } = await supabase.from("reminders").upsert(
         {
           plant_id: plantId,
@@ -144,65 +226,41 @@ export default function MyPlants() {
         },
         { onConflict: "plant_id, care_type" }
       );
-
       if (reminderError) throw reminderError;
-
       setPlants(
-        plants.map((p) => {
-          if (p.id === plantId) {
-            return { ...p, ...plantUpdate };
-          }
-          return p;
-        })
+        plants.map((p) => (p.id === plantId ? { ...p, ...plantUpdate } : p))
       );
     } catch (error) {
       console.error("Error al guardar el recordatorio:", error);
-      let errorMessage =
-        "No se pudo guardar el recordatorio. Inténtalo de nuevo.";
-      if (error instanceof Error) {
-        errorMessage = `Error: ${error.message}`;
-      }
-      alert(errorMessage);
+      alert(
+        `No se pudo guardar el recordatorio: ${
+          error instanceof Error ? error.message : "Error desconocido"
+        }`
+      );
     }
   };
 
-  // --- NUEVA FUNCIÓN PARA ELIMINAR LA PLANTA ---
   const handleDeletePlant = async (plantId: number, imageUrl: string) => {
     if (
       !window.confirm(
         "¿Estás seguro de que quieres eliminar esta planta? Esta acción es irreversible."
       )
-    ) {
+    )
       return;
-    }
-
     try {
-      // 1. Extraer el path del archivo de la URL para borrarlo del Storage
       const filePath = imageUrl.substring(
         imageUrl.indexOf("plant_images/") + "plant_images/".length
       );
-
-      // 2. Borrar la imagen del Storage de Supabase
       const { error: storageError } = await supabase.storage
         .from("plant_images")
         .remove([filePath]);
-
-      if (storageError) {
-        // Logueamos el error pero continuamos, para que el usuario pueda borrar la planta
-        // de la base de datos aunque la imagen no se encuentre en el storage.
+      if (storageError)
         console.error("Error al borrar la imagen del storage:", storageError);
-      }
-
-      // 3. Borrar la planta de la tabla 'plants'
-      // Gracias a 'ON DELETE CASCADE', los recordatorios se borrarán automáticamente.
       const { error: dbError } = await supabase
         .from("plants")
         .delete()
         .eq("id", plantId);
-
       if (dbError) throw dbError;
-
-      // 4. Actualizar la UI para remover la planta eliminada
       setPlants((currentPlants) =>
         currentPlants.filter((p) => p.id !== plantId)
       );
@@ -236,15 +294,42 @@ export default function MyPlants() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>🌿 Mis Plantas</h1>
-        <p>
-          Aquí encontrarás todas las plantas que has identificado y sus cuidados
-          personalizados.
-        </p>
+        <p>Busca, filtra y gestiona todas tus plantas y sus cuidados.</p>
       </div>
-
-      {plants.length > 0 ? (
+      <div className={styles.controlsContainer}>
+        <input
+          type="text"
+          placeholder="Buscar por nombre..."
+          className={styles.searchInput}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <div className={styles.filterButtons}>
+          <button
+            className={!activeFilter ? styles.activeFilter : ""}
+            onClick={() => setActiveFilter(null)}
+          >
+            Todas
+          </button>
+          <button
+            className={activeFilter === "Fácil" ? styles.activeFilter : ""}
+            onClick={() => setActiveFilter("Fácil")}
+          >
+            Fáciles de Cuidar
+          </button>
+          <button
+            className={
+              activeFilter === "pet_friendly" ? styles.activeFilter : ""
+            }
+            onClick={() => setActiveFilter("pet_friendly")}
+          >
+            Aptas para Mascotas
+          </button>
+        </div>
+      </div>
+      {filteredPlants.length > 0 ? (
         <div className={styles.myPlantsGrid}>
-          {plants.map((plant) => (
+          {filteredPlants.map((plant) => (
             <div
               key={plant.id}
               className={`${styles.plantCard} ${
@@ -264,9 +349,28 @@ export default function MyPlants() {
                   <h3>{plant.name}</h3>
                 </div>
               </div>
-
               <div className={styles.plantCardContent}>
-                {/* --- SECCIÓN DE BOTONES ACTUALIZADA --- */}
+                <div className={styles.generalInfo}>
+                  {plant.care_level && (
+                    <span
+                      className={`${styles.infoTag} ${
+                        styles[`level${plant.care_level}`]
+                      }`}
+                    >
+                      {plant.care_level}
+                    </span>
+                  )}
+                  {plant.pet_friendly === true && (
+                    <span className={`${styles.infoTag} ${styles.petFriendly}`}>
+                      🐾 Apta para Mascotas
+                    </span>
+                  )}
+                  {plant.is_toxic === true && (
+                    <span className={`${styles.infoTag} ${styles.isToxic}`}>
+                      ⚠️ Venenosa
+                    </span>
+                  )}
+                </div>
                 <div className={styles.buttonGroup}>
                   <button
                     onClick={() => togglePlant(plant.id)}
@@ -282,7 +386,6 @@ export default function MyPlants() {
                     🗑️
                   </button>
                 </div>
-
                 {expandedPlant === plant.id && (
                   <div className={styles.careInstructionsWrapper}>
                     <div className={styles.remindersSection}>
@@ -291,20 +394,14 @@ export default function MyPlants() {
                         plantId={plant.id}
                         careType="Riego"
                         initialFrequency={plant.watering_frequency_days}
-                        onSave={(frequency) =>
-                          handleSaveReminder(plant.id, "Riego", frequency)
-                        }
+                        onSave={(f) => handleSaveReminder(plant.id, "Riego", f)}
                       />
                       <ReminderSetup
                         plantId={plant.id}
                         careType="Fertilizante"
                         initialFrequency={plant.fertilizing_frequency_days}
-                        onSave={(frequency) =>
-                          handleSaveReminder(
-                            plant.id,
-                            "Fertilizante",
-                            frequency
-                          )
+                        onSave={(f) =>
+                          handleSaveReminder(plant.id, "Fertilizante", f)
                         }
                       />
                     </div>
@@ -319,8 +416,11 @@ export default function MyPlants() {
       ) : (
         <div className={styles.emptyState}>
           <span className={styles.emptyIcon}>🪴</span>
-          <h3>Aún no has guardado ninguna planta</h3>
-          <p>¡Identifica tu primera planta y comienza tu jardín digital!</p>
+          <h3>No se encontraron plantas</h3>
+          <p>
+            Prueba a cambiar el término de búsqueda, el filtro o añade una nueva
+            planta.
+          </p>
         </div>
       )}
     </div>

@@ -8,7 +8,6 @@
 /* Para cuando el sidebar está visible */
 .contentArea {
   flex-grow: 1;
-  width: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -22,6 +21,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  align-items: center; /* Centra el contenido horizontalmente */
+  justify-content: center; /* Centra el contenido verticalmente */
 }
 
 /* En pantallas grandes */
@@ -30,5 +31,9 @@
   .contentArea {
     margin-left: 250px;
     padding-top: 0;
+  }
+
+  .contentAreaFull {
+    padding: 2rem; /* Añade un poco de espacio en pantallas grandes sin sidebar */
   }
 }
