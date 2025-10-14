@@ -1,37 +1,44 @@
-// src/components/TaskCalendar.tsx
+// src/components/UnifiedCalendar.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import styles from "./TaskCalendar.module.css";
+import styles from "./UnifiedCalendar.module.css";
+import Image from "next/image";
 
-type TaskDay = {
-  date: string;
-  tasks: {
-    id: string;
-    plantName: string;
-    careType: "Riego" | "Fertilizante";
-    isCompleted: boolean;
-    completedDate?: string;
-  }[];
+type Task = {
+  id: string;
+  plantName: string;
+  careType: "Riego" | "Fertilizante";
+  isCompleted: boolean;
+  completedDate?: string;
+  imageUrl: string;
 };
 
 type CalendarDay = {
   date: Date;
   isCurrentMonth: boolean;
-  taskCount: number;
+  tasks: Task[];
   completedCount: number;
-  tasks: TaskDay["tasks"];
+  pendingCount: number;
+  futureReminders: number;
 };
 
-export default function TaskCalendar() {
+export default function UnifiedCalendar() {
   const supabase = createClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [taskHistory, setTaskHistory] = useState<TaskDay[]>([]);
+  const [tasks, setTasks] = useState<{ [key: string]: Task[] }>({});
+  const [futureReminders, setFutureReminders] = useState<{
+    [key: string]: number;
+  }>({});
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const getMonthTasks = async (year: number, month: number) => {
+  useEffect(() => {
+    loadCalendarData();
+  }, [currentMonth]);
+
+  const loadCalendarData = async () => {
     setLoading(true);
     const {
       data: { user },
@@ -39,52 +46,66 @@ export default function TaskCalendar() {
 
     if (!user) return;
 
-    // Obtener todas las tareas del mes y del próximo mes (para mostrar futuras)
-    const firstDay = new Date(year, month, 1).toISOString().split("T")[0];
-    const lastDay = new Date(year, month + 2, 0).toISOString().split("T")[0];
+    const firstDay = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      1
+    )
+      .toISOString()
+      .split("T")[0];
+    const lastDay = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() + 2,
+      0
+    )
+      .toISOString()
+      .split("T")[0];
 
-    const { data, error } = await supabase
+    // Cargar tareas completadas y pendientes
+    const { data: taskData } = await supabase
       .from("task_history")
-      .select("*, plants(name)")
+      .select("*, plants(name, image_url)")
       .eq("user_id", user.id)
       .gte("scheduled_date", firstDay)
       .lte("scheduled_date", lastDay)
       .order("scheduled_date", { ascending: true });
 
-    if (error) {
-      console.error("Error al cargar tareas:", error);
-    } else {
-      const grouped: { [key: string]: TaskDay["tasks"] } = {};
+    // Cargar recordatorios futuros
+    const { data: reminderData } = await supabase
+      .from("reminders")
+      .select("*, plants(name, image_url)")
+      .eq("user_id", user.id)
+      .gte("next_reminder_date", firstDay)
+      .lte("next_reminder_date", lastDay);
 
-      data?.forEach((task: any) => {
-        const dateKey = task.scheduled_date;
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = [];
-        }
-        grouped[dateKey].push({
-          id: task.id,
-          plantName: task.plants?.name || "Planta desconocida",
-          careType: task.care_type,
-          isCompleted: task.is_completed,
-          completedDate: task.completed_date,
-        });
+    // Agrupar tareas por fecha
+    const groupedTasks: { [key: string]: Task[] } = {};
+    taskData?.forEach((task: any) => {
+      const dateKey = task.scheduled_date;
+      if (!groupedTasks[dateKey]) {
+        groupedTasks[dateKey] = [];
+      }
+      groupedTasks[dateKey].push({
+        id: task.id,
+        plantName: task.plants?.name || "Planta desconocida",
+        careType: task.care_type,
+        isCompleted: task.is_completed,
+        completedDate: task.completed_date,
+        imageUrl: task.plants?.image_url || "/plant-care.png",
       });
+    });
 
-      const taskDays: TaskDay[] = Object.entries(grouped).map(
-        ([date, tasks]) => ({
-          date,
-          tasks,
-        })
-      );
+    // Contar recordatorios futuros por fecha
+    const reminderCounts: { [key: string]: number } = {};
+    reminderData?.forEach((reminder: any) => {
+      const dateKey = reminder.next_reminder_date;
+      reminderCounts[dateKey] = (reminderCounts[dateKey] || 0) + 1;
+    });
 
-      setTaskHistory(taskDays);
-    }
+    setTasks(groupedTasks);
+    setFutureReminders(reminderCounts);
     setLoading(false);
   };
-
-  useEffect(() => {
-    getMonthTasks(currentMonth.getFullYear(), currentMonth.getMonth());
-  }, [currentMonth]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -109,12 +130,14 @@ export default function TaskCalendar() {
         currentMonth.getMonth() - 1,
         daysInPrevMonth - i
       );
+      const dateString = date.toISOString().split("T")[0];
       days.push({
         date,
         isCurrentMonth: false,
-        taskCount: 0,
+        tasks: tasks[dateString] || [],
         completedCount: 0,
-        tasks: [],
+        pendingCount: 0,
+        futureReminders: futureReminders[dateString] || 0,
       });
     }
 
@@ -126,16 +149,17 @@ export default function TaskCalendar() {
         i
       );
       const dateString = date.toISOString().split("T")[0];
-      const dayTasks =
-        taskHistory.find((t) => t.date === dateString)?.tasks || [];
+      const dayTasks = tasks[dateString] || [];
       const completedCount = dayTasks.filter((t) => t.isCompleted).length;
+      const pendingCount = dayTasks.length - completedCount;
 
       days.push({
         date,
         isCurrentMonth: true,
-        taskCount: dayTasks.length,
-        completedCount: completedCount,
         tasks: dayTasks,
+        completedCount,
+        pendingCount,
+        futureReminders: futureReminders[dateString] || 0,
       });
     }
 
@@ -147,30 +171,18 @@ export default function TaskCalendar() {
         currentMonth.getMonth() + 1,
         i
       );
+      const dateString = date.toISOString().split("T")[0];
       days.push({
         date,
         isCurrentMonth: false,
-        taskCount: 0,
+        tasks: tasks[dateString] || [],
         completedCount: 0,
-        tasks: [],
+        pendingCount: 0,
+        futureReminders: futureReminders[dateString] || 0,
       });
     }
 
     return days;
-  };
-
-  const handlePrevMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
-    );
-    setSelectedDate(null);
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
-    );
-    setSelectedDate(null);
   };
 
   const handleCompleteTask = async (taskId: string) => {
@@ -187,25 +199,36 @@ export default function TaskCalendar() {
 
       if (error) throw error;
 
-      // Recargar tareas
-      getMonthTasks(currentMonth.getFullYear(), currentMonth.getMonth());
+      await loadCalendarData();
     } catch (error) {
       console.error("Error al completar tarea:", error);
       alert("Error al completar la tarea");
     }
   };
 
+  const handlePrevMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
+    );
+    setSelectedDate(null);
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
+    );
+    setSelectedDate(null);
+  };
+
   const calendarDays = generateCalendarDays();
-  const selectedDateTasks = selectedDate
-    ? taskHistory.find((t) => t.date === selectedDate)?.tasks || []
-    : [];
+  const selectedDateTasks = selectedDate ? tasks[selectedDate] || [] : [];
 
   const monthName = currentMonth.toLocaleDateString("es-ES", {
     month: "long",
     year: "numeric",
   });
 
-  if (loading && taskHistory.length === 0) {
+  if (loading) {
     return (
       <div className={styles.container}>
         <div className={styles.loadingSpinner}>
@@ -220,21 +243,27 @@ export default function TaskCalendar() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>📅 Calendario de Tareas</h1>
-        <p>Visualiza tu historial de tareas completadas y pendientes</p>
+        <p>Visualiza tus tareas completadas, pendientes y próximas</p>
       </div>
 
       <div className={styles.legend}>
         <div className={styles.legendItem}>
           <span className={styles.legendSymbol}>✓</span>
-          <span>Tarea completada</span>
+          <span>Completada</span>
         </div>
         <div className={styles.legendItem}>
           <span className={`${styles.legendSymbol} ${styles.pending}`}>●</span>
-          <span>Tarea pendiente</span>
+          <span>Pendiente</span>
         </div>
         <div className={styles.legendItem}>
           <span className={styles.legendSymbol}>✓●</span>
-          <span>Día con tareas mixtas</span>
+          <span>Mixtas</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.legendSymbol} style={{ fontSize: "0.8rem" }}>
+            ◇
+          </span>
+          <span>Futura</span>
         </div>
       </div>
 
@@ -274,24 +303,24 @@ export default function TaskCalendar() {
                   }
                 >
                   <div className={styles.dayNumber}>{day.date.getDate()}</div>
-                  {day.taskCount > 0 && (
+                  {(day.tasks.length > 0 || day.futureReminders > 0) && (
                     <div className={styles.taskIndicators}>
                       {day.completedCount > 0 && (
-                        <span
-                          className={styles.completed}
-                          title={`${day.completedCount} completadas`}
-                        >
+                        <span className={styles.completed} title="Completadas">
                           ✓
                         </span>
                       )}
-                      {day.taskCount - day.completedCount > 0 && (
-                        <span
-                          className={styles.pending}
-                          title={`${
-                            day.taskCount - day.completedCount
-                          } pendientes`}
-                        >
+                      {day.pendingCount > 0 && (
+                        <span className={styles.pending} title="Pendientes">
                           ●
+                        </span>
+                      )}
+                      {day.futureReminders > 0 && (
+                        <span
+                          className={styles.future}
+                          title={`${day.futureReminders} futuras`}
+                        >
+                          ◇
                         </span>
                       )}
                     </div>
@@ -305,7 +334,6 @@ export default function TaskCalendar() {
         {selectedDateTasks.length > 0 && (
           <div className={styles.taskDetail}>
             <h3>
-              Tareas del{" "}
               {new Date(selectedDate!).toLocaleDateString("es-ES", {
                 weekday: "long",
                 year: "numeric",
@@ -321,6 +349,14 @@ export default function TaskCalendar() {
                     task.isCompleted ? styles.taskCompleted : styles.taskPending
                   }`}
                 >
+                  <Image
+                    src={task.imageUrl}
+                    alt={task.plantName}
+                    width={50}
+                    height={50}
+                    className={styles.taskImage}
+                    unoptimized
+                  />
                   <div className={styles.taskInfo}>
                     <div className={styles.taskPlant}>{task.plantName}</div>
                     <div className={styles.taskCare}>
@@ -329,13 +365,13 @@ export default function TaskCalendar() {
                   </div>
                   <div className={styles.taskStatus}>
                     {task.isCompleted ? (
-                      <div className={styles.completedBadge}>✓ Completado</div>
+                      <div className={styles.completedBadge}>✓</div>
                     ) : (
                       <button
                         onClick={() => handleCompleteTask(task.id)}
                         className={styles.completeButton}
                       >
-                        Marcar como hecho
+                        Marcar
                       </button>
                     )}
                   </div>

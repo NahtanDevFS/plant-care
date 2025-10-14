@@ -1,5 +1,5 @@
-import TaskCalendar from "@/components/TaskCalentar";
+import UnifiedCalendar from "@/components/UnifiedCalendar";
 
-export default function CalendarTasksPage() {
-  return <TaskCalendar />;
+export default function CalendarPage() {
+  return <UnifiedCalendar />;
 }

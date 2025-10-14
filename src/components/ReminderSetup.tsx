@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./ReminderSetup.module.css";
 
 type ReminderSetupProps = {
@@ -17,6 +18,7 @@ export default function ReminderSetup({
   initialFrequency,
   onSave,
 }: ReminderSetupProps) {
+  const supabase = createClient();
   const [frequency, setFrequency] = useState<number | null>(initialFrequency);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -26,21 +28,64 @@ export default function ReminderSetup({
       alert("Por favor, introduce un número de días válido.");
       return;
     }
+
     setIsLoading(true);
     try {
-      const response = await fetch("/api/reminders/update-reminder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plantId, careType, frequency }),
-      });
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (!response.ok) {
-        throw new Error("Error al guardar el recordatorio");
+      if (!user) {
+        alert("No estás autenticado");
+        return;
       }
 
+      // 1. Obtener el recordatorio actual
+      const { data: reminder, error: reminderError } = await supabase
+        .from("reminders")
+        .select("*")
+        .eq("plant_id", plantId)
+        .eq("care_type", careType)
+        .eq("user_id", user.id)
+        .single();
+
+      // 2. Calcular la próxima fecha
+      const today = new Date();
+      const nextReminderDate = new Date(today);
+      nextReminderDate.setDate(nextReminderDate.getDate() + frequency);
+
+      if (reminderError || !reminder) {
+        // Si no existe, crear uno nuevo
+        const { error: insertError } = await supabase.from("reminders").insert([
+          {
+            plant_id: plantId,
+            user_id: user.id,
+            care_type: careType,
+            frequency_days: frequency,
+            next_reminder_date: nextReminderDate.toISOString().split("T")[0],
+          },
+        ]);
+
+        if (insertError) throw insertError;
+      } else {
+        // 3. Actualizar el recordatorio existente
+        const { error: updateError } = await supabase
+          .from("reminders")
+          .update({
+            frequency_days: frequency,
+            next_reminder_date: nextReminderDate.toISOString().split("T")[0],
+          })
+          .eq("id", reminder.id);
+
+        if (updateError) throw updateError;
+      }
+
+      // Llamar al callback onSave sin recargar
+      await onSave(frequency);
       setIsEditing(false);
       alert("Recordatorio guardado correctamente");
     } catch (error) {
+      console.error("Error:", error);
       alert(
         "Error: " + (error instanceof Error ? error.message : "desconocido")
       );

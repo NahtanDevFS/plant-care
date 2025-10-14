@@ -148,12 +148,40 @@ export default function MyPlants() {
         const { data, error } = await supabase
           .from("plants")
           .select("*")
-          .eq("user_id", user.id); // No ordenamos aquí, lo haremos en el cliente
+          .eq("user_id", user.id);
 
         if (error) {
           setError("No se pudieron cargar tus plantas.");
         } else {
-          setPlants(data || []);
+          // Cargar recordatorios para cada planta
+          const plantsWithReminders = await Promise.all(
+            (data || []).map(async (plant) => {
+              const { data: reminders } = await supabase
+                .from("reminders")
+                .select("*")
+                .eq("plant_id", plant.id)
+                .eq("user_id", user.id);
+
+              let watering_frequency = null;
+              let fertilizing_frequency = null;
+
+              reminders?.forEach((reminder) => {
+                if (reminder.care_type === "Riego") {
+                  watering_frequency = reminder.frequency_days;
+                } else if (reminder.care_type === "Fertilizante") {
+                  fertilizing_frequency = reminder.frequency_days;
+                }
+              });
+
+              return {
+                ...plant,
+                watering_frequency_days: watering_frequency,
+                fertilizing_frequency_days: fertilizing_frequency,
+              };
+            })
+          );
+
+          setPlants(plantsWithReminders);
         }
       }
       setLoading(false);
@@ -205,11 +233,105 @@ export default function MyPlants() {
     careType: "Riego" | "Fertilizante",
     frequency: number
   ) => {
-    // ... (lógica existente sin cambios)
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("No estás autenticado");
+        return;
+      }
+
+      // 1. Obtener el recordatorio actual
+      const { data: reminder, error: reminderError } = await supabase
+        .from("reminders")
+        .select("*")
+        .eq("plant_id", plantId)
+        .eq("care_type", careType)
+        .eq("user_id", user.id)
+        .single();
+
+      if (reminderError || !reminder) {
+        // Si no existe, crear uno nuevo
+        const today = new Date().toISOString().split("T")[0];
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + frequency);
+
+        const { error: insertError } = await supabase.from("reminders").insert([
+          {
+            plant_id: plantId,
+            user_id: user.id,
+            care_type: careType,
+            frequency_days: frequency,
+            next_reminder_date: nextDate.toISOString().split("T")[0],
+          },
+        ]);
+
+        if (insertError) throw insertError;
+
+        alert("Recordatorio creado correctamente");
+      } else {
+        // 2. Calcular la próxima fecha
+        const today = new Date();
+        const nextReminderDate = new Date(today);
+        nextReminderDate.setDate(nextReminderDate.getDate() + frequency);
+
+        // 3. Actualizar el recordatorio existente
+        const { error: updateError } = await supabase
+          .from("reminders")
+          .update({
+            frequency_days: frequency,
+            next_reminder_date: nextReminderDate.toISOString().split("T")[0],
+          })
+          .eq("id", reminder.id);
+
+        if (updateError) throw updateError;
+
+        alert("Recordatorio actualizado correctamente");
+      }
+
+      // No recargamos la página, solo actualizamos el estado local
+      // El componente ReminderSetup ya actualizó su estado
+    } catch (error) {
+      console.error("Error:", error);
+      alert(
+        "Error: " + (error instanceof Error ? error.message : "desconocido")
+      );
+    }
   };
 
   const handleDeletePlant = async (plantId: number, imageUrl: string) => {
-    // ... (lógica existente sin cambios)
+    if (!confirm("¿Estás seguro de que deseas eliminar esta planta?")) {
+      return;
+    }
+
+    try {
+      // Eliminar imagen de storage
+      if (imageUrl) {
+        const fileName = imageUrl.split("/").pop();
+        if (fileName) {
+          await supabase.storage.from("plant_images").remove([fileName]);
+        }
+      }
+
+      // Eliminar planta de la base de datos
+      const { error } = await supabase
+        .from("plants")
+        .delete()
+        .eq("id", plantId);
+
+      if (error) throw error;
+
+      // Actualizar lista de plantas
+      setPlants(plants.filter((p) => p.id !== plantId));
+      alert("Planta eliminada correctamente");
+    } catch (error) {
+      console.error("Error al eliminar planta:", error);
+      alert(
+        "Error: " + (error instanceof Error ? error.message : "desconocido")
+      );
+    }
   };
 
   const getDifficultyClass = (level: Plant["care_level"]) => {
