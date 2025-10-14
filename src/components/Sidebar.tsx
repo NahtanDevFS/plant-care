@@ -84,6 +84,13 @@ export default function Sidebar() {
         onClick={handleLinkClick}
         className={pathname === "/calendar" ? styles.active : ""}
       >
+        Tareas
+      </Link>
+      <Link
+        href="/calendar-tasks"
+        onClick={handleLinkClick}
+        className={pathname === "/calendar-tasks" ? styles.active : ""}
+      >
         Calendario
       </Link>
     </nav>

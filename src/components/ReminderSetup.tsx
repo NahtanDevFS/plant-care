@@ -27,9 +27,26 @@ export default function ReminderSetup({
       return;
     }
     setIsLoading(true);
-    await onSave(frequency);
-    setIsLoading(false);
-    setIsEditing(false);
+    try {
+      const response = await fetch("/api/reminders/update-reminder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plantId, careType, frequency }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al guardar el recordatorio");
+      }
+
+      setIsEditing(false);
+      alert("Recordatorio guardado correctamente");
+    } catch (error) {
+      alert(
+        "Error: " + (error instanceof Error ? error.message : "desconocido")
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const icon = careType === "Riego" ? "💧" : "🧪";

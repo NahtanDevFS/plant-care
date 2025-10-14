@@ -9,3 +9,13 @@ entrypoint = "./functions/send-reminders/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/send-reminders/*.html" ]
+[functions.maintain-reminders]
+enabled = true
+verify_jwt = false
+[functions.maintain-reminders]
+enabled = true
+verify_jwt = false
+
+[functions.create-daily-tasks]
+enabled = true
+verify_jwt = false
