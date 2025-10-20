@@ -94,95 +94,78 @@ export async function compressImage(
 }
 
 /**
- * Captura una foto desde la cámara del dispositivo
+ * Obtiene el stream de la cámara del dispositivo
  * @param facingMode - "user" para cámara frontal, "environment" para trasera
+ * @returns Promise con el MediaStream
+ */
+export async function getCameraStream(
+  facingMode: "user" | "environment" = "environment"
+): Promise<MediaStream> {
+  // Verificar si el navegador soporta getUserMedia
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error("Tu navegador no soporta acceso a la cámara");
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: facingMode,
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      },
+    });
+    return stream;
+  } catch (error: any) {
+    if (error.name === "NotAllowedError") {
+      throw new Error("Permiso denegado para acceder a la cámara");
+    } else if (error.name === "NotFoundError") {
+      throw new Error("No se encontró ninguna cámara");
+    } else {
+      throw new Error(`Error al acceder a la cámara: ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Captura una foto desde un elemento de video
+ * @param videoElement - Elemento de video activo
  * @returns Promise con el archivo de imagen capturado
  */
-export async function captureFromCamera(
-  facingMode: "user" | "environment" = "environment"
+export async function capturePhotoFromVideo(
+  videoElement: HTMLVideoElement
 ): Promise<File> {
   return new Promise((resolve, reject) => {
-    // Verificar si el navegador soporta getUserMedia
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      reject(new Error("Tu navegador no soporta acceso a la cámara"));
+    const canvas = document.createElement("canvas");
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      reject(new Error("Error al crear contexto de canvas"));
       return;
     }
 
-    // Crear elementos para captura
-    const video = document.createElement("video");
-    const canvas = document.createElement("canvas");
-    let stream: MediaStream | null = null;
+    // Capturar frame actual del video
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-    // Solicitar acceso a la cámara
-    navigator.mediaDevices
-      .getUserMedia({
-        video: {
-          facingMode: facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-      })
-      .then((mediaStream) => {
-        stream = mediaStream;
-        video.srcObject = stream;
-        video.play();
-
-        // Esperar a que el video esté listo
-        video.onloadedmetadata = () => {
-          // Configurar canvas con las dimensiones del video
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-
-          // Capturar frame actual
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            cleanup();
-            reject(new Error("Error al crear contexto de canvas"));
-            return;
-          }
-
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          // Convertir a blob
-          canvas.toBlob(
-            (blob) => {
-              cleanup();
-
-              if (!blob) {
-                reject(new Error("Error al capturar la imagen"));
-                return;
-              }
-
-              // Crear archivo desde el blob
-              const file = new File([blob], `camera-${Date.now()}.jpg`, {
-                type: "image/jpeg",
-                lastModified: Date.now(),
-              });
-
-              resolve(file);
-            },
-            "image/jpeg",
-            0.9
-          );
-        };
-      })
-      .catch((error) => {
-        cleanup();
-        if (error.name === "NotAllowedError") {
-          reject(new Error("Permiso denegado para acceder a la cámara"));
-        } else if (error.name === "NotFoundError") {
-          reject(new Error("No se encontró ninguna cámara"));
-        } else {
-          reject(new Error(`Error al acceder a la cámara: ${error.message}`));
+    // Convertir a blob
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Error al capturar la imagen"));
+          return;
         }
-      });
 
-    // Función para limpiar recursos
-    function cleanup() {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-      video.srcObject = null;
-    }
+        // Crear archivo desde el blob
+        const file = new File([blob], `camera-${Date.now()}.jpg`, {
+          type: "image/jpeg",
+          lastModified: Date.now(),
+        });
+
+        resolve(file);
+      },
+      "image/jpeg",
+      0.9
+    );
   });
 }

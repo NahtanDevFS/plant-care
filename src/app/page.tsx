@@ -2,11 +2,15 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./HomePage.module.css";
-import { compressImage, captureFromCamera } from "@/lib/imageCompression";
+import {
+  compressImage,
+  getCameraStream,
+  capturePhotoFromVideo,
+} from "@/lib/imageCompression";
 
 type PlantSuggestion = {
   name: string;
@@ -76,6 +80,11 @@ export default function HomePage() {
   const [savingPlantName, setSavingPlantName] = useState<string>("");
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">(
+    "environment"
+  );
   const router = useRouter();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,18 +95,70 @@ export default function HomePage() {
   };
 
   const handleCameraCapture = async () => {
-    setIsCompressing(true);
+    setShowCamera(true);
+  };
+
+  const openCamera = async (mode: "user" | "environment") => {
     try {
-      const capturedImage = await captureFromCamera("environment");
-      await processImage(capturedImage);
+      // Detener stream anterior si existe
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+
+      const stream = await getCameraStream(mode);
+      setCameraStream(stream);
+      setFacingMode(mode);
+
+      // Asignar stream al video
+      const videoElement = document.getElementById(
+        "camera-video"
+      ) as HTMLVideoElement;
+      if (videoElement) {
+        videoElement.srcObject = stream;
+      }
     } catch (error) {
-      console.error("Error al capturar desde cámara:", error);
+      console.error("Error al abrir cámara:", error);
       alert(
         error instanceof Error ? error.message : "Error al acceder a la cámara"
       );
+      setShowCamera(false);
+    }
+  };
+
+  const capturePhoto = async () => {
+    const videoElement = document.getElementById(
+      "camera-video"
+    ) as HTMLVideoElement;
+
+    if (!videoElement || !cameraStream) {
+      alert("Error: La cámara no está activa");
+      return;
+    }
+
+    setIsCompressing(true);
+    try {
+      const capturedImage = await capturePhotoFromVideo(videoElement);
+      await processImage(capturedImage);
+      closeCamera();
+    } catch (error) {
+      console.error("Error al capturar foto:", error);
+      alert("Error al capturar la foto");
     } finally {
       setIsCompressing(false);
     }
+  };
+
+  const closeCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  const switchCamera = () => {
+    const newMode = facingMode === "environment" ? "user" : "environment";
+    openCamera(newMode);
   };
 
   const processImage = async (file: File) => {
@@ -206,6 +267,51 @@ export default function HomePage() {
 
   return (
     <>
+      {showCamera && (
+        <div className={styles.cameraModal}>
+          <div className={styles.cameraContainer}>
+            <div className={styles.cameraHeader}>
+              <h2>📷 Capturar Foto</h2>
+              <button onClick={closeCamera} className={styles.closeModalButton}>
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.videoContainer}>
+              <video
+                id="camera-video"
+                autoPlay
+                playsInline
+                className={styles.cameraVideo}
+                onLoadedMetadata={() => {
+                  const video = document.getElementById(
+                    "camera-video"
+                  ) as HTMLVideoElement;
+                  if (video) video.play();
+                }}
+              />
+            </div>
+
+            <div className={styles.cameraControls}>
+              <button
+                onClick={switchCamera}
+                className={styles.switchCameraButton}
+                disabled={isCompressing}
+              >
+                🔄 Cambiar Cámara
+              </button>
+              <button
+                onClick={capturePhoto}
+                className={styles.captureButton}
+                disabled={isCompressing}
+              >
+                {isCompressing ? "Procesando..." : "📸 Capturar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className={styles.container}>
         <div className={styles.header}>
           <h1>PlantCare</h1>
