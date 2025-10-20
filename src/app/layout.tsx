@@ -20,6 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <head>
+        <title>PlantCare</title>
+      </head>
       <body>
         {/* Envuelve todo en el ClientLayout */}
         <ClientLayout>{children}</ClientLayout>

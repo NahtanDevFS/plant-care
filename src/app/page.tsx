@@ -6,6 +6,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styles from "./HomePage.module.css";
+import { compressImage, captureFromCamera } from "@/lib/imageCompression";
 
 type PlantSuggestion = {
   name: string;
@@ -47,7 +48,6 @@ const CareInstructions = ({ text }: { text: string }) => {
   );
 };
 
-// --- COMPONENTE DE PANTALLA DE CARGA ---
 const LoadingScreen = ({ plantName }: { plantName: string }) => {
   return (
     <div className={styles.loadingOverlay}>
@@ -63,62 +63,6 @@ const LoadingScreen = ({ plantName }: { plantName: string }) => {
   );
 };
 
-// --- ESTILOS PARA PANTALLA DE CARGA ---
-// Agrega esto a tu HomePage.module.css:
-/* 
-.loadingOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.95), rgba(56, 142, 60, 0.95));
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.loadingContent {
-  text-align: center;
-  color: white;
-}
-
-.loadingSpinner {
-  width: 60px;
-  height: 60px;
-  border: 5px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 2rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loadingContent h2 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-  color: white;
-}
-
-.loadingContent p {
-  font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0.5rem 0;
-}
-
-.loadingSubtext {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-style: italic;
-}
-*/
-
 export default function HomePage() {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -131,16 +75,47 @@ export default function HomePage() {
   const [isSavingPlant, setIsSavingPlant] = useState(false);
   const [savingPlantName, setSavingPlantName] = useState<string>("");
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
   const router = useRouter();
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setImage(file);
-      setImagePreview(URL.createObjectURL(file));
+      await processImage(file);
+    }
+  };
+
+  const handleCameraCapture = async () => {
+    setIsCompressing(true);
+    try {
+      const capturedImage = await captureFromCamera("environment");
+      await processImage(capturedImage);
+    } catch (error) {
+      console.error("Error al capturar desde cámara:", error);
+      alert(
+        error instanceof Error ? error.message : "Error al acceder a la cámara"
+      );
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  const processImage = async (file: File) => {
+    setIsCompressing(true);
+    try {
+      // Comprimir la imagen antes de usarla
+      const compressedImage = await compressImage(file, 1200, 1200, 0.85);
+
+      setImage(compressedImage);
+      setImagePreview(URL.createObjectURL(compressedImage));
       setResults(null);
       setSelectedPlant(null);
       setCareInfo("");
+    } catch (error) {
+      console.error("Error al procesar imagen:", error);
+      alert("Error al procesar la imagen. Por favor, intenta con otra.");
+    } finally {
+      setIsCompressing(false);
     }
   };
 
@@ -210,7 +185,6 @@ export default function HomePage() {
       const data = await response.json();
       setCareInfo(data.careInstructions);
 
-      // --- REDIRIGIR A MIS PLANTAS DESPUÉS DE 1 SEGUNDO ---
       setTimeout(() => {
         router.push("/my-plants");
       }, 1000);
@@ -226,7 +200,6 @@ export default function HomePage() {
     }
   };
 
-  // --- NO MOSTRAR NADA SI SE ESTÁ GUARDANDO ---
   if (isSavingPlant) {
     return <LoadingScreen plantName={savingPlantName} />;
   }
@@ -251,16 +224,39 @@ export default function HomePage() {
               />
             </div>
           )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className={styles.fileInput}
-            disabled={loading}
-          />
+
+          {isCompressing && (
+            <div className={styles.loadingState}>
+              <div className={styles.loadingSpinnerSmall}></div>
+              <p className={styles.loadingMessage}>Optimizando imagen...</p>
+            </div>
+          )}
+
+          <div className={styles.buttonGroup}>
+            <label htmlFor="file-upload" className={styles.uploadButton}>
+              📁 Subir Foto
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+                disabled={loading || isCompressing}
+              />
+            </label>
+
+            <button
+              onClick={handleCameraCapture}
+              disabled={loading || isCompressing}
+              className={styles.cameraButton}
+            >
+              📷 Tomar Foto
+            </button>
+          </div>
+
           <button
             onClick={handleIdentifyClick}
-            disabled={loading || !image}
+            disabled={loading || !image || isCompressing}
             className={styles.button}
           >
             {loading ? "Identificando..." : "Identificar Planta"}
