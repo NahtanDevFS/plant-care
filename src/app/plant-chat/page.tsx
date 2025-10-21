@@ -19,6 +19,34 @@ type Message = {
   timestamp: Date;
 };
 
+// Función para procesar el texto de Markdown a HTML
+const formatMessage = (text: string) => {
+  let formatted = text;
+
+  // Convertir **texto** a <strong>texto</strong>
+  formatted = formatted.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+  // Convertir *texto* a <em>texto</em> (pero no si ya es parte de **)
+  formatted = formatted.replace(/(?<!\*)\*(?!\*)(.+?)\*(?!\*)/g, "<em>$1</em>");
+
+  // Convertir listas con guiones
+  formatted = formatted.replace(/^- (.+)$/gm, "• $1");
+
+  // Convertir listas numeradas
+  formatted = formatted.replace(
+    /^\d+\. (.+)$/gm,
+    '<div style="margin-left: 1rem;">$1</div>'
+  );
+
+  // Convertir saltos de línea dobles a párrafos
+  formatted = formatted.replace(/\n\n/g, "<br><br>");
+
+  // Convertir saltos de línea simples a <br>
+  formatted = formatted.replace(/\n/g, "<br>");
+
+  return formatted;
+};
+
 export default function PlantChatPage() {
   const supabase = createClient();
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -258,7 +286,11 @@ export default function PlantChatPage() {
                   {message.role === "user" ? "👤" : "🌿"}
                 </div>
                 <div className={styles.messageBubble}>
-                  {message.content}
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: formatMessage(message.content),
+                    }}
+                  />
                   <span className={styles.messageTime}>
                     {message.timestamp.toLocaleTimeString("es-ES", {
                       hour: "2-digit",

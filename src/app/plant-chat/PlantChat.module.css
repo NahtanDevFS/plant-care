@@ -237,6 +237,16 @@
   word-wrap: break-word;
 }
 
+.messageBubble strong {
+  font-weight: 700;
+  color: inherit;
+}
+
+.messageBubble em {
+  font-style: italic;
+  color: inherit;
+}
+
 .messageAI .messageBubble {
   background-color: white;
   color: var(--color-text);
