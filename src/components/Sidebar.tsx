@@ -31,7 +31,6 @@ export default function Sidebar() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (!session) {
-        // Si el usuario cierra sesión, redirigir a /login
         router.push("/login");
       }
       router.refresh();
@@ -42,13 +41,10 @@ export default function Sidebar() {
     };
   }, [supabase, router]);
 
-  // --- FUNCIÓN DE CERRAR SESIÓN ACTUALIZADA ---
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    // Redirigimos manualmente después de cerrar sesión
     window.location.assign("/login");
   };
-  // ---------------------------------------------
 
   const handleLinkClick = () => {
     setMobileMenuOpen(false);
@@ -70,28 +66,35 @@ export default function Sidebar() {
         onClick={handleLinkClick}
         className={pathname === "/" ? styles.active : ""}
       >
-        Identificar
+        🔍 Identificar
       </Link>
       <Link
         href="/my-plants"
         onClick={handleLinkClick}
         className={pathname === "/my-plants" ? styles.active : ""}
       >
-        Mis Plantas
+        🪴 Mis Plantas
+      </Link>
+      <Link
+        href="/plant-chat"
+        onClick={handleLinkClick}
+        className={pathname === "/plant-chat" ? styles.active : ""}
+      >
+        🤖 Chat IA
       </Link>
       <Link
         href="/calendar"
         onClick={handleLinkClick}
         className={pathname === "/calendar" ? styles.active : ""}
       >
-        Tareas
+        ✅ Tareas
       </Link>
       <Link
         href="/calendar-tasks"
         onClick={handleLinkClick}
         className={pathname === "/calendar-tasks" ? styles.active : ""}
       >
-        Calendario
+        📅 Calendario
       </Link>
     </nav>
   );

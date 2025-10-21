@@ -1,0 +1,438 @@
+/* src/app/plant-chat/PlantChat.module.css */
+
+.container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: var(--color-text-light);
+  font-size: 1.1rem;
+}
+
+/* SELECTOR DE PLANTA */
+.plantSelector {
+  background-color: white;
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.plantSelector h2 {
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.plantsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.plantCard {
+  background-color: white;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.plantCard:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.plantCard.selected {
+  border-color: var(--color-primary);
+  background-color: #e8f5e9;
+  border-width: 3px;
+}
+
+.plantCardImage {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: calc(var(--border-radius) / 2);
+  margin-bottom: 0.75rem;
+}
+
+.plantCardName {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.selectButton {
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 300px;
+  padding: 0.875rem 1.5rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.selectButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+}
+
+.selectButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* CONTENEDOR DEL CHAT */
+.chatContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.chatHeader {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-dark)
+  );
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chatHeaderInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chatHeaderImage {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+}
+
+.chatHeaderText h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.chatHeaderText p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.changePlantButton {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+  padding: 0.5rem 1rem;
+  border-radius: calc(var(--border-radius) / 2);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.changePlantButton:hover {
+  background-color: white;
+  color: var(--color-primary);
+}
+
+/* MENSAJES */
+.messagesContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.message {
+  display: flex;
+  gap: 0.75rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.messageUser {
+  flex-direction: row-reverse;
+}
+
+.messageAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.messageUser .messageAvatar {
+  background-color: #2196f3;
+}
+
+.messageBubble {
+  max-width: 70%;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.messageAI .messageBubble {
+  background-color: white;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.messageUser .messageBubble {
+  background-color: var(--color-primary);
+  color: white;
+  margin-left: auto;
+}
+
+.messageTime {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.typingIndicator {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 18px;
+  width: fit-content;
+  border: 1px solid var(--color-border);
+}
+
+.typingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  animation: typing 1.4s infinite;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+}
+
+/* INPUT DE MENSAJE */
+.inputContainer {
+  padding: 1.5rem;
+  background-color: white;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 1rem;
+}
+
+.messageInput {
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  border: 2px solid var(--color-border);
+  border-radius: 25px;
+  font-family: var(--font-main);
+  font-size: 1rem;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s ease;
+  min-height: 50px;
+  max-height: 120px;
+}
+
+.messageInput:focus {
+  border-color: var(--color-primary);
+}
+
+.sendButton {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sendButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  transform: scale(1.1);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ESTADOS */
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1.5rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(76, 175, 80, 0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--color-text-light);
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+    height: calc(100vh - 100px);
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .plantsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .plantCardImage {
+    height: 100px;
+  }
+
+  .chatHeader {
+    padding: 1rem;
+  }
+
+  .chatHeaderImage {
+    width: 40px;
+    height: 40px;
+  }
+
+  .chatHeaderText h3 {
+    font-size: 1.1rem;
+  }
+
+  .changePlantButton {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .messagesContainer {
+    padding: 1rem;
+  }
+
+  .messageBubble {
+    max-width: 85%;
+    padding: 0.875rem 1rem;
+  }
+
+  .inputContainer {
+    padding: 1rem;
+  }
+}

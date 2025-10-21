@@ -44,15 +44,21 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const authRoutes = ["/login", "/register", "/forgot-password"]; // Quitamos /reset-password de aquí
-  const protectedRoutes = ["/", "/my-plants", "/calendar"];
+  const authRoutes = ["/login", "/register", "/forgot-password"];
+  const protectedRoutes = [
+    "/",
+    "/my-plants",
+    "/calendar",
+    "/plant-chat",
+    "/calendar-tasks",
+  ];
 
   // Si no hay usuario y la ruta está protegida, redirige a /login
   if (!user && protectedRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Si hay usuario y la ruta es de autenticación (excepto reset-password), redirige a la página principal
+  // Si hay usuario y la ruta es de autenticación, redirige a la página principal
   if (user && authRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/", request.url));
   }

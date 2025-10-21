@@ -161,6 +161,20 @@ export default function HomePage() {
     openCamera(newMode);
   };
 
+  // Efecto para abrir la cámara automáticamente cuando se muestra el modal
+  useEffect(() => {
+    if (showCamera && !cameraStream) {
+      openCamera(facingMode);
+    }
+
+    // Limpiar el stream cuando se desmonta el componente
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [showCamera]);
+
   const processImage = async (file: File) => {
     setIsCompressing(true);
     try {
