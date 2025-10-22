@@ -76,10 +76,14 @@ export default function Sidebar() {
         🪴 Mis Plantas
       </Link>
       <Link
-        href="/my-plants" // Dirige a la lista para que el usuario elija
+        href="/plant-diary" // Ahora apunta a la página de lista
         onClick={handleLinkClick}
-        // Decide cómo marcarlo activo, quizás si la ruta empieza con /plant-diary?
-        className={pathname.startsWith("/plant-diary") ? styles.active : ""}
+        // Se marca activo si la ruta es /plant-diary o empieza con /plant-diary/
+        className={
+          pathname === "/plant-diary" || pathname.startsWith("/plant-diary/")
+            ? styles.active
+            : ""
+        }
       >
         📝 Diario de Plantas
       </Link>
