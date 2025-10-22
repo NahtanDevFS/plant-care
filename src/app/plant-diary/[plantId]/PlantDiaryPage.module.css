@@ -1,0 +1,110 @@
+/* src/app/plant-diary/[plantId]/PlantDiaryPage.module.css */
+
+.pageContainer {
+  max-width: 900px; /* Ajusta el ancho según prefieras */
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--color-primary);
+  flex-wrap: wrap; /* Para pantallas pequeñas */
+  gap: 1rem;
+}
+
+.plantInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.plantHeaderImage {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--color-primary-dark);
+}
+
+.header h1 {
+  color: var(--color-primary);
+  font-size: 2rem;
+  margin: 0;
+}
+
+.backButton {
+  padding: 0.6rem 1.2rem;
+  background-color: var(--color-secondary);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.backButton:hover {
+  background-color: #e0e0e0;
+  border-color: #bdbdbd;
+  color: var(--color-text);
+}
+
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 1rem;
+  color: var(--color-text-light);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(76, 175, 80, 0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorMessagePage {
+  color: #d32f2f;
+  background-color: #ffcdd2;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .pageContainer {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .header h1 {
+    font-size: 1.6rem;
+  }
+  .backButton {
+    align-self: flex-start; /* Alinea el botón a la izquierda */
+    margin-top: 0.5rem;
+  }
+}

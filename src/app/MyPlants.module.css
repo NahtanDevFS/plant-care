@@ -384,6 +384,32 @@
   color: var(--color-text);
 }
 
+.diaryLinkContainer {
+  margin-top: 1.5rem; /* Espacio antes del botón del diario */
+  margin-bottom: 1.5rem; /* Espacio antes de la Guía de Cuidados */
+  text-align: center; /* Centra el botón */
+}
+
+.diaryLinkButton {
+  display: inline-block; /* Permite padding y centrado */
+  padding: 0.8rem 1.5rem;
+  background-color: var(
+    --color-primary-dark
+  ); /* Un color ligeramente diferente */
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  font-size: 0.95rem;
+}
+
+.diaryLinkButton:hover {
+  background-color: #388e3c; /* Un verde más oscuro al pasar el ratón */
+  transform: translateY(-2px);
+}
+
 /* --- DISEÑO RESPONSIVE --- */
 @media (max-width: 768px) {
   .container {

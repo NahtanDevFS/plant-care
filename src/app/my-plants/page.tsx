@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import styles from "@/app/MyPlants.module.css";
 import Image from "next/image";
 import ReminderSetup from "@/components/ReminderSetup";
+import PlantDiary from "@/components/PlantDiary";
+import Link from "next/link";
 
 // --- TIPOS DE DATOS ---
 // Tipo base de la planta que viene de Supabase
@@ -487,6 +489,14 @@ export default function MyPlants() {
                           handleSaveReminder(plant.id, "Fertilizante", f)
                         }
                       />
+                    </div>
+                    <div className={styles.diaryLinkContainer}>
+                      <Link
+                        href={`/plant-diary/${plant.id}`}
+                        className={styles.diaryLinkButton}
+                      >
+                        Ver Diario de la Planta 📖
+                      </Link>
                     </div>
                     <h3 className={styles.careTitle}>Guía de Cuidados</h3>
                     <CareInstructions text={plant.care_instructions} />
