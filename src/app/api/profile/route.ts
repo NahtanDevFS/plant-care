@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
     const avatarFile = formData.get("avatar") as File | null;
 
     let avatarUrl: string | undefined = undefined; // Usamos undefined para no actualizar si no hay archivo
-    let updateData: {
+    const updateData: {
       username?: string;
       avatar_url?: string;
       updated_at: string;
