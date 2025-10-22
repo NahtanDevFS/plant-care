@@ -4,8 +4,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { compressImage } from "@/lib/imageCompression"; // Importa la función
-import styles from "./PlantDiary.module.css"; // Asegúrate que este archivo CSS existe
+import {
+  compressImage,
+  getCameraStream, // <--- Importar
+  capturePhotoFromVideo, // <--- Importar
+} from "@/lib/imageCompression";
+import styles from "./PlantDiary.module.css";
 
 type DiaryEntry = {
   id: number;
@@ -28,12 +32,30 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   const [newImage, setNewImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false); // Estado para compresión
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null); // Ref para el video
+
+  // --- Estados para la cámara ---
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">(
+    "environment"
+  );
+  // -----------------------------
 
   useEffect(() => {
     fetchEntries();
   }, [plantId]);
+
+  // Limpieza del stream de cámara al desmontar o cerrar
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [cameraStream]);
 
   const fetchEntries = async () => {
     setLoading(true);
@@ -54,24 +76,29 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     }
   };
 
+  // Función genérica para procesar una imagen (File)
+  const processImageFile = async (file: File) => {
+    setIsCompressing(true);
+    setError(null); // Limpia errores previos de imagen
+    try {
+      const compressed = await compressImage(file, 800, 800, 0.8);
+      setNewImage(compressed);
+      setImagePreview(URL.createObjectURL(compressed));
+    } catch (compressError) {
+      console.error("Error processing image:", compressError);
+      setError("Error al procesar la imagen. Intenta de nuevo.");
+      setNewImage(null);
+      setImagePreview(null);
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setIsCompressing(true); // Inicia indicador de compresión
-      try {
-        // Comprimir la imagen antes de mostrar la vista previa
-        const compressed = await compressImage(file, 800, 800, 0.8); // Ajusta tamaño/calidad
-        setNewImage(compressed);
-        setImagePreview(URL.createObjectURL(compressed));
-      } catch (compressError) {
-        console.error("Error compressing image:", compressError);
-        setError("Error al procesar la imagen. Intenta de nuevo.");
-        setNewImage(null); // Resetea si falla
-        setImagePreview(null);
-      } finally {
-        setIsCompressing(false); // Finaliza indicador de compresión
-      }
+      await processImageFile(e.target.files[0]);
     } else {
+      // Si el usuario cancela, limpiar
       setNewImage(null);
       setImagePreview(null);
     }
@@ -82,7 +109,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     setNewImage(null);
     setImagePreview(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // Resetea el input file
+      fileInputRef.current.value = "";
     }
   };
 
@@ -97,17 +124,24 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
 
     const formData = new FormData();
     formData.append("plantId", String(plantId));
-    formData.append("notes", newNote.trim());
-    if (newImage) {
-      formData.append("image", newImage, newImage.name); // Usa la imagen comprimida
+    // Incluir nota solo si no está vacía, para evitar guardar entradas solo con imagen sin nota
+    if (newNote.trim()) {
+      formData.append("notes", newNote.trim());
+    } else if (!newImage) {
+      // Si no hay nota ni imagen (debería haber sido prevenido antes, pero doble chequeo)
+      setError("Se requiere una nota o una imagen.");
+      setIsSubmitting(false);
+      return;
     }
-    // Opcional: añadir fecha personalizada si la necesitas
-    // formData.append("entryDate", new Date().toISOString());
+
+    if (newImage) {
+      formData.append("image", newImage, newImage.name);
+    }
 
     try {
       const response = await fetch("/api/diary", {
         method: "POST",
-        body: formData, // No necesita headers 'Content-Type' con FormData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -116,7 +150,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       }
 
       const newEntry: DiaryEntry = await response.json();
-      setEntries([newEntry, ...entries]); // Añadir al principio
+      setEntries([newEntry, ...entries]);
       clearForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar.");
@@ -159,9 +193,115 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     });
   };
 
+  // --- Funciones de Cámara ---
+  const handleCameraCapture = () => {
+    setShowCamera(true);
+    openCamera(facingMode); // Abre con el modo actual
+  };
+
+  const openCamera = async (mode: "user" | "environment") => {
+    setError(null); // Limpiar errores al abrir
+    try {
+      // Detener stream anterior si existe
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+
+      const stream = await getCameraStream(mode);
+      setCameraStream(stream);
+      setFacingMode(mode);
+
+      // Asignar stream al video usando la ref
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current
+          .play()
+          .catch((err) => console.error("Error playing video:", err)); // Intenta reproducir
+      }
+    } catch (error) {
+      console.error("Error al abrir cámara:", error);
+      setError(
+        error instanceof Error ? error.message : "Error al acceder a la cámara"
+      );
+      setShowCamera(false); // Cierra el modal si hay error
+    }
+  };
+
+  const capturePhoto = async () => {
+    if (!videoRef.current || !cameraStream) {
+      setError("Error: La cámara no está activa");
+      return;
+    }
+
+    setIsCompressing(true); // Usamos el mismo estado de compresión
+    try {
+      const capturedImage = await capturePhotoFromVideo(videoRef.current);
+      await processImageFile(capturedImage); // Procesa la imagen capturada
+      closeCamera(); // Cierra la cámara después de capturar
+    } catch (error) {
+      console.error("Error al capturar foto:", error);
+      setError("Error al capturar la foto");
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  const closeCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  const switchCamera = () => {
+    const newMode = facingMode === "environment" ? "user" : "environment";
+    openCamera(newMode);
+  };
+  // -------------------------
+
   return (
-    // Ya no usamos <div className={styles.diarySection}> como contenedor principal
     <>
+      {/* --- Modal de Cámara --- */}
+      {showCamera && (
+        <div className={styles.cameraModal}>
+          <div className={styles.cameraContainer}>
+            <div className={styles.cameraHeader}>
+              <h2>📷 Tomar Foto</h2>
+              <button onClick={closeCamera} className={styles.closeModalButton}>
+                ✕
+              </button>
+            </div>
+            <div className={styles.videoContainer}>
+              <video
+                ref={videoRef} // Usar ref aquí
+                autoPlay
+                playsInline
+                className={styles.cameraVideo}
+                // Quitar onLoadedMetadata si usamos ref.play()
+              />
+            </div>
+            <div className={styles.cameraControls}>
+              <button
+                onClick={switchCamera}
+                className={styles.switchCameraButton}
+                disabled={isCompressing} // Deshabilita mientras procesa
+              >
+                🔄 Cambiar
+              </button>
+              <button
+                onClick={capturePhoto}
+                className={styles.captureButton}
+                disabled={isCompressing} // Deshabilita mientras procesa
+              >
+                {isCompressing ? "Procesando..." : "📸 Capturar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ----------------------- */}
+
       {/* --- Formulario para Nueva Entrada --- */}
       <form onSubmit={handleSubmit} className={styles.entryForm}>
         <textarea
@@ -172,15 +312,17 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
           disabled={isSubmitting || isCompressing}
         />
         <div className={styles.formActions}>
+          {/* Botón Subir Foto */}
           <label
             htmlFor={`image-upload-${plantId}`}
             className={styles.uploadLabel}
           >
-            {isCompressing
+            📁{" "}
+            {isCompressing && !newImage
               ? "Procesando..."
               : newImage
               ? "Cambiar Foto"
-              : "Añadir Foto"}
+              : "Subir Foto"}
           </label>
           <input
             id={`image-upload-${plantId}`}
@@ -191,6 +333,17 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             style={{ display: "none" }}
             disabled={isSubmitting || isCompressing}
           />
+
+          {/* Botón Tomar Foto */}
+          <button
+            type="button" // Importante: type="button" para no enviar el form
+            onClick={handleCameraCapture}
+            className={styles.cameraButtonForm} // Nueva clase CSS
+            disabled={isSubmitting || isCompressing}
+          >
+            📷 Tomar Foto
+          </button>
+
           {imagePreview && (
             <div className={styles.previewContainer}>
               <Image
@@ -252,10 +405,10 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                   <Image
                     src={entry.image_url}
                     alt="Foto del diario"
-                    width={200} // Ajusta según necesites
-                    height={150} // Ajusta según necesites
+                    width={200}
+                    height={150}
                     className={styles.entryImage}
-                    unoptimized // Si usas Supabase Storage gratuito
+                    unoptimized
                   />
                 </div>
               )}
