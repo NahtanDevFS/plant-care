@@ -1,19 +1,19 @@
 // src/components/PlantDiary.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import {
   compressImage,
-  getCameraStream, // <--- Importar
-  capturePhotoFromVideo, // <--- Importar
+  getCameraStream,
+  capturePhotoFromVideo,
 } from "@/lib/imageCompression";
 import styles from "./PlantDiary.module.css";
 
 type DiaryEntry = {
   id: number;
-  entry_date: string;
+  entry_date: string; // Fecha en formato ISO string (UTC o con timezone)
   notes: string | null;
   image_url: string | null;
   created_at: string;
@@ -23,9 +23,14 @@ type PlantDiaryProps = {
   plantId: number;
 };
 
+// --- Tipos para filtros y ordenación ---
+type DateFilterType = "all" | "week" | "month" | "year" | "custom";
+type SortOrderType = "desc" | "asc";
+// ------------------------------------
+
 export default function PlantDiary({ plantId }: PlantDiaryProps) {
   const supabase = createClient();
-  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [allEntries, setAllEntries] = useState<DiaryEntry[]>([]); // Almacena todas las entradas
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
@@ -34,7 +39,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null); // Ref para el video
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // --- Estados para la cámara ---
   const [showCamera, setShowCamera] = useState(false);
@@ -44,11 +49,18 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   );
   // -----------------------------
 
+  // --- Estados para Filtros y Ordenación ---
+  const [dateFilter, setDateFilter] = useState<DateFilterType>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrderType>("desc"); // Descendente por defecto
+  const [customStartDate, setCustomStartDate] = useState<string>("");
+  const [customEndDate, setCustomEndDate] = useState<string>("");
+  // ---------------------------------------
+
   useEffect(() => {
     fetchEntries();
   }, [plantId]);
 
-  // Limpieza del stream de cámara al desmontar o cerrar
+  // Limpieza del stream de cámara
   useEffect(() => {
     return () => {
       if (cameraStream) {
@@ -61,12 +73,13 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     setLoading(true);
     setError(null);
     try {
+      // Optimizacion: Podríamos pasar filtros a la API aquí si fueran muchos datos
       const response = await fetch(`/api/diary?plantId=${plantId}`);
       if (!response.ok) {
         throw new Error("Error al cargar las entradas del diario.");
       }
       const data: DiaryEntry[] = await response.json();
-      setEntries(data);
+      setAllEntries(data); // Guarda todas las entradas
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error desconocido al cargar."
@@ -76,10 +89,70 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     }
   };
 
-  // Función genérica para procesar una imagen (File)
+  // --- Lógica de Filtrado y Ordenación (useMemo) ---
+  const filteredAndSortedEntries = useMemo(() => {
+    let filtered = [...allEntries];
+    const now = new Date();
+
+    // Aplicar filtro de fecha
+    if (dateFilter !== "all") {
+      let startDate: Date | null = null;
+      let endDate: Date | null = new Date(now); // Por defecto hasta hoy
+      endDate.setHours(23, 59, 59, 999); // Final del día actual
+
+      switch (dateFilter) {
+        case "week":
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 7);
+          startDate.setHours(0, 0, 0, 0); // Inicio del día hace 7 días
+          break;
+        case "month":
+          startDate = new Date(now);
+          startDate.setMonth(now.getMonth() - 1);
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case "year":
+          startDate = new Date(now);
+          startDate.setFullYear(now.getFullYear() - 1);
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case "custom":
+          if (customStartDate) {
+            startDate = new Date(customStartDate);
+            startDate.setHours(0, 0, 0, 0); // Inicio del día de inicio
+          }
+          if (customEndDate) {
+            endDate = new Date(customEndDate);
+            endDate.setHours(23, 59, 59, 999); // Final del día de fin
+          }
+          // Si solo hay fecha de inicio, filtra desde esa fecha hasta hoy
+          // Si solo hay fecha de fin, filtra desde el inicio hasta esa fecha
+          // Si ambas, filtra en el rango
+          break;
+      }
+
+      filtered = filtered.filter((entry) => {
+        const entryDate = new Date(entry.entry_date);
+        const isAfterStart = startDate ? entryDate >= startDate : true;
+        const isBeforeEnd = endDate ? entryDate <= endDate : true;
+        return isAfterStart && isBeforeEnd;
+      });
+    }
+
+    // Aplicar ordenación
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.entry_date).getTime();
+      const dateB = new Date(b.entry_date).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+
+    return filtered;
+  }, [allEntries, dateFilter, sortOrder, customStartDate, customEndDate]);
+  // -----------------------------------------------
+
   const processImageFile = async (file: File) => {
     setIsCompressing(true);
-    setError(null); // Limpia errores previos de imagen
+    setError(null);
     try {
       const compressed = await compressImage(file, 800, 800, 0.8);
       setNewImage(compressed);
@@ -98,7 +171,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     if (e.target.files && e.target.files[0]) {
       await processImageFile(e.target.files[0]);
     } else {
-      // Si el usuario cancela, limpiar
       setNewImage(null);
       setImagePreview(null);
     }
@@ -124,11 +196,9 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
 
     const formData = new FormData();
     formData.append("plantId", String(plantId));
-    // Incluir nota solo si no está vacía, para evitar guardar entradas solo con imagen sin nota
     if (newNote.trim()) {
       formData.append("notes", newNote.trim());
     } else if (!newImage) {
-      // Si no hay nota ni imagen (debería haber sido prevenido antes, pero doble chequeo)
       setError("Se requiere una nota o una imagen.");
       setIsSubmitting(false);
       return;
@@ -150,7 +220,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       }
 
       const newEntry: DiaryEntry = await response.json();
-      setEntries([newEntry, ...entries]);
+      // Actualiza allEntries, useMemo se encargará del resto
+      setAllEntries([newEntry, ...allEntries]);
       clearForm();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar.");
@@ -175,7 +246,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
         throw new Error(errorData.error || "Error al eliminar la entrada.");
       }
 
-      setEntries(entries.filter((entry) => entry.id !== entryId));
+      // Actualiza allEntries, useMemo se encargará del resto
+      setAllEntries(allEntries.filter((entry) => entry.id !== entryId));
       alert("Entrada eliminada.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al eliminar.");
@@ -184,7 +256,27 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
+    // Intenta crear la fecha asumiendo que puede o no tener 'Z'
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      // Si falla, intenta añadiendo 'Z' si no está
+      if (!dateString.endsWith("Z")) {
+        const dateUTC = new Date(dateString + "Z");
+        if (!isNaN(dateUTC.getTime())) {
+          return dateUTC.toLocaleDateString("es-ES", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "UTC", // Especifica UTC si la fecha original lo era
+          });
+        }
+      }
+      return "Fecha inválida"; // Fallback
+    }
+    // Si la fecha original es válida, formatea en la zona horaria local
+    return date.toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -196,34 +288,30 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   // --- Funciones de Cámara ---
   const handleCameraCapture = () => {
     setShowCamera(true);
-    openCamera(facingMode); // Abre con el modo actual
+    openCamera(facingMode);
   };
 
   const openCamera = async (mode: "user" | "environment") => {
-    setError(null); // Limpiar errores al abrir
+    setError(null);
     try {
-      // Detener stream anterior si existe
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
       }
-
       const stream = await getCameraStream(mode);
       setCameraStream(stream);
       setFacingMode(mode);
-
-      // Asignar stream al video usando la ref
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current
           .play()
-          .catch((err) => console.error("Error playing video:", err)); // Intenta reproducir
+          .catch((err) => console.error("Error playing video:", err));
       }
     } catch (error) {
       console.error("Error al abrir cámara:", error);
       setError(
         error instanceof Error ? error.message : "Error al acceder a la cámara"
       );
-      setShowCamera(false); // Cierra el modal si hay error
+      setShowCamera(false);
     }
   };
 
@@ -232,12 +320,11 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       setError("Error: La cámara no está activa");
       return;
     }
-
-    setIsCompressing(true); // Usamos el mismo estado de compresión
+    setIsCompressing(true);
     try {
       const capturedImage = await capturePhotoFromVideo(videoRef.current);
-      await processImageFile(capturedImage); // Procesa la imagen capturada
-      closeCamera(); // Cierra la cámara después de capturar
+      await processImageFile(capturedImage);
+      closeCamera();
     } catch (error) {
       console.error("Error al capturar foto:", error);
       setError("Error al capturar la foto");
@@ -274,25 +361,24 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             </div>
             <div className={styles.videoContainer}>
               <video
-                ref={videoRef} // Usar ref aquí
+                ref={videoRef}
                 autoPlay
                 playsInline
                 className={styles.cameraVideo}
-                // Quitar onLoadedMetadata si usamos ref.play()
               />
             </div>
             <div className={styles.cameraControls}>
               <button
                 onClick={switchCamera}
                 className={styles.switchCameraButton}
-                disabled={isCompressing} // Deshabilita mientras procesa
+                disabled={isCompressing}
               >
                 🔄 Cambiar
               </button>
               <button
                 onClick={capturePhoto}
                 className={styles.captureButton}
-                disabled={isCompressing} // Deshabilita mientras procesa
+                disabled={isCompressing}
               >
                 {isCompressing ? "Procesando..." : "📸 Capturar"}
               </button>
@@ -312,7 +398,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
           disabled={isSubmitting || isCompressing}
         />
         <div className={styles.formActions}>
-          {/* Botón Subir Foto */}
           <label
             htmlFor={`image-upload-${plantId}`}
             className={styles.uploadLabel}
@@ -333,12 +418,10 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             style={{ display: "none" }}
             disabled={isSubmitting || isCompressing}
           />
-
-          {/* Botón Tomar Foto */}
           <button
-            type="button" // Importante: type="button" para no enviar el form
+            type="button"
             onClick={handleCameraCapture}
-            className={styles.cameraButtonForm} // Nueva clase CSS
+            className={styles.cameraButtonForm}
             disabled={isSubmitting || isCompressing}
           >
             📷 Tomar Foto
@@ -379,14 +462,75 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
         {error && <p className={styles.errorMessageForm}>{error}</p>}
       </form>
 
+      {/* --- Controles de Filtro y Ordenación --- */}
+      <div className={styles.filterControls}>
+        {/* Filtro de Fecha */}
+        <div className={styles.filterGroup}>
+          <label htmlFor={`date-filter-${plantId}`}>Mostrar:</label>
+          <select
+            id={`date-filter-${plantId}`}
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value as DateFilterType)}
+          >
+            <option value="all">Todas</option>
+            <option value="week">Última semana</option>
+            <option value="month">Último mes</option>
+            <option value="year">Último año</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </div>
+
+        {/* Inputs para Rango Personalizado (condicional) */}
+        {dateFilter === "custom" && (
+          <div className={`${styles.filterGroup} ${styles.customDateInputs}`}>
+            <label htmlFor={`start-date-${plantId}`}>Desde:</label>
+            <input
+              type="date"
+              id={`start-date-${plantId}`}
+              value={customStartDate}
+              onChange={(e) => setCustomStartDate(e.target.value)}
+              max={customEndDate || undefined} // Evita fecha inicio > fecha fin
+            />
+            <label htmlFor={`end-date-${plantId}`}>Hasta:</label>
+            <input
+              type="date"
+              id={`end-date-${plantId}`}
+              value={customEndDate}
+              onChange={(e) => setCustomEndDate(e.target.value)}
+              min={customStartDate || undefined} // Evita fecha fin < fecha inicio
+            />
+          </div>
+        )}
+
+        {/* Ordenación */}
+        <div className={styles.filterGroup}>
+          <label htmlFor={`sort-order-${plantId}`}>Ordenar por:</label>
+          <select
+            id={`sort-order-${plantId}`}
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as SortOrderType)}
+          >
+            <option value="desc">Más recientes primero</option>
+            <option value="asc">Más antiguas primero</option>
+          </select>
+        </div>
+      </div>
+      {/* ------------------------------------------ */}
+
       {/* --- Lista de Entradas --- */}
       {loading && <p>Cargando diario...</p>}
-      {!loading && entries.length === 0 && (
-        <p className={styles.emptyMessage}>Aún no hay entradas en el diario.</p>
-      )}
-      {!loading && entries.length > 0 && (
+      {!loading &&
+        filteredAndSortedEntries.length === 0 && ( // Usa la variable filtrada
+          <p className={styles.emptyMessage}>
+            {dateFilter === "all"
+              ? "Aún no hay entradas en el diario."
+              : "No hay entradas que coincidan con los filtros seleccionados."}
+          </p>
+        )}
+      {/* Muestra las entradas filtradas y ordenadas */}
+      {!loading && filteredAndSortedEntries.length > 0 && (
         <div className={styles.entriesList}>
-          {entries.map((entry) => (
+          {filteredAndSortedEntries.map((entry) => (
             <div key={entry.id} className={styles.diaryEntry}>
               <div className={styles.entryHeader}>
                 <span className={styles.entryDate}>

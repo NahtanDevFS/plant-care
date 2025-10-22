@@ -371,6 +371,81 @@
   box-shadow: none;
 }
 
+/* --- Controles de Filtro y Ordenación --- */
+.filterControls {
+  display: flex;
+  flex-wrap: wrap; /* Para que quepan en pantallas pequeñas */
+  gap: 1.5rem; /* Espacio entre grupos de filtros */
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa; /* Fondo ligero */
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  margin-bottom: 2rem; /* Espacio antes de la lista de entradas */
+  align-items: flex-end; /* Alinea items en la parte inferior */
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column; /* Label encima del input/select */
+  gap: 0.3rem; /* Espacio entre label y control */
+  min-width: 150px; /* Ancho mínimo para cada grupo */
+}
+
+.filterGroup label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+}
+
+.filterGroup select,
+.filterGroup input[type="date"] {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--border-radius) / 2);
+  background-color: white;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+}
+
+/* Estilos específicos para el grupo de fechas personalizadas */
+.customDateInputs {
+  flex-direction: row; /* Pone los inputs uno al lado del otro */
+  align-items: center; /* Centra verticalmente */
+  gap: 0.5rem; /* Espacio entre label e input */
+  min-width: auto; /* Anula el min-width general */
+}
+
+.customDateInputs label {
+  white-space: nowrap; /* Evita que el label se parta */
+}
+
+.customDateInputs input[type="date"] {
+  max-width: 140px; /* Limita el ancho de los inputs de fecha */
+}
+
+/* Responsive para filtros */
+@media (max-width: 768px) {
+  .filterControls {
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .filterGroup {
+    min-width: 120px; /* Más pequeño en móvil */
+    flex-grow: 1; /* Permite que ocupen el espacio disponible */
+  }
+  .customDateInputs {
+    flex-direction: column; /* Apila en móvil */
+    align-items: stretch; /* Ocupan todo el ancho */
+    width: 100%; /* Ocupa todo el ancho disponible */
+  }
+  .customDateInputs label {
+    margin-bottom: 0.2rem;
+  }
+  .customDateInputs input[type="date"] {
+    max-width: none; /* Ancho completo en móvil */
+  }
+}
+
 /* Ajustes Responsive para Modal Cámara */
 @media (max-width: 480px) {
   .cameraHeader {
