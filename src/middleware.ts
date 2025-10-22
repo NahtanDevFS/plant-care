@@ -48,9 +48,10 @@ export async function middleware(request: NextRequest) {
   const protectedRoutes = [
     "/",
     "/my-plants",
-    "/calendar",
     "/plant-chat",
     "/calendar-tasks",
+    "/plant-diary",
+    "/profile",
   ];
 
   // Si no hay usuario y la ruta está protegida, redirige a /login

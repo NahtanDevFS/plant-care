@@ -111,13 +111,6 @@ export default function Sidebar() {
         🤖 Chat IA
       </Link>
       <Link
-        href="/calendar"
-        onClick={handleLinkClick}
-        className={pathname === "/calendar" ? styles.active : ""}
-      >
-        ✅ Tareas
-      </Link>
-      <Link
         href="/calendar-tasks"
         onClick={handleLinkClick}
         className={pathname === "/calendar-tasks" ? styles.active : ""}
