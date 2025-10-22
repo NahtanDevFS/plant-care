@@ -1,0 +1,189 @@
+/* src/app/profile/ProfilePage.module.css */
+
+.container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  background-color: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.container h1 {
+  text-align: center;
+  color: var(--color-primary);
+  margin-bottom: 2rem;
+}
+
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Sección Avatar */
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem; /* Espacio extra */
+}
+
+.avatarPreview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--color-primary-dark);
+  background-color: var(--color-secondary); /* Fondo mientras carga */
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadButton {
+  padding: 0.6rem 1.2rem;
+  background-color: var(--color-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--border-radius) / 2);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.uploadButton:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.uploadButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.miniSpinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sección Datos */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fieldGroup label {
+  font-weight: 600;
+  color: var(--color-text-light);
+}
+
+.fieldGroup input {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--border-radius) / 2);
+  font-size: 1rem;
+  font-family: var(--font-main);
+}
+.fieldGroup input:disabled,
+.readOnlyInput {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+  color: #777;
+}
+
+.inputHint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: -0.2rem; /* Reduce espacio extra */
+}
+
+.saveButton {
+  padding: 0.9rem 1.5rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 1rem;
+  margin-top: 1rem; /* Espacio antes del botón */
+}
+
+.saveButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mensajes */
+.errorMessage,
+.successMessage {
+  padding: 0.8rem 1rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.errorMessage {
+  color: #d32f2f;
+  background-color: #ffcdd2;
+  border: 1px solid #ef9a9a;
+}
+
+.successMessage {
+  color: #388e3c;
+  background-color: #c8e6c9;
+  border: 1px solid #a5d6a7;
+}
+
+/* Loading */
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 1rem;
+  color: var(--color-text-light);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(76, 175, 80, 0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  .container h1 {
+    font-size: 1.8rem;
+  }
+}

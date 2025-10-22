@@ -30,19 +30,29 @@ export default function Sidebar() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (!session) {
+      // Solo redirige si no hay sesión Y no estamos ya en una página de autenticación
+      if (
+        !session &&
+        ![
+          "/login",
+          "/register",
+          "/forgot-password",
+          "/reset-password",
+        ].includes(pathname)
+      ) {
         router.push("/login");
       }
-      router.refresh();
+      router.refresh(); // Refresca para actualizar el estado del servidor
     });
 
     return () => {
       subscription?.unsubscribe();
     };
-  }, [supabase, router]);
+  }, [supabase, router, pathname]); // Añadir pathname a las dependencias
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    // Forzar recarga completa para limpiar estado y asegurar redirección por middleware
     window.location.assign("/login");
   };
 
@@ -50,12 +60,18 @@ export default function Sidebar() {
     setMobileMenuOpen(false);
   };
 
-  if (loading) {
+  // No renderizar sidebar en páginas de autenticación o mientras carga
+  const authRoutes = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ];
+  if (loading || authRoutes.includes(pathname)) {
     return null;
   }
-
-  const isAuthPage = pathname === "/login" || pathname === "/register";
-  if (!user || isAuthPage) {
+  // Si no hay usuario después de cargar y no estamos en auth, tampoco renderizar (middleware debería redirigir)
+  if (!user && !authRoutes.includes(pathname)) {
     return null;
   }
 
@@ -108,12 +124,29 @@ export default function Sidebar() {
       >
         📅 Calendario
       </Link>
+
+      {/* --- NUEVO ENLACE AL PERFIL --- */}
+      <Link
+        href="/profile"
+        onClick={handleLinkClick}
+        className={pathname === "/profile" ? styles.active : ""}
+        // Estilo para intentar ponerlo más abajo, ajusta según sea necesario
+        style={{
+          marginTop: "auto",
+          paddingTop: "1rem",
+          borderTop: "1px solid var(--color-border)",
+        }}
+      >
+        👤 Mi Perfil
+      </Link>
+      {/* ----------------------------- */}
     </nav>
   );
 
   const UserSection = () => (
     <div className={styles.sidebarUser}>
-      <span className={styles.userEmail}>{user?.email}</span>
+      {/* Opcional: podrías mostrar el username si lo cargas aquí */}
+      {/* <span className={styles.userEmail}>{user?.email}</span> */}
       <button onClick={handleSignOut} className={styles.logoutButton}>
         Cerrar Sesión
       </button>
@@ -131,13 +164,14 @@ export default function Sidebar() {
       <div className={styles.sidebarHeader}>
         <h2>🌿 PlantCare</h2>
       </div>
-      <NavLinks />
+      <NavLinks /> {/* Usa el NavLinks actualizado */}
       <UserSection />
     </div>
   );
 
   return (
     <>
+      {/* Sidebar para escritorio */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <h2>🌿 PlantCare</h2>
@@ -146,6 +180,7 @@ export default function Sidebar() {
         <UserSection />
       </aside>
 
+      {/* Header para móvil */}
       <header className={styles.mobileHeader}>
         <Link href="/" className={styles.mobileLogo}>
           <h2>🌿 PlantCare</h2>
@@ -159,13 +194,16 @@ export default function Sidebar() {
         </button>
       </header>
 
+      {/* Menú Overlay para móvil */}
       {isMobileMenuOpen && (
         <div
           className={styles.mobileNavOverlay}
           onClick={() => setMobileMenuOpen(false)}
         >
+          {/* Evita que el click dentro del menú cierre el overlay */}
           <div onClick={(e) => e.stopPropagation()}>
-            <MobileNav />
+            <MobileNav />{" "}
+            {/* Asegúrate que MobileNav usa el NavLinks actualizado */}
           </div>
         </div>
       )}
