@@ -334,12 +334,15 @@ export default function UnifiedCalendar() {
         {selectedDateTasks.length > 0 && (
           <div className={styles.taskDetail}>
             <h3>
-              {new Date(selectedDate!).toLocaleDateString("es-ES", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {new Date(selectedDate + "T00:00:00").toLocaleDateString(
+                "es-ES",
+                {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                }
+              )}
             </h3>
             <div className={styles.taskList}>
               {selectedDateTasks.map((task) => (
