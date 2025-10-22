@@ -344,6 +344,53 @@
   transform: translateY(-2px);
 }
 
+/* Estilo para items de recordatorios futuros en el panel de detalle */
+.taskFuture {
+  background-color: #e3f2fd; /* Fondo azul claro */
+  border-left-color: #2196f3; /* Borde azul */
+  opacity: 0.85; /* Ligeramente transparente para indicar que no es accionable */
+}
+
+/* Estilo para el título de la sección futura */
+.futureTitle {
+  font-size: 1rem;
+  color: var(--color-text-light);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+/* Estilo para el indicador '◇' en el panel de detalle */
+.futureBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; /* Mismo tamaño que completedBadge */
+  height: 40px;
+  background-color: #bbdefb; /* Fondo azul más claro */
+  color: #1e88e5; /* Azul más oscuro */
+  border-radius: 50%;
+  font-size: 1.5rem; /* Tamaño del rombo */
+  font-weight: bold;
+  opacity: 0.9;
+}
+
+/* Separador opcional */
+.detailSeparator {
+  border: none;
+  border-top: 1px dashed var(--color-border);
+  margin: 1.5rem 0;
+}
+
+/* Mensaje si no hay tareas (opcional pero bueno tenerlo) */
+.noTasksMessage {
+  text-align: center;
+  color: var(--color-text-light);
+  margin-top: 2rem;
+  font-style: italic;
+  padding: 1rem;
+}
+
 /* --- RESPONSIVE --- */
 @media (max-width: 1024px) {
   .calendarWrapper {
