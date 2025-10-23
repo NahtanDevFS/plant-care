@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
-import styles from "./SubstrateCalculator.module.css"; // Asegúrate de crear este archivo
+import styles from "./SubstrateCalculator.module.css";
 
 type SubstrateComponent = {
   id: number;
@@ -14,15 +14,15 @@ type SubstrateComponent = {
 
 type SelectedComponent = {
   component_id: number;
-  name: string; // Guardamos el nombre para mostrarlo fácilmente
-  ph_value: number; // Guardamos el pH para el cálculo
+  name: string;
+  ph_value: number;
   parts: number;
 };
 
 type UserMix = {
   id: number;
   mix_name: string;
-  components: SelectedComponent[]; // Asumimos que guardamos en este formato o similar
+  components: SelectedComponent[];
   calculated_ph: number;
   notes?: string | null;
   created_at: string;
@@ -43,8 +43,10 @@ export default function SubstrateCalculatorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  // Estado para el valor del dropdown
+  const [componentToAdd, setComponentToAdd] = useState<string>(""); // Guarda el ID como string
 
-  // Cargar componentes disponibles al montar
+  // --- (useEffect para fetchComponents - sin cambios) ---
   useEffect(() => {
     const fetchComponents = async () => {
       setLoadingComponents(true);
@@ -64,7 +66,7 @@ export default function SubstrateCalculatorPage() {
     fetchComponents();
   }, [supabase]);
 
-  // Cargar mezclas guardadas por el usuario
+  // --- (useEffect para fetchSavedMixes - sin cambios) ---
   useEffect(() => {
     const fetchSavedMixes = async () => {
       setLoadingMixes(true);
@@ -73,23 +75,18 @@ export default function SubstrateCalculatorPage() {
       } = await supabase.auth.getUser();
       if (!user) {
         setLoadingMixes(false);
-        // Podrías mostrar un mensaje o simplemente no cargar nada
         return;
       }
-
-      // *** IMPORTANTE: SIN RLS, ESTA CONSULTA TRAERÍA TODAS LAS MEZCLAS ***
-      // *** NECESITAS FILTRAR POR user_id MANUALMENTE ***
       const { data, error } = await supabase
         .from("user_substrate_mixes")
         .select("*")
-        .eq("user_id", user.id) // <--- FILTRO MANUAL ESENCIAL SIN RLS
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching saved mixes:", error);
         setError("Error al cargar mezclas guardadas.");
       } else {
-        // Asegurarse de que 'components' sea un array
         const mixes = (data || []).map((mix) => ({
           ...mix,
           components: Array.isArray(mix.components) ? mix.components : [],
@@ -101,16 +98,14 @@ export default function SubstrateCalculatorPage() {
     fetchSavedMixes();
   }, [supabase]);
 
-  // Calcular pH cuando cambian los componentes seleccionados o sus partes
+  // --- (useEffect para calcular pH - sin cambios) ---
   useEffect(() => {
     if (selectedComponents.length === 0) {
       setCalculatedPh(null);
       return;
     }
-
     let totalParts = 0;
     let weightedPhSum = 0;
-
     selectedComponents.forEach((item) => {
       const parts = Number(item.parts) || 0;
       if (parts > 0) {
@@ -118,46 +113,60 @@ export default function SubstrateCalculatorPage() {
         weightedPhSum += parts * item.ph_value;
       }
     });
-
     if (totalParts > 0) {
       const averagePh = weightedPhSum / totalParts;
-      setCalculatedPh(Number(averagePh.toFixed(1))); // Redondear a 1 decimal
+      setCalculatedPh(Number(averagePh.toFixed(1)));
     } else {
       setCalculatedPh(null);
     }
   }, [selectedComponents]);
 
-  const handleSelectComponent = (component: SubstrateComponent) => {
-    // Añadir si no está, quitar si ya está
-    setSelectedComponents((prev) => {
-      const exists = prev.some((c) => c.component_id === component.id);
-      if (exists) {
-        return prev.filter((c) => c.component_id !== component.id);
-      } else {
-        return [
-          ...prev,
-          {
-            component_id: component.id,
-            name: component.name,
-            ph_value: component.ph_value,
-            parts: 1, // Inicia con 1 parte por defecto
-          },
-        ];
-      }
-    });
+  // --- MODIFICADO: Añadir componente desde el dropdown ---
+  const handleAddComponent = () => {
+    if (!componentToAdd) return; // No hacer nada si no hay selección
+
+    const componentId = parseInt(componentToAdd, 10);
+    const component = allComponents.find((c) => c.id === componentId);
+
+    // Añadir solo si existe y no está ya en la lista
+    if (
+      component &&
+      !selectedComponents.some((sc) => sc.component_id === componentId)
+    ) {
+      setSelectedComponents((prev) => [
+        ...prev,
+        {
+          component_id: component.id,
+          name: component.name,
+          ph_value: component.ph_value,
+          parts: 1, // Inicia con 1 parte
+        },
+      ]);
+    }
+    // Resetear dropdown después de añadir
+    setComponentToAdd("");
   };
 
+  // --- NUEVO: Remover componente de la lista de mezcla ---
+  const handleRemoveComponent = (componentIdToRemove: number) => {
+    setSelectedComponents((prev) =>
+      prev.filter((c) => c.component_id !== componentIdToRemove)
+    );
+  };
+
+  // --- (handlePartsChange - sin cambios) ---
   const handlePartsChange = (componentId: number, value: string) => {
-    const newParts = parseInt(value, 10);
+    const newParts = parseFloat(value) || 0; // Permite decimales
     setSelectedComponents((prev) =>
       prev.map((c) =>
         c.component_id === componentId
-          ? { ...c, parts: isNaN(newParts) || newParts < 0 ? 0 : newParts }
+          ? { ...c, parts: newParts < 0 ? 0 : newParts } // Evita negativos
           : c
       )
     );
   };
 
+  // --- (getTotalParts - sin cambios) ---
   const getTotalParts = useMemo(() => {
     return selectedComponents.reduce(
       (sum, item) => sum + (Number(item.parts) || 0),
@@ -165,12 +174,14 @@ export default function SubstrateCalculatorPage() {
     );
   }, [selectedComponents]);
 
+  // --- (getPercentage - sin cambios) ---
   const getPercentage = (parts: number) => {
     const total = getTotalParts;
-    if (total === 0 || parts === 0) return 0;
+    if (total === 0 || parts === 0) return "0";
     return ((parts / total) * 100).toFixed(0);
   };
 
+  // --- (handleSaveMix - sin cambios) ---
   const handleSaveMix = async () => {
     if (!mixName.trim()) {
       setError("Por favor, dale un nombre a tu mezcla.");
@@ -184,11 +195,9 @@ export default function SubstrateCalculatorPage() {
       setError("No se pudo calcular el pH. Revisa las proporciones.");
       return;
     }
-
     setIsSaving(true);
     setError(null);
     setSuccessMessage(null);
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -197,35 +206,25 @@ export default function SubstrateCalculatorPage() {
       setIsSaving(false);
       return;
     }
-
-    // Prepara los datos a guardar (solo id y parts)
     const componentsToSave = selectedComponents
-      .filter((c) => c.parts > 0) // Solo guardar componentes con partes > 0
+      .filter((c) => c.parts > 0)
       .map(({ component_id, parts }) => ({ component_id, parts }));
-
     try {
-      // *** IMPORTANTE: SIN RLS, CUALQUIERA PODRÍA INSERTAR ***
-      // Idealmente, esto se haría en una API route que verifique al usuario
-      // O usar RLS policies que aseguren auth.uid() = user_id
       const { data, error: insertError } = await supabase
         .from("user_substrate_mixes")
         .insert([
           {
-            user_id: user.id, // Esencial incluir esto
+            user_id: user.id,
             mix_name: mixName.trim(),
             components: componentsToSave,
             calculated_ph: calculatedPh,
             notes: mixNotes.trim() || null,
           },
         ])
-        .select() // Devuelve el registro insertado
-        .single(); // Esperamos solo uno
-
+        .select()
+        .single();
       if (insertError) throw insertError;
-
-      // Añadir la nueva mezcla a la lista localmente
       if (data) {
-        // Necesitamos mapear los component_id a nombres para mostrar
         const newMixFormatted: UserMix = {
           ...data,
           components: (
@@ -243,12 +242,7 @@ export default function SubstrateCalculatorPage() {
         };
         setSavedMixes((prev) => [newMixFormatted, ...prev]);
       }
-
       setSuccessMessage(`Mezcla "${mixName.trim()}" guardada!`);
-      // Limpiar formulario opcionalmente
-      // setMixName("");
-      // setMixNotes("");
-      // setSelectedComponents([]);
     } catch (err) {
       console.error("Error saving mix:", err);
       setError(
@@ -259,13 +253,13 @@ export default function SubstrateCalculatorPage() {
     }
   };
 
+  // --- (handleDeleteMix - sin cambios) ---
   const handleDeleteMix = async (mixId: number) => {
     if (!confirm("¿Seguro que quieres eliminar esta mezcla guardada?")) {
       return;
     }
     setError(null);
     setSuccessMessage(null);
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -273,18 +267,13 @@ export default function SubstrateCalculatorPage() {
       setError("Necesitas iniciar sesión.");
       return;
     }
-
     try {
-      // *** IMPORTANTE: SIN RLS, CUALQUIERA PODRÍA BORRAR SI CONOCE EL ID ***
-      // Se debe verificar user_id
       const { error: deleteError } = await supabase
         .from("user_substrate_mixes")
         .delete()
         .eq("id", mixId)
-        .eq("user_id", user.id); // <--- FILTRO MANUAL ESENCIAL
-
+        .eq("user_id", user.id);
       if (deleteError) throw deleteError;
-
       setSavedMixes((prev) => prev.filter((mix) => mix.id !== mixId));
       setSuccessMessage("Mezcla eliminada.");
     } catch (err) {
@@ -292,6 +281,13 @@ export default function SubstrateCalculatorPage() {
       setError(err instanceof Error ? err.message : "Error al eliminar.");
     }
   };
+
+  // --- Componentes disponibles que AÚN NO están seleccionados ---
+  const availableComponents = useMemo(() => {
+    return allComponents.filter(
+      (comp) => !selectedComponents.some((sel) => sel.component_id === comp.id)
+    );
+  }, [allComponents, selectedComponents]);
 
   // --- Renderizado ---
   return (
@@ -305,38 +301,53 @@ export default function SubstrateCalculatorPage() {
       )}
 
       <div className={styles.calculatorSection}>
+        {/* --- Columna Izquierda: Añadir Componentes --- */}
         <div className={styles.componentSelection}>
-          <h2>1. Selecciona Componentes</h2>
+          <h2>1. Añadir Componentes</h2>
           {loadingComponents ? (
             <p>Cargando componentes...</p>
           ) : (
-            <div className={styles.componentGrid}>
-              {allComponents.map((comp) => (
-                <button
-                  key={comp.id}
-                  onClick={() => handleSelectComponent(comp)}
-                  className={`${styles.componentButton} ${
-                    selectedComponents.some((c) => c.component_id === comp.id)
-                      ? styles.selected
-                      : ""
-                  }`}
-                  title={comp.description || `pH: ${comp.ph_value}`}
-                >
-                  {comp.name}{" "}
-                  <span className={styles.componentPh}>
-                    (pH {comp.ph_value.toFixed(1)})
-                  </span>
-                </button>
-              ))}
+            <div className={styles.addComponentArea}>
+              <select
+                value={componentToAdd}
+                onChange={(e) => setComponentToAdd(e.target.value)}
+                className={styles.componentSelect}
+              >
+                <option value="">-- Elige un componente --</option>
+                {availableComponents.map((comp) => (
+                  <option key={comp.id} value={comp.id}>
+                    {comp.name} (pH {comp.ph_value.toFixed(1)})
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleAddComponent}
+                disabled={!componentToAdd}
+                className={styles.addButton}
+              >
+                Añadir a la Mezcla
+              </button>
+            </div>
+          )}
+          {/* Mostrar los componentes ya añadidos aquí como referencia */}
+          {selectedComponents.length > 0 && (
+            <div className={styles.addedComponentsInfo}>
+              <h4>Componentes en la mezcla:</h4>
+              <ul>
+                {selectedComponents.map((c) => (
+                  <li key={c.component_id}>{c.name}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
 
+        {/* --- Columna Derecha: Configuración y Resultados --- */}
         <div className={styles.mixConfiguration}>
           <h2>2. Define Proporciones (Partes)</h2>
           {selectedComponents.length === 0 ? (
             <p className={styles.placeholder}>
-              Selecciona componentes de la lista de la izquierda.
+              Añade componentes usando el selector de la izquierda.
             </p>
           ) : (
             <div className={styles.selectedComponentsList}>
@@ -348,7 +359,7 @@ export default function SubstrateCalculatorPage() {
                   <input
                     type="number"
                     min="0"
-                    step="0.5" // Permite medias partes
+                    step="0.5"
                     value={selComp.parts}
                     onChange={(e) =>
                       handlePartsChange(selComp.component_id, e.target.value)
@@ -357,13 +368,7 @@ export default function SubstrateCalculatorPage() {
                   />
                   <span> partes ({getPercentage(selComp.parts)}%)</span>
                   <button
-                    onClick={() =>
-                      handleSelectComponent(
-                        allComponents.find(
-                          (c) => c.id === selComp.component_id
-                        )!
-                      )
-                    }
+                    onClick={() => handleRemoveComponent(selComp.component_id)} // Usar la nueva función
                     className={styles.removeButton}
                     title="Quitar componente"
                   >
@@ -377,6 +382,7 @@ export default function SubstrateCalculatorPage() {
             </div>
           )}
 
+          {/* --- (Indicador de pH - sin cambios) --- */}
           <div className={styles.phResult}>
             <h2>3. Resultado Estimado</h2>
             <div className={styles.phIndicatorContainer}>
@@ -389,7 +395,7 @@ export default function SubstrateCalculatorPage() {
                 {calculatedPh !== null && (
                   <div
                     className={styles.phBarValue}
-                    style={{ left: `${((calculatedPh - 3) / 8) * 100}%` }} // Ajusta rango 3-11 pH
+                    style={{ left: `${((calculatedPh - 3) / 8) * 100}%` }}
                     title={`pH Estimado: ${calculatedPh}`}
                   ></div>
                 )}
@@ -401,6 +407,7 @@ export default function SubstrateCalculatorPage() {
             </div>
           </div>
 
+          {/* --- (Sección Guardar Mezcla - sin cambios) --- */}
           <div className={styles.saveSection}>
             <h2>4. Guardar Mezcla (Opcional)</h2>
             <input
@@ -437,6 +444,7 @@ export default function SubstrateCalculatorPage() {
 
       <hr className={styles.separator} />
 
+      {/* --- (Sección Mezclas Guardadas - sin cambios) --- */}
       <div className={styles.savedMixesSection}>
         <h2>📚 Mis Mezclas Guardadas</h2>
         {loadingMixes ? (
@@ -459,7 +467,6 @@ export default function SubstrateCalculatorPage() {
                     🗑️
                   </button>
                 </div>
-
                 <p className={styles.savedMixPh}>
                   pH Estimado: {mix.calculated_ph.toFixed(1)}
                 </p>

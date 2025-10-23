@@ -23,8 +23,9 @@
 
 .calculatorSection {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Dos columnas */
-  gap: 2rem;
+  /* Cambiado a 40% / 60% para dar más espacio a la configuración */
+  grid-template-columns: 40% 1fr;
+  gap: 2.5rem; /* Aumentar separación */
   margin-bottom: 2rem;
 }
 
@@ -37,46 +38,91 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.componentGrid {
+/* --- NUEVO: Estilos para el área de añadir componente --- */
+.addComponentArea {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  flex-direction: column; /* Apila el select y el botón */
+  gap: 1rem;
+  margin-bottom: 1.5rem; /* Espacio antes de la lista de añadidos */
 }
 
-.componentButton {
-  padding: 0.6rem 1rem;
+.componentSelect {
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid var(--color-border);
-  background-color: #f8f9fa;
-  color: var(--color-text);
   border-radius: var(--border-radius);
+  background-color: white;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+}
+.componentSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.addButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-primary-dark);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+}
+.addButton:hover:not(:disabled) {
+  background-color: #388e3c;
+}
+.addButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- NUEVO: Estilos para la lista informativa de componentes añadidos --- */
+.addedComponentsInfo {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+  border: 1px dashed var(--color-border);
+}
+.addedComponentsInfo h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-light);
   font-size: 0.9rem;
 }
-
-.componentButton:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
+.addedComponentsInfo ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+.addedComponentsInfo li {
+  margin-bottom: 0.3rem;
+  padding-left: 1.2em;
+  position: relative;
+}
+.addedComponentsInfo li::before {
+  content: "🌱"; /* O usa un punto, etc. */
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
-.componentButton.selected {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary-dark);
-  font-weight: 600;
-}
-
-.componentPh {
-  font-size: 0.8em;
-  opacity: 0.8;
-  margin-left: 0.5em;
-}
+/* --- Estilos Anteriores (Ajustados/Sin Cambios) --- */
 
 .placeholder {
   color: var(--color-text-light);
   font-style: italic;
   text-align: center;
   margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
 }
 
 .selectedComponentsList {
@@ -91,8 +137,9 @@
   align-items: center;
   gap: 0.75rem;
   background-color: #f8f9fa;
-  padding: 0.75rem;
+  padding: 0.75rem 1rem; /* Más padding */
   border-radius: calc(var(--border-radius) / 2);
+  border: 1px solid var(--color-border); /* Añadir borde sutil */
 }
 
 .selectedItemName {
@@ -101,21 +148,34 @@
 }
 
 .partsInput {
-  width: 60px;
-  padding: 0.4rem;
+  width: 70px; /* Un poco más ancho */
+  padding: 0.5rem;
   border-radius: calc(var(--border-radius) / 2);
   border: 1px solid var(--color-border);
   text-align: center;
+  font-size: 1rem; /* Asegurar tamaño */
+}
+.partsInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.selectedItem span:not(.selectedItemName) {
+  /* Estilo para "partes (X%)" */
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  white-space: nowrap; /* Evita que se parta */
 }
 
 .removeButton {
   background: none;
   border: none;
   color: #dc3545;
-  font-size: 1.5rem;
+  font-size: 1.6rem; /* Más grande */
   line-height: 1;
   cursor: pointer;
   padding: 0 0.5rem;
+  margin-left: 0.5rem; /* Pequeño espacio extra */
 }
 .removeButton:hover {
   color: #a0202d;
@@ -127,27 +187,26 @@
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px dashed var(--color-border);
+  font-size: 1.1rem; /* Más grande */
 }
 
-/* -- PH Indicator -- */
+/* -- PH Indicator (Sin Cambios) -- */
 .phResult {
   margin-top: 2rem;
 }
-
 .phIndicatorContainer {
   padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
   background-color: #f8f9fa;
 }
-
 .phScale {
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
   color: var(--color-text-light);
   margin-bottom: 0.5rem;
-  padding: 0 5%; /* Alinea etiquetas con extremos de la barra */
+  padding: 0 5%;
 }
 .phLabelAcid {
   color: #ff9800;
@@ -161,34 +220,26 @@
   color: #2196f3;
   font-weight: bold;
 }
-
 .phBarTrack {
   height: 20px;
-  background: linear-gradient(
-    to right,
-    #ff9800,
-    #4caf50,
-    #2196f3
-  ); /* Acid to Neutral to Alkaline */
+  background: linear-gradient(to right, #ff9800, #4caf50, #2196f3);
   border-radius: 10px;
   position: relative;
-  margin: 0 5%; /* Empuja la barra para alinear con etiquetas */
+  margin: 0 5%;
   width: 90%;
 }
-
 .phBarValue {
   position: absolute;
-  top: -5px; /* Ligeramente arriba */
-  bottom: -5px; /* Ligeramente abajo */
-  width: 4px; /* Ancho del indicador */
+  top: -5px;
+  bottom: -5px;
+  width: 4px;
   background-color: #333;
   border-radius: 2px;
-  transform: translateX(-50%); /* Centra el indicador */
+  transform: translateX(-50%);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   z-index: 1;
 }
 .phBarValue::after {
-  /* Triángulo opcional */
   content: "";
   position: absolute;
   bottom: -4px;
@@ -200,7 +251,6 @@
   border-right: 5px solid transparent;
   border-top: 5px solid #333;
 }
-
 .phValueDisplay {
   text-align: center;
   margin-top: 1rem;
@@ -208,13 +258,12 @@
   font-size: 1.1rem;
 }
 
-/* --- Save Section --- */
+/* --- Save Section (Sin Cambios) --- */
 .saveSection {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--color-border);
 }
-
 .mixNameInput,
 .mixNotesInput {
   width: 100%;
@@ -228,7 +277,6 @@
   resize: vertical;
   min-height: 60px;
 }
-
 .saveButton {
   padding: 0.8rem 1.5rem;
   background-color: var(--color-primary-dark);
@@ -249,25 +297,22 @@
   cursor: not-allowed;
 }
 
-/* --- Saved Mixes --- */
+/* --- Saved Mixes (Sin Cambios) --- */
 .separator {
   border: none;
   border-top: 1px solid var(--color-border);
   margin: 3rem 0;
 }
-
 .savedMixesSection h2 {
   color: var(--color-primary-dark);
   text-align: center;
   margin-bottom: 2rem;
 }
-
 .savedMixesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
 }
-
 .savedMixCard {
   background-color: #f8f9fa;
   border: 1px solid var(--color-border);
@@ -286,9 +331,8 @@
   color: var(--color-primary);
   font-size: 1.2rem;
   flex-grow: 1;
-  margin-right: 0.5rem; /* Espacio antes del botón */
+  margin-right: 0.5rem;
 }
-
 .deleteMixButton {
   background: none;
   border: none;
@@ -301,12 +345,10 @@
 .deleteMixButton:hover {
   color: #dc3545;
 }
-
 .savedMixPh {
   font-weight: bold;
   margin-bottom: 1rem;
 }
-
 .savedMixCard ul {
   list-style: none;
   padding-left: 0;
@@ -316,7 +358,6 @@
   margin-bottom: 0.3rem;
   font-size: 0.9rem;
 }
-
 .savedMixNotes {
   font-size: 0.9rem;
   color: var(--color-text-light);
@@ -324,7 +365,6 @@
   padding-left: 0.75rem;
   margin-top: 1rem;
 }
-
 .savedMixDate {
   font-size: 0.75rem;
   color: #aaa;
@@ -333,7 +373,7 @@
   margin-bottom: 0;
 }
 
-/* Mensajes de feedback */
+/* Mensajes de feedback (Sin Cambios) */
 .errorMessage,
 .successMessage {
   padding: 0.8rem 1rem;
@@ -354,11 +394,18 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  /* Ajusta el breakpoint si es necesario */
   .calculatorSection {
-    grid-template-columns: 1fr; /* Apila en móvil */
+    grid-template-columns: 1fr; /* Apila en pantallas medianas/pequeñas */
   }
   .componentSelection {
     margin-bottom: 2rem;
   }
 }
+
+/* --- QUITAR ESTILOS OBSOLETOS --- */
+/* Elimina .componentGrid y .componentButton si ya no los usas en otro lado */
+/* .componentGrid { display: none; } */
+/* .componentButton { display: none; } */
+/* .componentPh { display: none; } */
