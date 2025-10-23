@@ -104,6 +104,13 @@ export default function Sidebar() {
         📝 Diario de Plantas
       </Link>
       <Link
+        href="/substrate-calculator" // <--- NUEVA RUTA
+        onClick={handleLinkClick}
+        className={pathname === "/substrate-calculator" ? styles.active : ""}
+      >
+        🧪 Calculadora Sustrato {/* <--- NUEVO ENLACE */}
+      </Link>
+      <Link
         href="/plant-chat"
         onClick={handleLinkClick}
         className={pathname === "/plant-chat" ? styles.active : ""}

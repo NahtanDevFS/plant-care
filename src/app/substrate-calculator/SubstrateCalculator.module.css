@@ -1,0 +1,364 @@
+/* src/app/substrate-calculator/SubstrateCalculator.module.css */
+
+.pageContainer {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.pageContainer h1 {
+  text-align: center;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.pageContainer > p {
+  text-align: center;
+  color: var(--color-text-light);
+  margin-bottom: 2.5rem;
+}
+
+.calculatorSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Dos columnas */
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.componentSelection h2,
+.mixConfiguration h2 {
+  color: var(--color-primary-dark);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.componentGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.componentButton {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--color-border);
+  background-color: #f8f9fa;
+  color: var(--color-text);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.componentButton:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.componentButton.selected {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.componentPh {
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-left: 0.5em;
+}
+
+.placeholder {
+  color: var(--color-text-light);
+  font-style: italic;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.selectedComponentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.selectedItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: calc(var(--border-radius) / 2);
+}
+
+.selectedItemName {
+  flex-grow: 1;
+  font-weight: 500;
+}
+
+.partsInput {
+  width: 60px;
+  padding: 0.4rem;
+  border-radius: calc(var(--border-radius) / 2);
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.removeButton {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.5rem;
+}
+.removeButton:hover {
+  color: #a0202d;
+}
+
+.totalParts {
+  font-weight: bold;
+  text-align: right;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+/* -- PH Indicator -- */
+.phResult {
+  margin-top: 2rem;
+}
+
+.phIndicatorContainer {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: #f8f9fa;
+}
+
+.phScale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  margin-bottom: 0.5rem;
+  padding: 0 5%; /* Alinea etiquetas con extremos de la barra */
+}
+.phLabelAcid {
+  color: #ff9800;
+  font-weight: bold;
+}
+.phLabelNeutral {
+  color: #4caf50;
+  font-weight: bold;
+}
+.phLabelAlkaline {
+  color: #2196f3;
+  font-weight: bold;
+}
+
+.phBarTrack {
+  height: 20px;
+  background: linear-gradient(
+    to right,
+    #ff9800,
+    #4caf50,
+    #2196f3
+  ); /* Acid to Neutral to Alkaline */
+  border-radius: 10px;
+  position: relative;
+  margin: 0 5%; /* Empuja la barra para alinear con etiquetas */
+  width: 90%;
+}
+
+.phBarValue {
+  position: absolute;
+  top: -5px; /* Ligeramente arriba */
+  bottom: -5px; /* Ligeramente abajo */
+  width: 4px; /* Ancho del indicador */
+  background-color: #333;
+  border-radius: 2px;
+  transform: translateX(-50%); /* Centra el indicador */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+.phBarValue::after {
+  /* Triángulo opcional */
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #333;
+}
+
+.phValueDisplay {
+  text-align: center;
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* --- Save Section --- */
+.saveSection {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.mixNameInput,
+.mixNotesInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+.mixNotesInput {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.saveButton {
+  padding: 0.8rem 1.5rem;
+  background-color: var(--color-primary-dark);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 1rem;
+  width: 100%;
+}
+.saveButton:hover:not(:disabled) {
+  background-color: #388e3c;
+}
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- Saved Mixes --- */
+.separator {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 3rem 0;
+}
+
+.savedMixesSection h2 {
+  color: var(--color-primary-dark);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.savedMixesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.savedMixCard {
+  background-color: #f8f9fa;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  position: relative;
+}
+.savedMixHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+.savedMixHeader h3 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 1.2rem;
+  flex-grow: 1;
+  margin-right: 0.5rem; /* Espacio antes del botón */
+}
+
+.deleteMixButton {
+  background: none;
+  border: none;
+  color: #adb5bd;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.deleteMixButton:hover {
+  color: #dc3545;
+}
+
+.savedMixPh {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.savedMixCard ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1rem;
+}
+.savedMixCard li {
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.savedMixNotes {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  border-left: 3px solid var(--color-border);
+  padding-left: 0.75rem;
+  margin-top: 1rem;
+}
+
+.savedMixDate {
+  font-size: 0.75rem;
+  color: #aaa;
+  text-align: right;
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+/* Mensajes de feedback */
+.errorMessage,
+.successMessage {
+  padding: 0.8rem 1rem;
+  border-radius: var(--border-radius);
+  text-align: center;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+.errorMessage {
+  color: #d32f2f;
+  background-color: #ffcdd2;
+  border: 1px solid #ef9a9a;
+}
+.successMessage {
+  color: #388e3c;
+  background-color: #c8e6c9;
+  border: 1px solid #a5d6a7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calculatorSection {
+    grid-template-columns: 1fr; /* Apila en móvil */
+  }
+  .componentSelection {
+    margin-bottom: 2rem;
+  }
+}

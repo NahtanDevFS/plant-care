@@ -51,6 +51,7 @@ export async function middleware(request: NextRequest) {
     "/plant-chat",
     "/calendar-tasks",
     "/plant-diary",
+    "/substrate-calculator",
     "/profile",
   ];
 
