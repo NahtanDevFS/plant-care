@@ -1,7 +1,7 @@
 // src/app/plant-chat/page.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react"; // Import useMemo
 import { createClient } from "@/lib/supabase/client";
 import styles from "./PlantChat.module.css";
 import Image from "next/image";
@@ -22,34 +22,21 @@ type Message = {
 // Función para procesar el texto de Markdown a HTML
 const formatMessage = (text: string) => {
   let formatted = text;
-
-  // Convertir **texto** a <strong>texto</strong>
   formatted = formatted.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-  // Convertir *texto* a <em>texto</em> (pero no si ya es parte de **)
   formatted = formatted.replace(/(?<!\*)\*(?!\*)(.+?)\*(?!\*)/g, "<em>$1</em>");
-
-  // Convertir listas con guiones
   formatted = formatted.replace(/^- (.+)$/gm, "• $1");
-
-  // Convertir listas numeradas
   formatted = formatted.replace(
     /^\d+\. (.+)$/gm,
     '<div style="margin-left: 1rem;">$1</div>'
   );
-
-  // Convertir saltos de línea dobles a párrafos
   formatted = formatted.replace(/\n\n/g, "<br><br>");
-
-  // Convertir saltos de línea simples a <br>
   formatted = formatted.replace(/\n/g, "<br>");
-
   return formatted;
 };
 
 export default function PlantChatPage() {
   const supabase = createClient();
-  const [plants, setPlants] = useState<Plant[]>([]);
+  const [allPlants, setAllPlants] = useState<Plant[]>([]); // Renombrado
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
   const [tempSelectedPlant, setTempSelectedPlant] = useState<number | null>(
     null
@@ -59,6 +46,7 @@ export default function PlantChatPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showSelector, setShowSelector] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para la búsqueda
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,14 +70,35 @@ export default function PlantChatPage() {
         .eq("user_id", user.id);
 
       if (!error && data) {
-        setPlants(data);
+        setAllPlants(data); // Guardar todas las plantas
       }
     }
     setLoading(false);
   };
 
+  // Filtrar plantas basado en searchTerm usando useMemo
+  const filteredPlants = useMemo(() => {
+    if (!searchTerm) {
+      return allPlants; // Si no hay búsqueda, devuelve todas
+    }
+    // Reiniciar planta temporalmente seleccionada si no está en los resultados filtrados
+    if (
+      tempSelectedPlant &&
+      !allPlants.find(
+        (p) =>
+          p.id === tempSelectedPlant &&
+          p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    ) {
+      setTempSelectedPlant(null);
+    }
+    return allPlants.filter((plant) =>
+      plant.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [allPlants, searchTerm, tempSelectedPlant]); // Añadir tempSelectedPlant a dependencias
+
   const handleSelectPlant = () => {
-    const plant = plants.find((p) => p.id === tempSelectedPlant);
+    const plant = allPlants.find((p) => p.id === tempSelectedPlant); // Buscar en allPlants
     if (plant) {
       setSelectedPlant(plant);
       setShowSelector(false);
@@ -104,6 +113,7 @@ export default function PlantChatPage() {
   };
 
   const sendMessage = async () => {
+    // ... (resto de la función sendMessage sin cambios)
     if (!inputMessage.trim() || !selectedPlant || sending) return;
 
     const userMessage: Message = {
@@ -117,7 +127,6 @@ export default function PlantChatPage() {
     setSending(true);
 
     try {
-      // Preparar historial para la API
       const chatHistory = messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -178,6 +187,7 @@ export default function PlantChatPage() {
     setSelectedPlant(null);
     setMessages([]);
     setTempSelectedPlant(null);
+    setSearchTerm(""); // Limpiar búsqueda al cambiar planta
   };
 
   if (loading) {
@@ -191,7 +201,8 @@ export default function PlantChatPage() {
     );
   }
 
-  if (plants.length === 0) {
+  if (allPlants.length === 0) {
+    // Comprobar allPlants
     return (
       <div className={styles.container}>
         <div className={styles.header}>
@@ -221,30 +232,50 @@ export default function PlantChatPage() {
       {showSelector && !selectedPlant ? (
         <div className={styles.plantSelector}>
           <h2>Selecciona una planta</h2>
-          <div className={styles.plantsGrid}>
-            {plants.map((plant) => (
-              <div
-                key={plant.id}
-                className={`${styles.plantCard} ${
-                  tempSelectedPlant === plant.id ? styles.selected : ""
-                }`}
-                onClick={() => setTempSelectedPlant(plant.id)}
-              >
-                <Image
-                  src={plant.image_url}
-                  alt={plant.name}
-                  width={200}
-                  height={120}
-                  className={styles.plantCardImage}
-                  unoptimized
-                />
-                <div className={styles.plantCardName}>{plant.name}</div>
-              </div>
-            ))}
+          {/* --- Barra de Búsqueda --- */}
+          <div className={styles.searchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar planta por nombre..."
+              className={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
+          {/* ------------------------ */}
+
+          {filteredPlants.length > 0 ? ( // Mostrar grid solo si hay resultados
+            <div className={styles.plantsGrid}>
+              {filteredPlants.map((plant) => (
+                <div
+                  key={plant.id}
+                  className={`${styles.plantCard} ${
+                    tempSelectedPlant === plant.id ? styles.selected : ""
+                  }`}
+                  onClick={() => setTempSelectedPlant(plant.id)}
+                >
+                  <Image
+                    src={plant.image_url}
+                    alt={plant.name}
+                    width={200}
+                    height={120}
+                    className={styles.plantCardImage}
+                    unoptimized
+                  />
+                  <div className={styles.plantCardName}>{plant.name}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Mensaje si no hay resultados de búsqueda
+            <p className={styles.noResults}>
+              No se encontraron plantas con ese nombre.
+            </p>
+          )}
+
           <button
             onClick={handleSelectPlant}
-            disabled={!tempSelectedPlant}
+            disabled={!tempSelectedPlant} // Deshabilitado si no hay planta seleccionada temporalmente
             className={styles.selectButton}
           >
             Comenzar Chat
@@ -252,6 +283,7 @@ export default function PlantChatPage() {
         </div>
       ) : selectedPlant ? (
         <div className={styles.chatContainer}>
+          {/* ... (resto del componente de chat sin cambios) ... */}
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderInfo}>
               <Image
