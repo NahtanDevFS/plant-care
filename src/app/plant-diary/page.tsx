@@ -114,7 +114,7 @@ export default function SelectPlantForDiaryPage() {
       ) : filteredPlants.length === 0 ? ( // Comprueba si no hay resultados de búsqueda
         <div className={styles.emptyState}>
           <h3>No se encontraron plantas</h3>
-          <p>No hay plantas que coincidan con tu búsqueda "{searchTerm}".</p>
+          <p>No hay plantas que coincidan con tu búsqueda: {searchTerm}.</p>
         </div>
       ) : (
         // Mapea sobre las plantas filtradas
