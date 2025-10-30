@@ -3,6 +3,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createServerClient } from "@supabase/ssr";
+import { CURRENT_LLM_PROVIDER, LLM_MODELS } from "@/lib/llm-config";
+import * as GroqClient from "@/lib/groq-client";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -82,44 +84,67 @@ CONTEXTO ADICIONAL:
 El usuario está en Guatemala, con clima templado a subtropical.
 `;
 
-    // Preparar el historial de chat para Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    let responseText: string;
 
-    // Construir el historial de conversación
-    const history = chatHistory
-      ? chatHistory.map((msg: any) => ({
-          role: msg.role === "user" ? "user" : "model",
-          parts: [{ text: msg.content }],
-        }))
-      : [];
-
-    // Iniciar el chat con el contexto
-    const chat = model.startChat({
-      history: [
+    if (CURRENT_LLM_PROVIDER === "groq") {
+      // Usar Groq
+      const messages = [
+        { role: "user" as const, content: plantContext },
         {
-          role: "user",
-          parts: [{ text: plantContext }],
+          role: "assistant" as const,
+          content: `¡Entendido! Estoy listo para ayudarte con tu ${plant.name}. Tengo toda la información sobre sus cuidados y características. ¿Qué te gustaría saber? 🌱`,
         },
-        {
-          role: "model",
-          parts: [
-            {
-              text: `¡Entendido! Estoy listo para ayudarte con tu ${plant.name}. Tengo toda la información sobre sus cuidados y características. ¿Qué te gustaría saber? 🌱`,
-            },
-          ],
-        },
-        ...history,
-      ],
-    });
+        ...(chatHistory || []).map((msg: any) => ({
+          role: (msg.role === "user" ? "user" : "assistant") as
+            | "user"
+            | "assistant",
+          content: msg.content,
+        })),
+        { role: "user" as const, content: message },
+      ];
 
-    // Enviar el mensaje del usuario
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    const text = response.text();
+      responseText = await GroqClient.generateChatResponse(
+        LLM_MODELS.groq,
+        messages
+      );
+    } else {
+      // Usar Gemini
+      const model = genAI.getGenerativeModel({ model: LLM_MODELS.gemini });
+
+      const history = chatHistory
+        ? chatHistory.map((msg: any) => ({
+            role: msg.role === "user" ? "user" : "model",
+            parts: [{ text: msg.content }],
+          }))
+        : [];
+
+      const chat = model.startChat({
+        history: [
+          {
+            role: "user",
+            parts: [{ text: plantContext }],
+          },
+          {
+            role: "model",
+            parts: [
+              {
+                text: `¡Entendido! Estoy listo para ayudarte con tu ${plant.name}. Tengo toda la información sobre sus cuidados y características. ¿Qué te gustaría saber? 🌱`,
+              },
+            ],
+          },
+          ...history,
+        ],
+      });
+
+      const result = await chat.sendMessage(message);
+      const response = await result.response;
+      responseText = response.text();
+    }
 
     return NextResponse.json({
-      response: text,
+      response: responseText,
       plantName: plant.name,
+      provider: CURRENT_LLM_PROVIDER,
     });
   } catch (error) {
     console.error("Error en el chat:", error);

@@ -3,14 +3,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { CURRENT_LLM_PROVIDER, LLM_MODELS } from "@/lib/llm-config";
+import * as GroqClient from "@/lib/groq-client";
 
 // Inicializa el SDK de Google
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 async function getCareInstructions(plantName: string): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
     const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando un clima templado a subtropical como el de Guatemala. La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
 
 ### General:
@@ -57,18 +57,25 @@ IMPORTANTE:
 - En Plagas y Enfermedades, numera con 1. 2. etc
 - No incluyas texto introductorio ni final`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    return text;
+    if (CURRENT_LLM_PROVIDER === "groq") {
+      const response = await GroqClient.generateContent(
+        LLM_MODELS.groq,
+        prompt
+      );
+      return response;
+    } else {
+      const model = genAI.getGenerativeModel({ model: LLM_MODELS.gemini });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    }
   } catch (error) {
     console.error(
-      "No se pudo obtener la información de cuidados de Gemini:",
+      `No se pudo obtener la información de cuidados de ${CURRENT_LLM_PROVIDER}:`,
       error
     );
     throw new Error(
-      "No se pudo generar la información de cuidados desde Gemini."
+      `No se pudo generar la información de cuidados desde ${CURRENT_LLM_PROVIDER}.`
     );
   }
 }
@@ -185,6 +192,7 @@ export async function POST(request: NextRequest) {
       message: "¡Planta guardada con éxito!",
       careInstructions,
       metadata,
+      provider: CURRENT_LLM_PROVIDER, // Para debug
     });
   } catch (error) {
     console.error("Error en el endpoint POST /api/save-plant:", error);
