@@ -463,7 +463,15 @@
   }
 
   .header h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
+  }
+
+  .header h1 svg {
+    display: none;
+  }
+
+  .header p {
+    font-size: 1rem;
   }
 
   .plantsGrid {

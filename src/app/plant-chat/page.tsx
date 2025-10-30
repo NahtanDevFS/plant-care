@@ -208,13 +208,11 @@ export default function PlantChatPage() {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          {/* --- 2. ÍCONO REEMPLAZADO --- */}
           <h1>
-            <FiMessageSquare /> Chat con tu Planta
+            <FiMessageSquare /> Aprende más sobre plantas
           </h1>
         </div>
         <div className={styles.emptyState}>
-          {/* --- 3. ÍCONO REEMPLAZADO --- */}
           <span className={styles.emptyIcon}>
             <FiArchive />
           </span>
@@ -232,18 +230,19 @@ export default function PlantChatPage() {
     <div className={styles.container}>
       {!selectedPlant && (
         <div className={styles.header}>
-          {/* --- 2. ÍCONO REEMPLAZADO --- */}
           <h1>
-            <FiMessageSquare /> Chat con tu Planta
+            <FiMessageSquare /> Aprende más sobre plantas
           </h1>
-          <p>Selecciona una planta para consultar dudas personalizadas</p>
+          <p>
+            Selecciona una planta o inicia un chat para consultar dudas
+            personalizadas a una inteligencia artificial que las resolverá
+          </p>
         </div>
       )}
 
       {showSelector && !selectedPlant ? (
         <div className={styles.plantSelector}>
           <h2>Selecciona una planta</h2>
-          {/* --- Barra de Búsqueda --- */}
           <div className={styles.searchContainer}>
             <input
               type="text"
@@ -253,7 +252,6 @@ export default function PlantChatPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          {/* ------------------------ */}
 
           {filteredPlants.length > 0 ? ( // Mostrar grid solo si hay resultados
             <div className={styles.plantsGrid}>
@@ -374,7 +372,6 @@ export default function PlantChatPage() {
               disabled={!inputMessage.trim() || sending}
               className={styles.sendButton}
             >
-              {/* --- 5. ÍCONO REEMPLAZADO --- */}
               <FiSend />
             </button>
           </div>
