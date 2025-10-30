@@ -691,7 +691,7 @@ export default function MyPlants() {
           margin: { left: margin, right: margin },
         });
 
-        // @ts-ignore
+        // @ts-expect-error jspdf-autotable no tipa correctamente 'finalY'
         yPos = pdf.lastAutoTable.finalY + 10;
       } catch (imgError) {
         console.error("Error al procesar imagen para PDF:", imgError);
