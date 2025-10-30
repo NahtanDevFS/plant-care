@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
 import styles from "./ProfilePage.module.css"; // Crearemos este CSS
 import type { User } from "@supabase/supabase-js"; // Importar User type
+// --- 1. IMPORTAR ÍCONO ---
+import { FiUser } from "react-icons/fi";
 
 type Profile = {
   username: string | null;
@@ -164,7 +166,10 @@ export default function ProfilePage() {
 
   return (
     <div className={styles.container}>
-      <h1>👤 Mi Perfil</h1>
+      {/* --- 2. ÍCONO REEMPLAZADO --- */}
+      <h1>
+        <FiUser /> Mi Perfil
+      </h1>
 
       {error && <p className={styles.errorMessage}>{error}</p>}
       {successMessage && (

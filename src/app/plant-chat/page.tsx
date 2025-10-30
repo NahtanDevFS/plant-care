@@ -5,6 +5,8 @@ import { useEffect, useState, useRef, useMemo } from "react"; // Import useMemo
 import { createClient } from "@/lib/supabase/client";
 import styles from "./PlantChat.module.css";
 import Image from "next/image";
+// --- 1. IMPORTAR ÍCONOS ---
+import { FiMessageSquare, FiArchive, FiUser, FiSend } from "react-icons/fi";
 
 type Plant = {
   id: number;
@@ -206,10 +208,16 @@ export default function PlantChatPage() {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <h1>🤖 Chat con tu Planta</h1>
+          {/* --- 2. ÍCONO REEMPLAZADO --- */}
+          <h1>
+            <FiMessageSquare /> Chat con tu Planta
+          </h1>
         </div>
         <div className={styles.emptyState}>
-          <span className={styles.emptyIcon}>🪴</span>
+          {/* --- 3. ÍCONO REEMPLAZADO --- */}
+          <span className={styles.emptyIcon}>
+            <FiArchive />
+          </span>
           <h3>No tienes plantas registradas</h3>
           <p>
             Primero debes identificar y guardar una planta para poder chatear
@@ -224,7 +232,10 @@ export default function PlantChatPage() {
     <div className={styles.container}>
       {!selectedPlant && (
         <div className={styles.header}>
-          <h1>🤖 Chat con tu Planta</h1>
+          {/* --- 2. ÍCONO REEMPLAZADO --- */}
+          <h1>
+            <FiMessageSquare /> Chat con tu Planta
+          </h1>
           <p>Selecciona una planta para consultar dudas personalizadas</p>
         </div>
       )}
@@ -315,7 +326,8 @@ export default function PlantChatPage() {
                 }`}
               >
                 <div className={styles.messageAvatar}>
-                  {message.role === "user" ? "👤" : "🌿"}
+                  {/* --- 4. ÍCONO REEMPLAZADO (USUARIO) --- */}
+                  {message.role === "user" ? <FiUser /> : "🌿"}
                 </div>
                 <div className={styles.messageBubble}>
                   <div
@@ -362,7 +374,8 @@ export default function PlantChatPage() {
               disabled={!inputMessage.trim() || sending}
               className={styles.sendButton}
             >
-              ➤
+              {/* --- 5. ÍCONO REEMPLAZADO --- */}
+              <FiSend />
             </button>
           </div>
         </div>

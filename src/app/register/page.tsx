@@ -80,9 +80,13 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.authContainer}>
+      <div className={styles.authHeader}>
+        <h1>🌿 PlantCare</h1>
+        <p>Identifica y aprende a cuidar tus plantas y mucho más.</p>
+      </div>
+
       <form onSubmit={handleSignUp} className={styles.authForm}>
         <h2>Crear Cuenta</h2>
-        {/* --- Campo Username --- */}
         <label htmlFor="username">Nombre de Usuario</label>
         <input
           id="username"
@@ -123,7 +127,10 @@ export default function RegisterPage() {
           {isLoading ? "Registrando..." : "Registrarse"}
         </button>
         <p>
-          ¿Ya tienes cuenta? <Link href="/login">Inicia Sesión</Link>
+          ¿Ya tienes cuenta?{" "}
+          <Link href="/login" className={styles.authLink}>
+            Inicia Sesión
+          </Link>
         </p>
         {error && <p className={styles.errorMessage}>{error}</p>}
         {message && <p className={styles.successMessage}>{message}</p>}

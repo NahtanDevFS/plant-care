@@ -37,6 +37,11 @@ export default function LoginPage() {
 
   return (
     <div className={styles.authContainer}>
+      <div className={styles.authHeader}>
+        <h1>🌿 PlantCare</h1>
+        <p>Identifica y aprende a cuidar tus plantas y mucho más.</p>
+      </div>
+
       <form onSubmit={handleSignIn} className={styles.authForm}>
         <h2>Iniciar Sesión</h2>
         <label htmlFor="email">Email</label>
@@ -72,7 +77,10 @@ export default function LoginPage() {
           {isLoading ? "Cargando..." : "Iniciar Sesión"}
         </button>
         <p>
-          ¿No tienes cuenta? <Link href="/register">Regístrate</Link>
+          ¿No tienes cuenta?{" "}
+          <Link href="/register" className={styles.authLink}>
+            Regístrate
+          </Link>
         </p>
         {error && <p className={styles.errorMessage}>{error}</p>}
       </form>

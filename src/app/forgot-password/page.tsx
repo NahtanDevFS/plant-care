@@ -35,6 +35,11 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className={styles.authContainer}>
+      <div className={styles.authHeader}>
+        <h1>🌿 PlantCare</h1>
+        <p>Identifica y aprende a cuidar tus plantas y mucho más.</p>
+      </div>
+
       <form onSubmit={handlePasswordReset} className={styles.authForm}>
         <h2>Recuperar Contraseña</h2>
         <p>
@@ -56,7 +61,10 @@ export default function ForgotPasswordPage() {
           {isLoading ? "Enviando..." : "Enviar enlace"}
         </button>
         <p>
-          ¿Recordaste tu contraseña? <Link href="/login">Iniciar Sesión</Link>
+          ¿Recordaste tu contraseña?{" "}
+          <Link href="/login" className={styles.authLink}>
+            Iniciar Sesión
+          </Link>
         </p>
         {error && <p className={styles.errorMessage}>{error}</p>}
         {message && <p className={styles.successMessage}>{message}</p>}

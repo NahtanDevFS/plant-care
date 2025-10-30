@@ -10,6 +10,8 @@ import {
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
 import styles from "./PlantDiary.module.css";
+// --- 1. IMPORTAR ÍCONOS ---
+import { FiUpload, FiCamera, FiRefreshCw, FiX, FiTrash2 } from "react-icons/fi";
 
 type DiaryEntry = {
   id: number;
@@ -354,7 +356,10 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
         <div className={styles.cameraModal}>
           <div className={styles.cameraContainer}>
             <div className={styles.cameraHeader}>
-              <h2>📷 Tomar Foto</h2>
+              {/* --- 2. ÍCONO REEMPLAZADO --- */}
+              <h2>
+                <FiCamera /> Tomar Foto
+              </h2>
               <button onClick={closeCamera} className={styles.closeModalButton}>
                 ✕
               </button>
@@ -373,14 +378,22 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                 className={styles.switchCameraButton}
                 disabled={isCompressing}
               >
-                🔄 Cambiar
+                {/* --- 3. ÍCONO REEMPLAZADO --- */}
+                <FiRefreshCw /> Cambiar
               </button>
               <button
                 onClick={capturePhoto}
                 className={styles.captureButton}
                 disabled={isCompressing}
               >
-                {isCompressing ? "Procesando..." : "📸 Capturar"}
+                {/* --- 4. ÍCONO REEMPLAZADO --- */}
+                {isCompressing ? (
+                  "Procesando..."
+                ) : (
+                  <>
+                    <FiCamera /> Capturar
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -402,7 +415,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             htmlFor={`image-upload-${plantId}`}
             className={styles.uploadLabel}
           >
-            📁{" "}
+            {/* --- 5. ÍCONO REEMPLAZADO --- */}
+            <FiUpload />
             {isCompressing && !newImage
               ? "Procesando..."
               : newImage
@@ -424,7 +438,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             className={styles.cameraButtonForm}
             disabled={isSubmitting || isCompressing}
           >
-            📷 Tomar Foto
+            {/* --- 6. ÍCONO REEMPLAZADO --- */}
+            <FiCamera /> Tomar Foto
           </button>
 
           {imagePreview && (
@@ -445,7 +460,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                 }}
                 className={styles.removePreviewButton}
               >
-                ×
+                {/* --- 7. ÍCONO REEMPLAZADO --- */}
+                <FiX />
               </button>
             </div>
           )}
@@ -541,7 +557,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                   className={styles.deleteEntryButton}
                   title="Eliminar entrada"
                 >
-                  🗑️
+                  {/* --- 8. ÍCONO REEMPLAZADO --- */}
+                  <FiTrash2 />
                 </button>
               </div>
               {entry.image_url && (

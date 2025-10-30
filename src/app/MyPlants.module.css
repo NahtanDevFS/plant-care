@@ -59,6 +59,12 @@
   font-size: 5rem;
   display: block;
   margin-bottom: 1rem;
+  color: var(--color-primary); /* --- AÑADIDO --- */
+}
+
+/* --- AÑADIDO --- */
+.emptyIcon svg {
+  stroke-width: 1.5;
 }
 
 .errorMessage {
@@ -193,6 +199,20 @@
   border-radius: 15px;
   font-size: 0.8rem;
   font-weight: 600;
+  /* --- AÑADIDO --- */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* --- AÑADIDO --- */
+.infoTag svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
+}
+/* Específico para LiaPawSolid que es más grande */
+.petFriendly svg {
+  font-size: 1.2rem;
 }
 
 .levelEasy {
@@ -254,6 +274,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* --- AÑADIDO --- */
+.deleteButton svg {
+  stroke-width: 2.5;
 }
 
 .deleteButton:hover {
@@ -335,7 +360,16 @@
 }
 
 .careIcon {
+  /* font-size: 1.8rem; <-- REEMPLAZADO */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- AÑADIDO --- */
+.careIcon svg {
   font-size: 1.8rem;
+  stroke-width: 2;
 }
 
 .careHeader h4 {
@@ -391,7 +425,10 @@
 }
 
 .diaryLinkButton {
-  display: inline-block; /* Permite padding y centrado */
+  display: inline-flex; /* --- MODIFICADO --- */
+  align-items: center; /* --- AÑADIDO --- */
+  gap: 0.5rem; /* --- AÑADIDO --- */
+  justify-content: center; /* --- AÑADIDO --- */
   padding: 0.8rem 1.5rem;
   background-color: var(
     --color-primary-dark
@@ -403,6 +440,12 @@
   font-weight: 600;
   transition: background-color 0.2s ease, transform 0.1s ease;
   font-size: 0.95rem;
+}
+
+/* --- AÑADIDO --- */
+.diaryLinkButton svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
 }
 
 .diaryLinkButton:hover {

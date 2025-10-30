@@ -4,6 +4,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./SubstrateCalculator.module.css";
+// --- 1. IMPORTAR ÍCONOS ---
+import { FiPercent, FiSave, FiArchive, FiTrash2 } from "react-icons/fi";
+import { GiPlantSeed } from "react-icons/gi";
 
 type SubstrateComponent = {
   id: number;
@@ -292,7 +295,10 @@ export default function SubstrateCalculatorPage() {
   // --- Renderizado ---
   return (
     <div className={styles.pageContainer}>
-      <h1>🧪 Calculadora de Sustrato</h1>
+      {/* --- 2. ÍCONO REEMPLAZADO --- */}
+      <h1>
+        <FiPercent /> Calculadora de Sustrato
+      </h1>
       <p>Crea y guarda tus mezclas de sustrato personalizadas.</p>
 
       {error && <p className={styles.errorMessage}>{error}</p>}
@@ -334,8 +340,11 @@ export default function SubstrateCalculatorPage() {
             <div className={styles.addedComponentsInfo}>
               <h4>Componentes en la mezcla:</h4>
               <ul>
+                {/* --- 3. ÍCONO AÑADIDO --- */}
                 {selectedComponents.map((c) => (
-                  <li key={c.component_id}>{c.name}</li>
+                  <li key={c.component_id}>
+                    <GiPlantSeed /> {c.name}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -436,7 +445,14 @@ export default function SubstrateCalculatorPage() {
               }
               className={styles.saveButton}
             >
-              {isSaving ? "Guardando..." : "💾 Guardar Mezcla"}
+              {/* --- 4. ÍCONO REEMPLAZADO --- */}
+              {isSaving ? (
+                "Guardando..."
+              ) : (
+                <>
+                  <FiSave /> Guardar Mezcla
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -446,7 +462,10 @@ export default function SubstrateCalculatorPage() {
 
       {/* --- (Sección Mezclas Guardadas - sin cambios) --- */}
       <div className={styles.savedMixesSection}>
-        <h2>📚 Mis Mezclas Guardadas</h2>
+        {/* --- 5. ÍCONO REEMPLAZADO --- */}
+        <h2>
+          <FiArchive /> Mis Mezclas Guardadas
+        </h2>
         {loadingMixes ? (
           <p>Cargando mezclas...</p>
         ) : savedMixes.length === 0 ? (
@@ -464,7 +483,8 @@ export default function SubstrateCalculatorPage() {
                     className={styles.deleteMixButton}
                     title="Eliminar mezcla"
                   >
-                    🗑️
+                    {/* --- 6. ÍCONO REEMPLAZADO --- */}
+                    <FiTrash2 />
                   </button>
                 </div>
                 <p className={styles.savedMixPh}>

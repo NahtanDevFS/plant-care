@@ -9,6 +9,20 @@ import Image from "next/image";
 import ReminderSetup from "@/components/ReminderSetup";
 import PlantDiary from "@/components/PlantDiary";
 import Link from "next/link";
+// --- 1. IMPORTAR ÍCONOS ---
+import {
+  FiDroplet,
+  FiSun,
+  FiWind,
+  FiAlertTriangle,
+  FiThermometer,
+  FiTrash2,
+  FiBookOpen,
+  FiArchive,
+  FiInfo,
+} from "react-icons/fi";
+import { LiaPawSolid, LiaBugSolid, LiaDeafSolid } from "react-icons/lia";
+import { GiPlantSeed } from "react-icons/gi"; // (Gi para Sustrato)
 
 // --- TIPOS DE DATOS ---
 // Tipo base de la planta que viene de Supabase
@@ -28,17 +42,30 @@ type PlantFromDB = {
 // Tipo extendido para usar en el componente
 type Plant = PlantFromDB;
 
-// --- CONFIGURACIÓN DE TARJETAS DE CUIDADO ---
+// --- 2. CONFIGURACIÓN DE TARJETAS DE CUIDADO (Actualizada con Íconos) ---
 const careConfig = {
-  Riego: { icon: "💧", color: "#2196F3", bgColor: "#E3F2FD" },
-  Luz: { icon: "☀️", color: "#FF9800", bgColor: "#FFF3E0" },
-  Sustrato: { icon: "🌱", color: "#795548", bgColor: "#EFEBE9" },
-  Fertilizante: { icon: "🧪", color: "#9C27B0", bgColor: "#F3E5F5" },
-  Humedad: { icon: "💨", color: "#00BCD4", bgColor: "#E0F7FA" },
-  "Plagas Comunes": { icon: "🐞", color: "#d32f2f", bgColor: "#ffcdd2" },
-  "Enfermedades Comunes": { icon: "🍄", color: "#7B1FA2", bgColor: "#E1BEE7" },
-  General: { icon: "ℹ️", color: "#607D8B", bgColor: "#ECEFF1" },
+  Riego: { icon: <FiDroplet />, color: "#2196F3", bgColor: "#E3F2FD" },
+  Luz: { icon: <FiSun />, color: "#FF9800", bgColor: "#FFF3E0" },
+  Sustrato: { icon: <GiPlantSeed />, color: "#795548", bgColor: "#EFEBE9" }, // Usar GiPlantSeed
+  Fertilizante: {
+    icon: <FiThermometer />,
+    color: "#9C27B0",
+    bgColor: "#F3E5F5",
+  },
+  Humedad: { icon: <FiWind />, color: "#00BCD4", bgColor: "#E0F7FA" },
+  "Plagas Comunes": {
+    icon: <LiaBugSolid />,
+    color: "#d32f2f",
+    bgColor: "#ffcdd2",
+  },
+  "Enfermedades Comunes": {
+    icon: <LiaDeafSolid />,
+    color: "#7B1FA2",
+    bgColor: "#E1BEE7",
+  },
+  General: { icon: <FiInfo />, color: "#607D8B", bgColor: "#ECEFF1" },
 };
+// -------------------------------------------------------------------
 
 type CareKey = keyof typeof careConfig;
 
@@ -89,11 +116,7 @@ const CareInstructions = ({ text }: { text: string }) => {
         const [title, ...contentParts] = section.split(":");
         const content = contentParts.join(":").trim();
         const trimmedTitle = title.trim() as CareKey;
-        const config = careConfig[trimmedTitle] || {
-          icon: "📋",
-          color: "#4caf50",
-          bgColor: "#E8F5E9",
-        };
+        const config = careConfig[trimmedTitle] || careConfig["General"]; // Fallback a General
 
         if (trimmedTitle === "General") return null;
 
@@ -445,14 +468,15 @@ export default function MyPlants() {
                       {plant.care_level}
                     </span>
                   )}
+                  {/* --- 3. ÍCONOS REEMPLAZADOS --- */}
                   {plant.pet_friendly === true && (
                     <span className={`${styles.infoTag} ${styles.petFriendly}`}>
-                      🐾 Apta para Mascotas
+                      <LiaPawSolid /> Apta para Mascotas
                     </span>
                   )}
                   {plant.is_toxic === true && (
                     <span className={`${styles.infoTag} ${styles.isToxic}`}>
-                      ⚠️ Venenosa
+                      <FiAlertTriangle /> Venenosa
                     </span>
                   )}
                 </div>
@@ -468,7 +492,8 @@ export default function MyPlants() {
                     className={styles.deleteButton}
                     title="Eliminar planta"
                   >
-                    🗑️
+                    {/* --- 4. ÍCONO REEMPLAZADO --- */}
+                    <FiTrash2 />
                   </button>
                 </div>
                 {expandedPlant === plant.id && (
@@ -495,7 +520,8 @@ export default function MyPlants() {
                         href={`/plant-diary/${plant.id}`}
                         className={styles.diaryLinkButton}
                       >
-                        Ver Diario de la Planta 📖
+                        {/* --- 5. ÍCONO REEMPLAZADO --- */}
+                        Ver Diario de la Planta <FiBookOpen />
                       </Link>
                     </div>
                     <h3 className={styles.careTitle}>Guía de Cuidados</h3>
@@ -508,7 +534,10 @@ export default function MyPlants() {
         </div>
       ) : (
         <div className={styles.emptyState}>
-          <span className={styles.emptyIcon}>🪴</span>
+          {/* --- 6. ÍCONO REEMPLAZADO --- */}
+          <span className={styles.emptyIcon}>
+            <FiArchive />
+          </span>
           <h3>No se encontraron plantas</h3>
           <p>
             Prueba a cambiar el término de búsqueda, los filtros o añade una

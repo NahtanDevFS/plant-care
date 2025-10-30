@@ -8,6 +8,8 @@ import PlantDiary from "@/components/PlantDiary"; // Reutilizaremos el component
 import styles from "./PlantDiaryPage.module.css"; // Crearemos este CSS
 import Image from "next/image";
 import Link from "next/link"; // Para el botón de volver
+// --- 1. IMPORTAR ÍCONOS ---
+import { FiBook, FiArrowLeft } from "react-icons/fi";
 
 type Plant = {
   id: number;
@@ -78,9 +80,13 @@ export default function PlantDiaryPage() {
     return (
       <div className={styles.pageContainer}>
         <div className={styles.header}>
-          <h1>📝 Diario de Planta</h1>
+          {/* --- 2. ÍCONO REEMPLAZADO --- */}
+          <h1>
+            <FiBook /> Diario de Planta
+          </h1>
           <Link href="/my-plants" className={styles.backButton}>
-            ← Volver a Mis Plantas
+            {/* --- 3. ÍCONO REEMPLAZADO --- */}
+            <FiArrowLeft /> Volver a Mis Plantas
           </Link>
         </div>
         <p className={styles.errorMessagePage}>
@@ -105,10 +111,9 @@ export default function PlantDiaryPage() {
           <h1>Diario de: {plant.name}</h1>
         </div>
         <Link href="/my-plants" className={styles.backButton}>
-          ← Volver a Mis Plantas
+          <FiArrowLeft /> Volver a Mis Plantas
         </Link>
       </div>
-      {/* Reutilizamos el componente PlantDiary pasándole el ID */}
       <PlantDiary plantId={plant.id} />
     </div>
   );

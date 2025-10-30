@@ -12,7 +12,17 @@
 }
 
 .icon {
+  /* font-size: 1.2rem; <-- REEMPLAZADO */
+  display: flex; /* AÑADIDO */
+  align-items: center; /* AÑADIDO */
+  justify-content: center; /* AÑADIDO */
+  color: var(--color-primary); /* AÑADIDO: Damos color al ícono */
+}
+
+/* --- AÑADIDO --- */
+.icon svg {
   font-size: 1.2rem;
+  stroke-width: 2.5;
 }
 
 .reminderContainer p {

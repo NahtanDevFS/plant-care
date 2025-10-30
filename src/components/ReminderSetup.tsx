@@ -4,6 +4,8 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./ReminderSetup.module.css";
+// --- 1. IMPORTAR ÍCONOS ---
+import { FiDroplet, FiThermometer } from "react-icons/fi";
 
 type ReminderSetupProps = {
   plantId: number;
@@ -94,7 +96,8 @@ export default function ReminderSetup({
     }
   };
 
-  const icon = careType === "Riego" ? "💧" : "🧪";
+  // --- 2. REEMPLAZAR EMOJI POR ÍCONO ---
+  const icon = careType === "Riego" ? <FiDroplet /> : <FiThermometer />;
   const label = careType === "Riego" ? "Regar cada" : "Fertilizar cada";
 
   if (isEditing) {

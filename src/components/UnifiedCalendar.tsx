@@ -5,6 +5,17 @@ import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./UnifiedCalendar.module.css";
 import Image from "next/image";
+// --- 1. IMPORTAR ÍCONOS ---
+import {
+  FiCalendar,
+  FiCheck,
+  FiCircle,
+  FiSquare,
+  FiArrowLeft,
+  FiArrowRight,
+  FiDroplet,
+  FiThermometer,
+} from "react-icons/fi";
 
 // Tipo para tareas pasadas/presentes (desde task_history)
 type Task = {
@@ -328,40 +339,52 @@ export default function UnifiedCalendar() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>📅 Calendario de Tareas</h1>
+        {/* --- 2. ÍCONO REEMPLAZADO --- */}
+        <h1>
+          <FiCalendar /> Calendario de Tareas
+        </h1>
         <p>Visualiza tus tareas completadas, pendientes y próximas</p>
       </div>
 
+      {/* --- 3. LEYENDA ACTUALIZADA CON ÍCONOS --- */}
       <div className={styles.legend}>
         <div className={styles.legendItem}>
-          <span className={styles.legendSymbol}>✓</span>
+          <span className={`${styles.legendSymbol} ${styles.legendCompleted}`}>
+            <FiCheck />
+          </span>
           <span>Completada</span>
         </div>
         <div className={styles.legendItem}>
-          <span className={`${styles.legendSymbol} ${styles.pending}`}>●</span>
+          <span className={`${styles.legendSymbol} ${styles.legendPending}`}>
+            <FiCircle />
+          </span>
           <span>Pendiente</span>
         </div>
         <div className={styles.legendItem}>
-          <span className={styles.legendSymbol}>✓●</span>
-          <span>Mixtas</span>
+          <span className={`${styles.legendSymbol} ${styles.legendFuture}`}>
+            <FiSquare />
+          </span>
+          <span>Próxima</span>
         </div>
         <div className={styles.legendItem}>
-          <span className={styles.legendSymbol} style={{ fontSize: "0.8rem" }}>
-            ◇
+          <span className={`${styles.legendSymbol} ${styles.legendMixed}`}>
+            <FiCheck />
+            <FiCircle />
           </span>
-          <span>Próxima</span> {/* Cambiado de Futura a Próxima */}
+          <span>Mixtas</span>
         </div>
       </div>
 
       <div className={styles.calendarWrapper}>
         <div className={styles.calendar}>
           <div className={styles.monthHeader}>
+            {/* --- 4. ÍCONOS DE NAVEGACIÓN REEMPLAZADOS --- */}
             <button onClick={handlePrevMonth} className={styles.navButton}>
-              ←
+              <FiArrowLeft />
             </button>
             <h2>{monthName}</h2>
             <button onClick={handleNextMonth} className={styles.navButton}>
-              →
+              <FiArrowRight />
             </button>
           </div>
 
@@ -391,7 +414,7 @@ export default function UnifiedCalendar() {
                   }
                 >
                   <div className={styles.dayNumber}>{day.date.getDate()}</div>
-                  {/* Usa futureRemindersCount aquí */}
+                  {/* --- 5. INDICADORES DE DÍA ACTUALIZADOS --- */}
                   {(day.tasks.length > 0 || day.futureRemindersCount > 0) && (
                     <div className={styles.taskIndicators}>
                       {day.completedCount > 0 && (
@@ -399,7 +422,7 @@ export default function UnifiedCalendar() {
                           className={styles.completed}
                           title={`${day.completedCount} Completada(s)`}
                         >
-                          ✓
+                          <FiCheck />
                         </span>
                       )}
                       {day.pendingCount > 0 && (
@@ -407,7 +430,7 @@ export default function UnifiedCalendar() {
                           className={styles.pending}
                           title={`${day.pendingCount} Pendiente(s)`}
                         >
-                          ●
+                          <FiCircle />
                         </span>
                       )}
                       {day.futureRemindersCount > 0 && (
@@ -415,7 +438,7 @@ export default function UnifiedCalendar() {
                           className={styles.future}
                           title={`${day.futureRemindersCount} Próxima(s)`}
                         >
-                          ◇
+                          <FiSquare />
                         </span>
                       )}
                     </div>
@@ -465,7 +488,12 @@ export default function UnifiedCalendar() {
                       <div className={styles.taskInfo}>
                         <div className={styles.taskPlant}>{task.plantName}</div>
                         <div className={styles.taskCare}>
-                          {task.careType === "Riego" ? "💧" : "🧪"}{" "}
+                          {/* --- 6. ÍCONOS DE TAREA REEMPLAZADOS --- */}
+                          {task.careType === "Riego" ? (
+                            <FiDroplet />
+                          ) : (
+                            <FiThermometer />
+                          )}{" "}
                           {task.careType}
                         </div>
                       </div>
@@ -481,7 +509,8 @@ export default function UnifiedCalendar() {
                                 : "Completada"
                             }
                           >
-                            ✓
+                            {/* --- 7. ÍCONO DE BADGE REEMPLAZADO --- */}
+                            <FiCheck />
                           </div>
                         ) : (
                           <button
@@ -529,7 +558,12 @@ export default function UnifiedCalendar() {
                             {reminder.plantName}
                           </div>
                           <div className={styles.taskCare}>
-                            {reminder.careType === "Riego" ? "💧" : "🧪"}{" "}
+                            {/* --- 6. ÍCONOS DE TAREA REEMPLAZADOS --- */}
+                            {reminder.careType === "Riego" ? (
+                              <FiDroplet />
+                            ) : (
+                              <FiThermometer />
+                            )}{" "}
                             {reminder.careType}
                           </div>
                         </div>
@@ -539,7 +573,8 @@ export default function UnifiedCalendar() {
                             className={styles.futureBadge}
                             title="Tarea futura"
                           >
-                            ◇
+                            {/* --- 7. ÍCONO DE BADGE REEMPLAZADO --- */}
+                            <FiSquare />
                           </div>
                         </div>
                       </div>

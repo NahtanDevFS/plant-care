@@ -6,6 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./PlantDiaryList.module.css";
+// --- 1. IMPORTAR ÍCONOS ---
+import { FiBook, FiArchive } from "react-icons/fi";
 
 type Plant = {
   id: number;
@@ -75,7 +77,10 @@ export default function SelectPlantForDiaryPage() {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          <h1>📝 Diario de Plantas</h1>
+          {/* --- 2. ÍCONO REEMPLAZADO --- */}
+          <h1>
+            <FiBook /> Diario de Plantas
+          </h1>
         </div>
         <p className={styles.errorMessage}>{error}</p>
       </div>
@@ -85,7 +90,10 @@ export default function SelectPlantForDiaryPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>📝 Diario de Plantas</h1>
+        {/* --- 2. ÍCONO REEMPLAZADO --- */}
+        <h1>
+          <FiBook /> Diario de Plantas
+        </h1>
         <p>Selecciona una planta para ver o añadir entradas a su diario.</p>
       </div>
 
@@ -113,6 +121,10 @@ export default function SelectPlantForDiaryPage() {
         </div>
       ) : filteredPlants.length === 0 ? ( // Comprueba si no hay resultados de búsqueda
         <div className={styles.emptyState}>
+          {/* --- 3. ÍCONO REEMPLAZADO --- */}
+          <span className={styles.emptyIcon}>
+            <FiArchive />
+          </span>
           <h3>No se encontraron plantas</h3>
           <p>No hay plantas que coincidan con tu búsqueda: {searchTerm}.</p>
         </div>

@@ -13,6 +13,17 @@
   text-align: center;
   color: var(--color-primary);
   margin-bottom: 0.5rem;
+  /* --- AÑADIDO --- */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* --- AÑADIDO --- */
+.pageContainer h1 svg {
+  font-size: 2.2rem;
+  stroke-width: 2.5;
 }
 
 .pageContainer > p {
@@ -103,14 +114,25 @@
 }
 .addedComponentsInfo li {
   margin-bottom: 0.3rem;
-  padding-left: 1.2em;
-  position: relative;
+  /* padding-left: 1.2em; --- REEMPLAZADO --- */
+  /* position: relative; --- REEMPLAZADO --- */
+  display: flex; /* --- AÑADIDO --- */
+  align-items: center; /* --- AÑADIDO --- */
+  gap: 0.5rem; /* --- AÑADIDO --- */
 }
 .addedComponentsInfo li::before {
-  content: "🌱"; /* O usa un punto, etc. */
-  position: absolute;
-  left: 0;
-  top: 0;
+  /* content: "🌱"; --- REEMPLAZADO --- */
+  /* position: absolute; --- REEMPLAZADO --- */
+  /* left: 0; --- REEMPLAZADO --- */
+  /* top: 0; --- REEMPLAZADO --- */
+  display: none; /* --- AÑADIDO --- */
+}
+
+/* --- AÑADIDO --- */
+.addedComponentsInfo li svg {
+  font-size: 1.1rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 /* --- Estilos Anteriores (Ajustados/Sin Cambios) --- */
@@ -288,7 +310,19 @@
   transition: background-color 0.2s ease;
   font-size: 1rem;
   width: 100%;
+  /* --- AÑADIDO --- */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
+
+/* --- AÑADIDO --- */
+.saveButton svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
+}
+
 .saveButton:hover:not(:disabled) {
   background-color: #388e3c;
 }
@@ -307,7 +341,19 @@
   color: var(--color-primary-dark);
   text-align: center;
   margin-bottom: 2rem;
+  /* --- AÑADIDO --- */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
 }
+
+/* --- AÑADIDO --- */
+.savedMixesSection h2 svg {
+  font-size: 1.8rem;
+  stroke-width: 2;
+}
+
 .savedMixesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -341,7 +387,16 @@
   cursor: pointer;
   padding: 0;
   line-height: 1;
+  /* --- AÑADIDO --- */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+/* --- AÑADIDO --- */
+.deleteMixButton svg {
+  stroke-width: 2.5;
+}
+
 .deleteMixButton:hover {
   color: #dc3545;
 }
@@ -403,9 +458,3 @@
     margin-bottom: 2rem;
   }
 }
-
-/* --- QUITAR ESTILOS OBSOLETOS --- */
-/* Elimina .componentGrid y .componentButton si ya no los usas en otro lado */
-/* .componentGrid { display: none; } */
-/* .componentButton { display: none; } */
-/* .componentPh { display: none; } */

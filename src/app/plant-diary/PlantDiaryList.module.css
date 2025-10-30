@@ -15,6 +15,17 @@
   color: var(--color-primary);
   font-size: 2.2rem;
   margin-bottom: 0.5rem;
+  /* --- AÑADIDO --- */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* --- AÑADIDO --- */
+.header h1 svg {
+  stroke-width: 2.5;
+  font-size: 2rem; /* Ligeramente más pequeño que el h1 */
 }
 
 .header p {
@@ -106,6 +117,17 @@
 .emptyState p {
   color: var(--color-text-light);
   margin-bottom: 1.5rem;
+}
+
+/* --- AÑADIDO --- */
+.emptyIcon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+.emptyIcon svg {
+  stroke-width: 1.5;
 }
 
 .identifyButton {

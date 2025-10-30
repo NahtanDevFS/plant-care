@@ -7,6 +7,16 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
+// --- 1. IMPORTAR LOS ÍCONOS ---
+import {
+  FiSearch,
+  FiGrid,
+  FiBookOpen,
+  FiPercent,
+  FiMessageSquare,
+  FiCalendar,
+  FiUser,
+} from "react-icons/fi";
 
 export default function Sidebar() {
   const [user, setUser] = useState<User | null>(null);
@@ -75,6 +85,7 @@ export default function Sidebar() {
     return null;
   }
 
+  // --- 2. REEMPLAZAR ÍCONOS EN NAVLINKS ---
   const NavLinks = () => (
     <nav className={styles.sidebarNav}>
       <Link
@@ -82,14 +93,14 @@ export default function Sidebar() {
         onClick={handleLinkClick}
         className={pathname === "/" ? styles.active : ""}
       >
-        🔍 Identificar
+        <FiSearch /> Identificar
       </Link>
       <Link
         href="/my-plants"
         onClick={handleLinkClick}
         className={pathname === "/my-plants" ? styles.active : ""}
       >
-        🪴 Mis Plantas
+        <FiGrid /> Mis Plantas
       </Link>
       <Link
         href="/plant-diary" // Ahora apunta a la página de lista
@@ -101,28 +112,28 @@ export default function Sidebar() {
             : ""
         }
       >
-        📝 Diario de Plantas
+        <FiBookOpen /> Diario de Plantas
       </Link>
       <Link
         href="/substrate-calculator" // <--- NUEVA RUTA
         onClick={handleLinkClick}
         className={pathname === "/substrate-calculator" ? styles.active : ""}
       >
-        🧪 Calculadora Sustrato {/* <--- NUEVO ENLACE */}
+        <FiPercent /> Calculadora Sustrato {/* <--- NUEVO ENLACE */}
       </Link>
       <Link
         href="/plant-chat"
         onClick={handleLinkClick}
         className={pathname === "/plant-chat" ? styles.active : ""}
       >
-        🤖 Chat IA
+        <FiMessageSquare /> Chat IA
       </Link>
       <Link
         href="/calendar-tasks"
         onClick={handleLinkClick}
         className={pathname === "/calendar-tasks" ? styles.active : ""}
       >
-        📅 Calendario
+        <FiCalendar /> Calendario
       </Link>
 
       {/* --- NUEVO ENLACE AL PERFIL --- */}
@@ -137,7 +148,7 @@ export default function Sidebar() {
           borderTop: "1px solid var(--color-border)",
         }}
       >
-        👤 Mi Perfil
+        <FiUser /> Mi Perfil
       </Link>
       {/* ----------------------------- */}
     </nav>

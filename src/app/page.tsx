@@ -11,6 +11,8 @@ import {
   getCameraStream,
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
+// --- 1. IMPORTAR ÍCONOS ---
+import { FiUpload, FiCamera, FiRefreshCw } from "react-icons/fi";
 
 type PlantSuggestion = {
   name: string;
@@ -285,7 +287,10 @@ export default function HomePage() {
         <div className={styles.cameraModal}>
           <div className={styles.cameraContainer}>
             <div className={styles.cameraHeader}>
-              <h2>📷 Capturar Foto</h2>
+              {/* --- 2. ÍCONO REEMPLAZADO --- */}
+              <h2>
+                <FiCamera /> Capturar Foto
+              </h2>
               <button onClick={closeCamera} className={styles.closeModalButton}>
                 ✕
               </button>
@@ -312,14 +317,22 @@ export default function HomePage() {
                 className={styles.switchCameraButton}
                 disabled={isCompressing}
               >
-                🔄 Cambiar Cámara
+                {/* --- 3. ÍCONO REEMPLAZADO --- */}
+                <FiRefreshCw /> Cambiar Cámara
               </button>
               <button
                 onClick={capturePhoto}
                 className={styles.captureButton}
                 disabled={isCompressing}
               >
-                {isCompressing ? "Procesando..." : "📸 Capturar"}
+                {/* --- 4. ÍCONO REEMPLAZADO --- */}
+                {isCompressing ? (
+                  "Procesando..."
+                ) : (
+                  <>
+                    <FiCamera /> Capturar
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -328,7 +341,8 @@ export default function HomePage() {
 
       <main className={styles.container}>
         <div className={styles.header}>
-          <h1>PlantCare</h1>
+          {/* --- 5. AÑADIDO EMOJI DE LOGO --- */}
+          <h1>🌿 PlantCare</h1>
           <p>Identifica tus plantas y aprende a cuidarlas al instante.</p>
         </div>
 
@@ -354,7 +368,8 @@ export default function HomePage() {
 
           <div className={styles.buttonGroup}>
             <label htmlFor="file-upload" className={styles.uploadButton}>
-              📁 Subir Foto
+              {/* --- 6. ÍCONO REEMPLAZADO --- */}
+              <FiUpload /> Subir Foto
               <input
                 id="file-upload"
                 type="file"
@@ -370,7 +385,8 @@ export default function HomePage() {
               disabled={loading || isCompressing}
               className={styles.cameraButton}
             >
-              📷 Tomar Foto
+              {/* --- 7. ÍCONO REEMPLAZADO --- */}
+              <FiCamera /> Tomar Foto
             </button>
           </div>
 
