@@ -453,6 +453,482 @@
   transform: translateY(-2px);
 }
 
+/* Botón de editar sobre la imagen */
+.editImageButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0; /* Oculto por defecto */
+}
+.plantImageWrapper:hover .editImageButton {
+  opacity: 1; /* Mostrar al hacer hover */
+}
+.editImageButton:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+.editImageButton svg {
+  stroke-width: 2.5;
+}
+.editImageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Overlay de carga (pantalla completa) */
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* --- AÑADIDO: Estilos Modal de Cámara (copiados de PlantDiary.module.css) --- */
+.cameraModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 15px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.cameraContainer {
+  width: 95%;
+  max-width: 700px;
+  background-color: #1a1a1a;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+.cameraHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: #2a2a2a;
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.cameraHeader h2 {
+  color: white;
+  margin: 0;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.closeModalButton {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.closeModalButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: rotate(90deg);
+}
+
+.videoContainer {
+  position: relative;
+  width: 100%;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cameraVideo {
+  width: 100%;
+  height: auto;
+  max-height: 65vh;
+  display: block;
+}
+
+.cameraControls {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #2a2a2a;
+  justify-content: center;
+  flex-wrap: wrap;
+  border-top: 1px solid #444;
+}
+
+/* Botones dentro del modal de cámara */
+.modalUploadButton,
+.modalSwitchButton,
+.modalCaptureButton {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: calc(var(--border-radius) / 2);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  min-width: 130px;
+}
+
+.modalUploadButton,
+.modalSwitchButton {
+  background-color: #444;
+  color: white;
+}
+
+.modalUploadButton:hover:not(:disabled),
+.modalSwitchButton:hover:not(:disabled) {
+  background-color: #555;
+  transform: translateY(-1px);
+}
+
+.modalCaptureButton {
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 1rem;
+  box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3);
+}
+
+.modalCaptureButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.modalUploadButton:disabled,
+.modalSwitchButton:disabled,
+.modalCaptureButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cameraHeader h2 svg,
+.modalUploadButton svg,
+.modalSwitchButton svg,
+.modalCaptureButton svg {
+  stroke-width: 2.5;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 480px) {
+  .cameraHeader {
+    padding: 0.8rem 1rem;
+  }
+  .cameraHeader h2 {
+    font-size: 1.1rem;
+  }
+  .closeModalButton {
+    font-size: 1.5rem;
+    width: 30px;
+    height: 30px;
+  }
+  .cameraControls {
+    padding: 0.8rem 1rem;
+    gap: 0.8rem;
+  }
+  .modalUploadButton,
+  .modalSwitchButton,
+  .modalCaptureButton {
+    font-size: 0.9rem;
+    padding: 0.7rem 1.2rem;
+    min-width: auto;
+    flex-grow: 1; /* Hacer que los botones se expandan */
+  }
+}
+
+.exportContainer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border);
+  flex-wrap: wrap;
+}
+
+.exportButton {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  background-color: #f0f0f0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.exportButton:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  border-color: #aaa;
+}
+
+.exportButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
+.exportButton svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
+}
+
+/* Checkbox de selección en la tarjeta */
+.plantSelectCheckboxContainer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+.plantSelectCheckboxContainer:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.plantSelectCheckbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+/* Estilo para navegadores que soportan accent-color */
+.plantSelectCheckbox {
+  accent-color: var(--color-primary);
+}
+
+/* Estilo para la tarjeta seleccionada */
+.plantCard.selected {
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+}
+
+/* Ajuste del botón de editar para que no colisione con el checkbox */
+.editImageButton {
+  top: 10px;
+  right: 10px;
+  /* (El resto del estilo .editImageButton ya debería estar) */
+}
+
+/* Spinner pequeño para exportar */
+.loadingSpinnerSmall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+}
+
+.loadingSpinnerSmall .spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+.exportContainer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border);
+  flex-wrap: wrap;
+}
+
+.exportButton,
+.selectButton {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Botones de Exportar (Primarios) */
+.exportButton {
+  background-color: var(--color-primary-dark);
+  color: white;
+  border: 1px solid var(--color-primary-dark);
+}
+.exportButton:hover:not(:disabled) {
+  background-color: #388e3c; /* Más oscuro */
+}
+
+/* Botones de Selección (Secundarios) */
+.selectButton {
+  background-color: #f0f0f0;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.selectButton:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  border-color: #aaa;
+}
+
+.exportButton:disabled,
+.selectButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.exportButton svg,
+.selectButton svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
+}
+
+/* Checkbox de selección en la tarjeta */
+.plantSelectCheckboxContainer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+.plantSelectCheckboxContainer:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.plantSelectCheckbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+/* Estilo para navegadores que soportan accent-color */
+.plantSelectCheckbox {
+  accent-color: var(--color-primary);
+}
+
+/* Estilo para la tarjeta seleccionada */
+.plantCard.selected {
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+  transform: translateY(-8px);
+}
+.plantCard.selected .plantSelectCheckboxContainer {
+  background-color: white;
+}
+
+/* Ajuste del botón de editar para que no colisione con el checkbox */
+.editImageButton {
+  top: 10px;
+  right: 10px;
+  /* (El resto del estilo .editImageButton ya debería estar) */
+}
+
+/* Spinner pequeño para exportar */
+.loadingSpinnerSmall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+  width: 100%; /* Ocupa toda la línea */
+}
+
+.loadingSpinnerSmall .spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+/* Clase de utilidad para accesibilidad */
+.visuallyHidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
 /* --- DISEÑO RESPONSIVE --- */
 @media (max-width: 768px) {
   .container {
