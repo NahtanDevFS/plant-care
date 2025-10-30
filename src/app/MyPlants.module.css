@@ -929,6 +929,203 @@
   width: 1px;
 }
 
+.controlsToggleButton {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem; /* Espacio antes del contenedor si está abierto */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.controlsToggleButton svg {
+  font-size: 1.3rem;
+  stroke-width: 3;
+}
+.controlsToggleIcon {
+  transition: transform 0.3s ease;
+}
+
+/* --- MODIFICADO: Contenedor de controles colapsable --- */
+.controlsContainer {
+  /* ... (tus estilos existentes como padding, background-color, etc.) ... */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+
+  /* Transiciones */
+  transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out,
+    opacity 0.3s ease-in-out, margin-bottom 0.5s ease-in-out;
+  max-height: 1000px; /* Altura "auto" animable */
+  opacity: 1;
+  overflow: hidden;
+}
+.controlsContainer.controlsCollapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-bottom: 1rem;
+  opacity: 0;
+  gap: 0; /* Evita que el 'gap' ocupe espacio cuando está colapsado */
+}
+
+/* Contenido interno para evitar que el 'gap' colapse mal */
+.controlsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.exportContainer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border);
+  flex-wrap: wrap;
+}
+
+.exportButton,
+.selectButton {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Botones de Exportar (Primarios) */
+.exportButton {
+  background-color: var(--color-primary-dark);
+  color: white;
+  border: 1px solid var(--color-primary-dark);
+}
+.exportButton:hover:not(:disabled) {
+  background-color: #388e3c;
+}
+
+/* Botones de Selección (Secundarios) */
+.selectButton {
+  background-color: #f0f0f0;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.selectButton:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  border-color: #aaa;
+}
+
+/* --- CORREGIDO: Estilos de botones deshabilitados --- */
+.exportButton:disabled,
+.selectButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f0f0f0; /* Fondo gris claro */
+  color: #a0a0a0; /* Color de texto gris (visible sobre fondo claro) */
+  border-color: var(--color-border);
+}
+/* -------------------------------------------------- */
+
+.exportButton svg,
+.selectButton svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
+}
+
+/* Checkbox de selección en la tarjeta */
+.plantSelectCheckboxContainer {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+.plantSelectCheckboxContainer:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.plantSelectCheckbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+.plantSelectCheckbox {
+  accent-color: var(--color-primary);
+}
+
+/* Estilo para la tarjeta seleccionada */
+.plantCard.selected {
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+  transform: translateY(-8px);
+}
+.plantCard.selected .plantSelectCheckboxContainer {
+  background-color: white;
+}
+
+/* Ajuste del botón de editar */
+.editImageButton {
+  top: 10px;
+  right: 10px;
+}
+
+/* Spinner pequeño para exportar */
+.loadingSpinnerSmall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+  width: 100%;
+}
+
+.loadingSpinnerSmall .spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+}
+
+/* Clase de utilidad para accesibilidad */
+.visuallyHidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
 /* --- DISEÑO RESPONSIVE --- */
 @media (max-width: 768px) {
   .container {

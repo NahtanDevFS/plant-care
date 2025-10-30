@@ -23,10 +23,12 @@ import {
   FiCamera,
   FiRefreshCw,
   FiX,
-  FiFileText, // <-- Ícono PDF
-  FiGrid, // <-- Ícono Excel
-  FiCheckSquare, // <-- Ícono Seleccionar Todo
-  FiSquare, // <-- Ícono Deseleccionar
+  FiFileText,
+  FiGrid,
+  FiCheckSquare,
+  FiSquare,
+  FiChevronDown, // <-- AÑADIDO: Ícono para colapsar
+  FiFilter, // <-- AÑADIDO: Ícono para colapsar
 } from "react-icons/fi";
 import { LiaPawSolid, LiaBugSolid, LiaDeafSolid } from "react-icons/lia";
 import { GiPlantSeed } from "react-icons/gi";
@@ -36,12 +38,10 @@ import {
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
 
-// --- AÑADIDO: Importar bibliotecas de exportación ---
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // <-- Importar autoTable
+import autoTable from "jspdf-autotable";
 import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
-// --------------------------------------------------
 
 // --- TIPOS DE DATOS ---
 type PlantFromDB = {
@@ -100,7 +100,6 @@ const PestDiseaseParser = ({ text }: { text: string }) => {
         const symptoms = symptomMatch ? symptomMatch[1].trim() : "";
         const controlMatch = cleanItem.match(/Control:\s*([\s\S]*?)$/);
         const control = controlMatch ? controlMatch[1].trim() : "";
-
         return (
           <div key={index} className={styles.careContentDetail}>
             <strong>{title}</strong>
@@ -162,7 +161,7 @@ const CareInstructions = ({ text }: { text: string }) => {
   );
 };
 
-// --- Helper para parsear cuidados para Exportación (Mejorado) ---
+// --- Helper para parsear cuidados para Exportación (Sin cambios) ---
 const parseCareInstructionsForExport = (text: string) => {
   const sections = text.split("### ").filter((s) => s);
   const careData: { [key: string]: string } = {};
@@ -171,14 +170,14 @@ const parseCareInstructionsForExport = (text: string) => {
     const content = contentParts
       .join(":")
       .trim()
-      .replace(/\s+/g, " ") // Limpia espacios
-      .replace(/\n/g, " "); // Limpia saltos de línea
+      .replace(/\s+/g, " ")
+      .replace(/\n/g, " ");
     careData[title.trim()] = content;
   });
   return careData;
 };
 
-// --- AÑADIDO: Helper para convertir imagen a base64 ---
+// --- Helper para convertir imagen a base64 (Sin cambios) ---
 const getImageAsBase64 = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     fetch(url)
@@ -236,10 +235,14 @@ export default function MyPlants() {
   const [selectedPlants, setSelectedPlants] = useState(new Set<number>());
   const [isExporting, setIsExporting] = useState(false);
 
+  // --- AÑADIDO: Estado para colapsar controles ---
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
+  // ---------------------------------------------
+
   // --- useEffect para fetchPlants (Sin cambios) ---
   useEffect(() => {
-    // ... (lógica existente sin cambios)
     const fetchPlants = async () => {
+      // ... (lógica existente)
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -261,11 +264,10 @@ export default function MyPlants() {
               let watering_frequency = null;
               let fertilizing_frequency = null;
               reminders?.forEach((reminder) => {
-                if (reminder.care_type === "Riego") {
+                if (reminder.care_type === "Riego")
                   watering_frequency = reminder.frequency_days;
-                } else if (reminder.care_type === "Fertilizante") {
+                else if (reminder.care_type === "Fertilizante")
                   fertilizing_frequency = reminder.frequency_days;
-                }
               });
               return {
                 ...plant,
@@ -290,6 +292,14 @@ export default function MyPlants() {
       }
     };
   }, [cameraStream]);
+
+  // --- AÑADIDO: useEffect para colapsar en móvil ---
+  useEffect(() => {
+    // Colapsar controles por defecto en pantallas pequeñas
+    if (window.innerWidth <= 768) {
+      setIsControlsVisible(false);
+    }
+  }, []); // Se ejecuta solo una vez al montar
 
   // --- LÓGICA DE FILTRADO Y ORDENAMIENTO (Sin cambios) ---
   const processedPlants = useMemo(() => {
@@ -349,17 +359,15 @@ export default function MyPlants() {
       const nextDate = new Date();
       nextDate.setDate(nextDate.getDate() + frequency);
       if (reminderError || !reminder) {
-        const { error: insertError } = await supabase
-          .from("reminders")
-          .insert([
-            {
-              plant_id: plantId,
-              user_id: user.id,
-              care_type: careType,
-              frequency_days: frequency,
-              next_reminder_date: nextDate.toISOString().split("T")[0],
-            },
-          ]);
+        const { error: insertError } = await supabase.from("reminders").insert([
+          {
+            plant_id: plantId,
+            user_id: user.id,
+            care_type: careType,
+            frequency_days: frequency,
+            next_reminder_date: nextDate.toISOString().split("T")[0],
+          },
+        ]);
         if (insertError) throw insertError;
         alert("Recordatorio creado correctamente");
       } else {
@@ -538,9 +546,7 @@ export default function MyPlants() {
     });
   };
 
-  // --- AÑADIDO: Nuevos Handlers de Selección ---
   const handleSelectAll = () => {
-    // Selecciona solo las plantas visibles (filtradas)
     const allVisibleIds = processedPlants.map((p) => p.id);
     setSelectedPlants(new Set(allVisibleIds));
   };
@@ -548,15 +554,13 @@ export default function MyPlants() {
   const handleDeselectAll = () => {
     setSelectedPlants(new Set());
   };
-  // ---------------------------------------------
 
   const getSelectedPlantsData = () => {
-    // Filtra en el orden actual de `processedPlants`
     return processedPlants.filter((p) => selectedPlants.has(p.id));
   };
 
+  // --- MODIFICADO: handleExportExcel ---
   const handleExportExcel = () => {
-    // ... (lógica de exportación a Excel, sin cambios)
     setIsExporting(true);
     const plantsToExport = getSelectedPlantsData();
     if (plantsToExport.length === 0) {
@@ -564,6 +568,7 @@ export default function MyPlants() {
       setIsExporting(false);
       return;
     }
+
     const dataForExcel = plantsToExport.map((plant) => {
       const careData = parseCareInstructionsForExport(plant.care_instructions);
       return {
@@ -574,9 +579,9 @@ export default function MyPlants() {
         Es_Toxica: plant.is_toxic ? "Sí" : "No",
         Registrada: new Date(plant.created_at).toLocaleDateString("es-ES"),
         ...careData,
-        URL_Imagen: plant.image_url,
       };
     });
+
     const ws = XLSX.utils.json_to_sheet(dataForExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "MisPlantas");
@@ -584,7 +589,6 @@ export default function MyPlants() {
     setIsExporting(false);
   };
 
-  // --- MODIFICADO: Lógica de PDF mejorada ---
   const handleExportPDF = async () => {
     setIsExporting(true);
     const plantsToExport = getSelectedPlantsData();
@@ -601,9 +605,8 @@ export default function MyPlants() {
     const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
 
-    // Título Principal
     pdf.setFontSize(18);
-    pdf.setTextColor(69, 160, 73); // Verde primario
+    pdf.setTextColor(69, 160, 73);
     pdf.text("Reporte de Mis Plantas", pageWidth / 2, yPos, {
       align: "center",
     });
@@ -611,10 +614,8 @@ export default function MyPlants() {
 
     for (let i = 0; i < plantsToExport.length; i++) {
       const plant = plantsToExport[i];
-
-      // Espacio para la nueva planta (y salto de página si es necesario)
-      const plantHeaderHeight = 10; // Altura estimada del título
-      if (i > 0) yPos += 8; // Espacio entre plantas
+      const plantHeaderHeight = 10;
+      if (i > 0) yPos += 8;
 
       if (yPos + plantHeaderHeight > pageHeight - margin) {
         pdf.addPage();
@@ -626,17 +627,15 @@ export default function MyPlants() {
         pdf.line(margin, yPos - 4, pageWidth - margin, yPos - 4);
       }
 
-      // Título de la Planta
       pdf.setFontSize(16);
       pdf.setTextColor(69, 160, 73);
       pdf.text(plant.name, margin, yPos);
       yPos += 10;
 
-      // --- Cargar Imagen (nuevo método) ---
       try {
         const imgData = await getImageAsBase64(plant.image_url);
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = contentWidth * 0.4; // Imagen ocupa el 40% del ancho
+        const imgWidth = contentWidth * 0.4;
         const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
         if (yPos + imgHeight > pageHeight - margin) {
@@ -646,7 +645,6 @@ export default function MyPlants() {
 
         pdf.addImage(imgData, "PNG", margin, yPos, imgWidth, imgHeight);
 
-        // --- Texto al lado de la imagen ---
         const textX = margin + imgWidth + 8;
         const textWidth = contentWidth - imgWidth - 8;
         let textY = yPos;
@@ -658,7 +656,7 @@ export default function MyPlants() {
           plant.care_instructions
         );
         const generalInfo = [
-          `Nivel: ${plant.care_level || "N/A"}`,
+          `Dificultad de cuidar: ${plant.care_level || "N/A"}`,
           `Mascotas: ${plant.pet_friendly ? "Sí" : "No"}`,
           `Tóxica: ${plant.is_toxic ? "Sí" : "No"}`,
         ];
@@ -673,16 +671,13 @@ export default function MyPlants() {
           textY += 5;
         });
 
-        // Mover yPos a después de la imagen o el texto (lo que sea más largo)
         yPos = Math.max(yPos + imgHeight + 8, textY + 8);
 
-        // --- Tabla de Cuidados (usando autoTable) ---
         const tableBody = Object.entries(careData)
-          .filter(([key]) => key !== "General") // Ya mostramos "General"
+          .filter(([key]) => key !== "General")
           .map(([key, value]) => [key, value]);
 
         if (yPos + 20 > pageHeight - margin) {
-          // Check si la tabla cabe
           pdf.addPage();
           yPos = margin;
         }
@@ -692,16 +687,16 @@ export default function MyPlants() {
           head: [["Aspecto", "Instrucción"]],
           body: tableBody,
           theme: "grid",
-          headStyles: { fillColor: [69, 160, 73] }, // Verde primario
+          headStyles: { fillColor: [69, 160, 73] },
           margin: { left: margin, right: margin },
         });
 
-        // @ts-ignore // autoTable no tipa bien 'finalY'
+        // @ts-ignore
         yPos = pdf.lastAutoTable.finalY + 10;
       } catch (imgError) {
         console.error("Error al procesar imagen para PDF:", imgError);
         pdf.setFontSize(9);
-        pdf.setTextColor(255, 0, 0); // Rojo
+        pdf.setTextColor(255, 0, 0);
         pdf.text("Error al cargar imagen.", margin, yPos);
         yPos += 6;
       }
@@ -809,91 +804,119 @@ export default function MyPlants() {
           <p>Busca, filtra y gestiona todas tus plantas y sus cuidados.</p>
         </div>
 
-        <div className={styles.controlsContainer}>
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
-            className={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+        {/* --- AÑADIDO: Botón para colapsar --- */}
+        <button
+          onClick={() => setIsControlsVisible(!isControlsVisible)}
+          className={styles.controlsToggleButton}
+        >
+          <span>
+            <FiFilter />
+            {isControlsVisible
+              ? " Ocultar Filtros y Opciones"
+              : " Mostrar Filtros y Opciones"}
+          </span>
+          <FiChevronDown
+            className={styles.controlsToggleIcon}
+            style={{
+              transform: isControlsVisible ? "rotate(180deg)" : "rotate(0deg)",
+            }}
           />
+        </button>
 
-          <div className={styles.filterGrid}>
-            <div className={styles.filterGroup}>
-              <label>Ordenar por</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="newest">Más nuevas</option>
-                <option value="oldest">Más antiguas</option>
-              </select>
-            </div>
-            <div className={styles.filterGroup}>
-              <label>Dificultad</label>
-              <select
-                value={difficultyFilter}
-                onChange={(e) => setDifficultyFilter(e.target.value)}
-              >
-                <option value="all">Todas</option>
-                <option value="Fácil">Fácil</option>
-                <option value="Media">Media</option>
-                <option value="Difícil">Difícil</option>
-              </select>
-            </div>
-            <div className={styles.filterGroup}>
-              <label>Mascotas</label>
-              <select
-                value={petFilter}
-                onChange={(e) => setPetFilter(e.target.value)}
-              >
-                <option value="all">Todas</option>
-                <option value="yes">Aptas para mascotas</option>
-                <option value="no">No aptas para mascotas</option>
-              </select>
-            </div>
-          </div>
+        {/* --- MODIFICADO: Contenedor de controles colapsable --- */}
+        <div
+          className={`${styles.controlsContainer} ${
+            !isControlsVisible ? styles.controlsCollapsed : ""
+          }`}
+        >
+          {/* --- AÑADIDO: Contenedor interno para la transición --- */}
+          <div className={styles.controlsContent}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              className={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
 
-          {/* --- AÑADIDO: Botones de Exportación y Selección --- */}
-          <div className={styles.exportContainer}>
-            <button
-              onClick={handleSelectAll}
-              className={styles.selectButton}
-              disabled={isExporting}
-            >
-              <FiCheckSquare /> Seleccionar{" "}
-              {processedPlants.length > 0 ? `(${processedPlants.length})` : ""}
-            </button>
-            <button
-              onClick={handleDeselectAll}
-              className={styles.selectButton}
-              disabled={isExporting || selectedPlants.size === 0}
-            >
-              <FiSquare /> Deseleccionar
-            </button>
-            <button
-              onClick={handleExportExcel}
-              className={styles.exportButton}
-              disabled={isExporting || selectedPlants.size === 0}
-            >
-              <FiGrid /> Exportar Excel ({selectedPlants.size})
-            </button>
-            <button
-              onClick={handleExportPDF}
-              className={styles.exportButton}
-              disabled={isExporting || selectedPlants.size === 0}
-            >
-              <FiFileText /> Exportar PDF ({selectedPlants.size})
-            </button>
-          </div>
-          {isExporting && (
-            <div className={styles.loadingSpinnerSmall}>
-              <div className={styles.spinner}></div>
-              <span>Exportando...</span>
+            <div className={styles.filterGrid}>
+              <div className={styles.filterGroup}>
+                <label>Ordenar por</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="newest">Más nuevas</option>
+                  <option value="oldest">Más antiguas</option>
+                </select>
+              </div>
+              <div className={styles.filterGroup}>
+                <label>Dificultad</label>
+                <select
+                  value={difficultyFilter}
+                  onChange={(e) => setDifficultyFilter(e.target.value)}
+                >
+                  <option value="all">Todas</option>
+                  <option value="Fácil">Fácil</option>
+                  <option value="Media">Media</option>
+                  <option value="Difícil">Difícil</option>
+                </select>
+              </div>
+              <div className={styles.filterGroup}>
+                <label>Mascotas</label>
+                <select
+                  value={petFilter}
+                  onChange={(e) => setPetFilter(e.target.value)}
+                >
+                  <option value="all">Todas</option>
+                  <option value="yes">Aptas para mascotas</option>
+                  <option value="no">No aptas para mascotas</option>
+                </select>
+              </div>
             </div>
-          )}
-          {/* ----------------------------------------------- */}
+
+            <div className={styles.exportContainer}>
+              <button
+                onClick={handleSelectAll}
+                className={styles.selectButton}
+                disabled={isExporting}
+              >
+                <FiCheckSquare /> Seleccionar{" "}
+                {processedPlants.length > 0
+                  ? `(${processedPlants.length})`
+                  : ""}
+              </button>
+              <button
+                onClick={handleDeselectAll}
+                className={styles.selectButton}
+                disabled={isExporting || selectedPlants.size === 0}
+              >
+                <FiSquare /> Deseleccionar
+              </button>
+              <button
+                onClick={handleExportExcel}
+                className={styles.exportButton}
+                disabled={isExporting || selectedPlants.size === 0}
+              >
+                <FiGrid /> Exportar Excel ({selectedPlants.size})
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className={styles.exportButton}
+                disabled={isExporting || selectedPlants.size === 0}
+              >
+                <FiFileText /> Exportar PDF ({selectedPlants.size})
+              </button>
+            </div>
+            {isExporting && (
+              <div className={styles.loadingSpinnerSmall}>
+                <div className={styles.spinner}></div>
+                <span>Exportando...</span>
+              </div>
+            )}
+          </div>
         </div>
+        {/* ----------------------------------------------- */}
 
         {processedPlants.length > 0 ? (
           <div className={styles.myPlantsGrid}>
@@ -909,7 +932,7 @@ export default function MyPlants() {
                   <div className={styles.plantSelectCheckboxContainer}>
                     <input
                       type="checkbox"
-                      id={`select-plant-${plant.id}`} // AÑADIDO: id para label
+                      id={`select-plant-${plant.id}`}
                       className={styles.plantSelectCheckbox}
                       checked={isSelected}
                       onChange={() => handlePlantSelect(plant.id)}
@@ -917,8 +940,6 @@ export default function MyPlants() {
                       title="Seleccionar para exportar"
                     />
                   </div>
-
-                  {/* AÑADIDO: Label invisible para el checkbox por accesibilidad */}
                   <label
                     htmlFor={`select-plant-${plant.id}`}
                     className={styles.visuallyHidden}
@@ -926,12 +947,9 @@ export default function MyPlants() {
                     Seleccionar {plant.name}
                   </label>
 
-                  <div
-                    className={styles.plantImageWrapper}
-                    // ID movido a la imagen para el nuevo método de PDF
-                  >
+                  <div className={styles.plantImageWrapper}>
                     <Image
-                      id={`plant-image-${plant.id}`} // <-- ID puesto en la Imagen
+                      id={`plant-image-${plant.id}`}
                       src={plant.image_url}
                       alt={plant.name}
                       width={400}
@@ -939,7 +957,7 @@ export default function MyPlants() {
                       className={styles.plantCardImage}
                       unoptimized
                       key={plant.image_url}
-                      crossOrigin="anonymous" // <-- MUY IMPORTANTE para PDF
+                      crossOrigin="anonymous"
                     />
                     <button
                       className={styles.editImageButton}
@@ -965,7 +983,7 @@ export default function MyPlants() {
                             plant.care_level
                           )}`}
                         >
-                          {plant.care_level}
+                          Dificultad: {plant.care_level}
                         </span>
                       )}
                       {plant.pet_friendly === true && (
@@ -1045,8 +1063,9 @@ export default function MyPlants() {
             </span>
             <h3>No se encontraron plantas</h3>
             <p>
-              Prueba a cambiar el término de búsqueda, los filtros o añade una
-              nueva planta.
+              {searchTerm
+                ? "Prueba a cambiar el término de búsqueda o los filtros."
+                : "Añade tu primera planta desde la pestaña 'Identificar'."}
             </p>
           </div>
         )}
