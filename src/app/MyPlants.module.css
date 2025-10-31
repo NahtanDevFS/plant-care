@@ -59,10 +59,9 @@
   font-size: 5rem;
   display: block;
   margin-bottom: 1rem;
-  color: var(--color-primary); /* --- AÑADIDO --- */
+  color: var(--color-primary);
 }
 
-/* --- AÑADIDO --- */
 .emptyIcon svg {
   stroke-width: 1.5;
 }
@@ -77,6 +76,30 @@
 }
 
 /* --- CONTROLES DE BÚSQUEDA Y FILTRO --- */
+.controlsToggleButton {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.controlsToggleButton svg {
+  font-size: 1.3rem;
+  stroke-width: 3;
+}
+.controlsToggleIcon {
+  transition: transform 0.3s ease;
+}
+
 .controlsContainer {
   display: flex;
   flex-direction: column;
@@ -85,6 +108,26 @@
   padding: 1.5rem;
   background-color: #f8f9fa;
   border-radius: var(--border-radius);
+  transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out,
+    opacity 0.3s ease-in-out, margin-bottom 0.5s ease-in-out;
+  max-height: 1000px;
+  opacity: 1;
+  overflow: hidden;
+}
+.controlsContainer.controlsCollapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-bottom: 1rem;
+  opacity: 0;
+  gap: 0;
+}
+
+.controlsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
 }
 
 .searchInput {
@@ -137,6 +180,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: max-content;
+  border: 3px solid transparent; /* Borde para estado 'selected' */
 }
 
 .plantCardExpanded {
@@ -180,6 +224,8 @@
   margin: 0;
   font-size: 1.4rem;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer; /* Para indicar que abre el acordeón */
+  word-break: break-word;
 }
 
 /* --- CONTENIDO DE LA TARJETA --- */
@@ -199,18 +245,15 @@
   border-radius: 15px;
   font-size: 0.8rem;
   font-weight: 600;
-  /* --- AÑADIDO --- */
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-/* --- AÑADIDO --- */
 .infoTag svg {
   font-size: 1.1rem;
   stroke-width: 2.5;
 }
-/* Específico para LiaPawSolid que es más grande */
 .petFriendly svg {
   font-size: 1.2rem;
 }
@@ -219,11 +262,11 @@
   background-color: #e8f5e9;
   color: #388e3c;
 }
-.levelMedia {
+.levelMedium {
   background-color: #fff3e0;
   color: #f57c00;
 }
-.levelDifícil {
+.levelHard {
   background-color: #ffcdd2;
   color: #d32f2f;
 }
@@ -276,7 +319,6 @@
   justify-content: center;
 }
 
-/* --- AÑADIDO --- */
 .deleteButton svg {
   stroke-width: 2.5;
 }
@@ -360,13 +402,11 @@
 }
 
 .careIcon {
-  /* font-size: 1.8rem; <-- REEMPLAZADO */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* --- AÑADIDO --- */
 .careIcon svg {
   font-size: 1.8rem;
   stroke-width: 2;
@@ -419,20 +459,18 @@
 }
 
 .diaryLinkContainer {
-  margin-top: 1.5rem; /* Espacio antes del botón del diario */
-  margin-bottom: 1.5rem; /* Espacio antes de la Guía de Cuidados */
-  text-align: center; /* Centra el botón */
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .diaryLinkButton {
-  display: inline-flex; /* --- MODIFICADO --- */
-  align-items: center; /* --- AÑADIDO --- */
-  gap: 0.5rem; /* --- AÑADIDO --- */
-  justify-content: center; /* --- AÑADIDO --- */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
   padding: 0.8rem 1.5rem;
-  background-color: var(
-    --color-primary-dark
-  ); /* Un color ligeramente diferente */
+  background-color: var(--color-primary-dark);
   color: white;
   border: none;
   border-radius: var(--border-radius);
@@ -442,14 +480,13 @@
   font-size: 0.95rem;
 }
 
-/* --- AÑADIDO --- */
 .diaryLinkButton svg {
   font-size: 1.1rem;
   stroke-width: 2.5;
 }
 
 .diaryLinkButton:hover {
-  background-color: #388e3c; /* Un verde más oscuro al pasar el ratón */
+  background-color: #388e3c;
   transform: translateY(-2px);
 }
 
@@ -471,10 +508,10 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  opacity: 0; /* Oculto por defecto */
+  opacity: 0;
 }
 .plantImageWrapper:hover .editImageButton {
-  opacity: 1; /* Mostrar al hacer hover */
+  opacity: 1;
 }
 .editImageButton:hover {
   background-color: rgba(0, 0, 0, 0.8);
@@ -502,7 +539,7 @@
   z-index: 9999;
 }
 
-/* --- AÑADIDO: Estilos Modal de Cámara (copiados de PlantDiary.module.css) --- */
+/* --- Estilos Modal de Cámara --- */
 .cameraModal {
   position: fixed;
   top: 0;
@@ -604,7 +641,6 @@
   border-top: 1px solid #444;
 }
 
-/* Botones dentro del modal de cámara */
 .modalUploadButton,
 .modalSwitchButton,
 .modalCaptureButton {
@@ -687,7 +723,7 @@
     font-size: 0.9rem;
     padding: 0.7rem 1.2rem;
     min-width: auto;
-    flex-grow: 1; /* Hacer que los botones se expandan */
+    flex-grow: 1;
   }
 }
 
@@ -700,109 +736,6 @@
   flex-wrap: wrap;
 }
 
-.exportButton {
-  flex-grow: 1;
-  padding: 0.75rem 1rem;
-  background-color: #f0f0f0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  font-family: var(--font-main);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.exportButton:hover:not(:disabled) {
-  background-color: #e0e0e0;
-  border-color: #aaa;
-}
-
-.exportButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f5f5f5;
-}
-
-.exportButton svg {
-  font-size: 1.1rem;
-  stroke-width: 2.5;
-}
-
-/* Checkbox de selección en la tarjeta */
-.plantSelectCheckboxContainer {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-.plantSelectCheckboxContainer:hover {
-  background-color: rgba(255, 255, 255, 1);
-}
-
-.plantSelectCheckbox {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-}
-/* Estilo para navegadores que soportan accent-color */
-.plantSelectCheckbox {
-  accent-color: var(--color-primary);
-}
-
-/* Estilo para la tarjeta seleccionada */
-.plantCard.selected {
-  border: 3px solid var(--color-primary);
-  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
-}
-
-/* Ajuste del botón de editar para que no colisione con el checkbox */
-.editImageButton {
-  top: 10px;
-  right: 10px;
-  /* (El resto del estilo .editImageButton ya debería estar) */
-}
-
-/* Spinner pequeño para exportar */
-.loadingSpinnerSmall {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-light);
-}
-
-.loadingSpinnerSmall .spinner {
-  width: 24px;
-  height: 24px;
-  border-width: 3px;
-}
-
-.exportContainer {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px dashed var(--color-border);
-  flex-wrap: wrap;
-}
-
 .exportButton,
 .selectButton {
   flex-grow: 1;
@@ -819,201 +752,6 @@
   gap: 0.5rem;
 }
 
-/* Botones de Exportar (Primarios) */
-.exportButton {
-  background-color: var(--color-primary-dark);
-  color: white;
-  border: 1px solid var(--color-primary-dark);
-}
-.exportButton:hover:not(:disabled) {
-  background-color: #388e3c; /* Más oscuro */
-}
-
-/* Botones de Selección (Secundarios) */
-.selectButton {
-  background-color: #f0f0f0;
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
-}
-.selectButton:hover:not(:disabled) {
-  background-color: #e0e0e0;
-  border-color: #aaa;
-}
-
-.exportButton:disabled,
-.selectButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.exportButton svg,
-.selectButton svg {
-  font-size: 1.1rem;
-  stroke-width: 2.5;
-}
-
-/* Checkbox de selección en la tarjeta */
-.plantSelectCheckboxContainer {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-.plantSelectCheckboxContainer:hover {
-  background-color: rgba(255, 255, 255, 1);
-}
-
-.plantSelectCheckbox {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-}
-/* Estilo para navegadores que soportan accent-color */
-.plantSelectCheckbox {
-  accent-color: var(--color-primary);
-}
-
-/* Estilo para la tarjeta seleccionada */
-.plantCard.selected {
-  border: 3px solid var(--color-primary);
-  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
-  transform: translateY(-8px);
-}
-.plantCard.selected .plantSelectCheckboxContainer {
-  background-color: white;
-}
-
-/* Ajuste del botón de editar para que no colisione con el checkbox */
-.editImageButton {
-  top: 10px;
-  right: 10px;
-  /* (El resto del estilo .editImageButton ya debería estar) */
-}
-
-/* Spinner pequeño para exportar */
-.loadingSpinnerSmall {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-light);
-  width: 100%; /* Ocupa toda la línea */
-}
-
-.loadingSpinnerSmall .spinner {
-  width: 24px;
-  height: 24px;
-  border-width: 3px;
-}
-
-/* Clase de utilidad para accesibilidad */
-.visuallyHidden {
-  border: 0;
-  clip: rect(0 0 0 0);
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-  width: 1px;
-}
-
-.controlsToggleButton {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 1rem;
-  color: var(--color-primary);
-  margin-bottom: 0.5rem; /* Espacio antes del contenedor si está abierto */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-.controlsToggleButton svg {
-  font-size: 1.3rem;
-  stroke-width: 3;
-}
-.controlsToggleIcon {
-  transition: transform 0.3s ease;
-}
-
-/* --- MODIFICADO: Contenedor de controles colapsable --- */
-.controlsContainer {
-  /* ... (tus estilos existentes como padding, background-color, etc.) ... */
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background-color: #f8f9fa;
-  border-radius: var(--border-radius);
-
-  /* Transiciones */
-  transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out,
-    opacity 0.3s ease-in-out, margin-bottom 0.5s ease-in-out;
-  max-height: 1000px; /* Altura "auto" animable */
-  opacity: 1;
-  overflow: hidden;
-}
-.controlsContainer.controlsCollapsed {
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-bottom: 1rem;
-  opacity: 0;
-  gap: 0; /* Evita que el 'gap' ocupe espacio cuando está colapsado */
-}
-
-/* Contenido interno para evitar que el 'gap' colapse mal */
-.controlsContent {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-}
-
-.exportContainer {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px dashed var(--color-border);
-  flex-wrap: wrap;
-}
-
-.exportButton,
-.selectButton {
-  flex-grow: 1;
-  padding: 0.75rem 1rem;
-  border-radius: var(--border-radius);
-  font-family: var(--font-main);
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-/* Botones de Exportar (Primarios) */
 .exportButton {
   background-color: var(--color-primary-dark);
   color: white;
@@ -1023,7 +761,6 @@
   background-color: #388e3c;
 }
 
-/* Botones de Selección (Secundarios) */
 .selectButton {
   background-color: #f0f0f0;
   color: var(--color-text);
@@ -1034,16 +771,14 @@
   border-color: #aaa;
 }
 
-/* --- CORREGIDO: Estilos de botones deshabilitados --- */
 .exportButton:disabled,
 .selectButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-color: #f0f0f0; /* Fondo gris claro */
-  color: #a0a0a0; /* Color de texto gris (visible sobre fondo claro) */
+  background-color: #f0f0f0;
+  color: #a0a0a0;
   border-color: var(--color-border);
 }
-/* -------------------------------------------------- */
 
 .exportButton svg,
 .selectButton svg {
@@ -1081,9 +816,8 @@
   accent-color: var(--color-primary);
 }
 
-/* Estilo para la tarjeta seleccionada */
 .plantCard.selected {
-  border: 3px solid var(--color-primary);
+  border-color: var(--color-primary);
   box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
   transform: translateY(-8px);
 }
@@ -1091,13 +825,6 @@
   background-color: white;
 }
 
-/* Ajuste del botón de editar */
-.editImageButton {
-  top: 10px;
-  right: 10px;
-}
-
-/* Spinner pequeño para exportar */
 .loadingSpinnerSmall {
   display: flex;
   align-items: center;
@@ -1114,7 +841,6 @@
   border-width: 3px;
 }
 
-/* Clase de utilidad para accesibilidad */
 .visuallyHidden {
   border: 0;
   clip: rect(0 0 0 0);
@@ -1142,4 +868,136 @@
   .plantCardExpanded {
     grid-column: auto;
   }
+}
+
+/* --- NUEVO: Estilos para Edición de Nombre --- */
+
+/* Resaltar tarjeta cuando se edita el nombre */
+.plantCardEditing {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.4) !important;
+  transform: translateY(0) !important;
+}
+
+.plantNameOverlay h3 {
+  /* h3 es el nombre científico */
+  cursor: pointer; /* Indica que abre el acordeón */
+  word-break: break-word;
+}
+
+/* Párrafo para mostrar el nombre común */
+.commonNameDisplay {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #f0f0f0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 4px; /* Espacio del nombre científico */
+  border-radius: 4px;
+  padding: 2px 6px;
+  transition: background-color 0.2s ease;
+}
+.commonNameDisplay:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.editNameIcon {
+  font-size: 0.9rem;
+  stroke-width: 3;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+.commonNameDisplay:hover .editNameIcon {
+  opacity: 1;
+}
+
+/* Contenedor del input y botones de edición */
+.nameEditWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.nameEditInput {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 1.1rem; /* Ligeramente más pequeño que el h3 */
+  font-weight: 600;
+  border-radius: calc(var(--border-radius) / 2);
+  border: 2px solid var(--color-primary);
+  background-color: white;
+  color: #333;
+}
+.nameEditInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+}
+
+.nameEditActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.nameEditButtonSave,
+.nameEditButtonCancel {
+  width: 40px;
+  height: 32px;
+  border: none;
+  border-radius: calc(var(--border-radius) / 2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.nameEditButtonSave {
+  background-color: var(--color-primary);
+  color: white;
+}
+.nameEditButtonSave:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+.nameEditButtonSave:disabled {
+  opacity: 0.6;
+}
+
+.nameEditButtonCancel {
+  background-color: #f0f0f0;
+  color: #555;
+}
+.nameEditButtonCancel:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.nameEditButtonSave .miniSpinner {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  border-top-color: white;
+  border-left-color: white;
+  border-right-color: white;
+  border-bottom-color: transparent;
+  animation: spin 0.6s linear infinite; /* Asegura que la animación esté definida */
+}
+
+/* El nombre científico se vuelve itálico si hay un nombre común */
+/* Este estilo se aplica en el JSX, pero lo dejo aquí como referencia */
+.scientificName {
+  font-size: 0.85rem;
+  font-style: italic;
+  opacity: 0.8;
+  margin: 0;
+  padding: 0;
+  font-weight: 400;
+  margin-top: -5px; /* Acerca al nombre principal */
 }

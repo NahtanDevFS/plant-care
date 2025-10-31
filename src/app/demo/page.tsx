@@ -5,18 +5,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-// Usamos los mismos estilos de HomePage para que se vea idéntica
 import styles from "@/app/HomePage.module.css";
-// Importamos los íconos que necesita el diseño
 import { FiUpload, FiCamera, FiLock, FiX } from "react-icons/fi";
 
 export default function DemoPage() {
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
 
-  // Esta función se activará con cualquier clic en el contenido
   const triggerModal = (e: React.MouseEvent) => {
-    // Evita que el modal se dispare si ya está abierto y se hace clic en el overlay
     if (!showModal) {
       e.preventDefault();
       e.stopPropagation();
@@ -25,7 +21,7 @@ export default function DemoPage() {
   };
 
   const closeModal = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita que el clic en el botón de cerrar active el wrapper
+    e.stopPropagation();
     setShowModal(false);
   };
 
@@ -41,15 +37,11 @@ export default function DemoPage() {
 
   return (
     <>
-      {/* --- El Modal --- */}
       {showModal && (
-        <div
-          className={styles.modalOverlay}
-          onClick={closeModal} // Cierra al hacer clic en el fondo
-        >
+        <div className={styles.modalOverlay} onClick={closeModal}>
           <div
             className={styles.modalContent}
-            onClick={(e) => e.stopPropagation()} // Evita que el clic en el modal lo cierre
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               className={styles.modalCloseButton}
@@ -84,14 +76,8 @@ export default function DemoPage() {
         </div>
       )}
 
-      {/* --- Contenido de la Página (Wrapper) --- */}
       {/* Este div captura todos los clics */}
       <div className={styles.demoWrapper} onClick={triggerModal}>
-        {/*
-          Este es el JSX estático de tu src/app/page.tsx.
-          Todos los `onClick`, `onChange`, `disabled` y `href` han sido eliminados
-          para que el wrapper principal capture la interacción.
-        */}
         <main className={styles.container}>
           <div className={styles.header}>
             <h1>🌿 PlantCare</h1>

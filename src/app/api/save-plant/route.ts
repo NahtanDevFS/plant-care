@@ -14,6 +14,7 @@ async function getCareInstructions(plantName: string): Promise<string> {
     const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando un clima templado a subtropical como el de Guatemala. La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
 
 ### General:
+- Nombre Común: [Nombre común más popular en Guatemala para ${plantName}. Si no hay uno claro, escribe N/A]
 - Dificultad: [Fácil/Media/Difícil]
 - Apta para mascotas: [Sí/No]
 - Venenosa: [Sí/No - si es Sí, especificar para quién]
@@ -85,11 +86,13 @@ function extractPlantMetadata(careInstructions: string): {
   care_level: "Fácil" | "Media" | "Difícil" | null;
   pet_friendly: boolean | null;
   is_toxic: boolean | null;
+  common_name: string | null;
 } {
   const result = {
     care_level: null as "Fácil" | "Media" | "Difícil" | null,
     pet_friendly: null as boolean | null,
     is_toxic: null as boolean | null,
+    common_name: null as string | null,
   };
 
   // Buscar la sección General
@@ -97,6 +100,22 @@ function extractPlantMetadata(careInstructions: string): {
   if (!generalMatch) return result;
 
   const generalText = generalMatch[0];
+
+  const commonNameMatch = generalText.match(
+    /Nombre Común:\s*([\s\S]*?)(?=\n-|\n###|$)/i
+  );
+  if (commonNameMatch && commonNameMatch[1]) {
+    let name: any = commonNameMatch[1].trim().replace(/^\[|\]$/g, "");
+    // Si el LLM dice "N/A" o similar, lo ponemos como null
+    if (
+      name.toLowerCase() === "n/a" ||
+      name.toLowerCase().includes("no especificado") ||
+      name.toLowerCase().includes("no aplica")
+    ) {
+      name = null;
+    }
+    result.common_name = name;
+  }
 
   // Extraer Dificultad
   const difficultyMatch = generalText.match(
@@ -175,6 +194,7 @@ export async function POST(request: NextRequest) {
     const { error: dbError } = await supabase.from("plants").insert([
       {
         name: plantName,
+        common_name: metadata.common_name,
         care_instructions: careInstructions,
         image_url: publicUrl,
         user_id: user.id,

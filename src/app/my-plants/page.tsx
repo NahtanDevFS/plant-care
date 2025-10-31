@@ -18,7 +18,7 @@ import {
   FiBookOpen,
   FiArchive,
   FiInfo,
-  FiEdit2,
+  FiEdit2, // <-- Ícono para editar nombre
   FiUpload,
   FiCamera,
   FiRefreshCw,
@@ -27,8 +27,9 @@ import {
   FiGrid,
   FiCheckSquare,
   FiSquare,
-  FiChevronDown, // <-- AÑADIDO: Ícono para colapsar
-  FiFilter, // <-- AÑADIDO: Ícono para colapsar
+  FiChevronDown,
+  FiFilter,
+  FiSave, // <-- Ícono para guardar nombre
 } from "react-icons/fi";
 import { LiaPawSolid, LiaBugSolid, LiaDeafSolid } from "react-icons/lia";
 import { GiPlantSeed } from "react-icons/gi";
@@ -40,14 +41,14 @@ import {
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
 
-// --- TIPOS DE DATOS ---
+// --- TIPOS DE DATOS (Actualizado) ---
 type PlantFromDB = {
   id: number;
   created_at: string;
-  name: string;
+  name: string; // Nombre científico
+  common_name: string | null; // <-- AÑADIDO
   image_url: string;
   care_instructions: string;
   watering_frequency_days: number | null;
@@ -58,7 +59,7 @@ type PlantFromDB = {
 };
 type Plant = PlantFromDB;
 
-// --- CONFIGURACIÓN DE TARJETAS DE CUIDADO ---
+// --- CONFIGURACIÓN DE TARJETAS DE CUIDADO (Sin cambios) ---
 const careConfig = {
   Riego: { icon: <FiDroplet />, color: "#2196F3", bgColor: "#E3F2FD" },
   Luz: { icon: <FiSun />, color: "#FF9800", bgColor: "#FFF3E0" },
@@ -83,7 +84,7 @@ const careConfig = {
 };
 type CareKey = keyof typeof careConfig;
 
-// --- PARSEADOR PARA PLAGAS Y ENFERMEDADES (Sin cambios) ---
+// --- COMPONENTES (PestDiseaseParser, CareInstructions - sin cambios) ---
 const PestDiseaseParser = ({ text }: { text: string }) => {
   const items = text.split(/\d+\.\s+/).filter((s) => s.trim().length > 0);
   return (
@@ -119,8 +120,6 @@ const PestDiseaseParser = ({ text }: { text: string }) => {
     </div>
   );
 };
-
-// --- CareInstructions (Sin cambios) ---
 const CareInstructions = ({ text }: { text: string }) => {
   const sections = text.split("### ").filter((s) => s);
   return (
@@ -128,9 +127,12 @@ const CareInstructions = ({ text }: { text: string }) => {
       {sections.map((section) => {
         const [title, ...contentParts] = section.split(":");
         const content = contentParts.join(":").trim();
-        const trimmedTitle = title.trim() as CareKey;
-        const config = careConfig[trimmedTitle] || careConfig["General"];
-        if (trimmedTitle === "General") return null;
+        const trimmedTitle = title.trim();
+        if (trimmedTitle === "General" || trimmedTitle === "Nombre Común") {
+          return null;
+        }
+        const configKey = trimmedTitle as CareKey;
+        const config = careConfig[configKey] || careConfig["General"];
         const isComplex = ["Plagas Comunes", "Enfermedades Comunes"].includes(
           trimmedTitle
         );
@@ -161,6 +163,7 @@ const CareInstructions = ({ text }: { text: string }) => {
   );
 };
 
+// --- Helper para parsear cuidados para Exportación (Actualizado) ---
 const parseCareInstructionsForExport = (text: string) => {
   const sections = text.split("### ").filter((s) => s);
   const careData: { [key: string]: string } = {};
@@ -176,6 +179,7 @@ const parseCareInstructionsForExport = (text: string) => {
   return careData;
 };
 
+// --- Helper para convertir imagen a base64 (Sin cambios) ---
 const getImageAsBase64 = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     fetch(url)
@@ -209,13 +213,11 @@ export default function MyPlants() {
   const [error, setError] = useState<string | null>(null);
   const [expandedPlant, setExpandedPlant] = useState<number | null>(null);
 
-  // --- Estados de Búsqueda y Filtro ---
   const [searchTerm, setSearchTerm] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [petFilter, setPetFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
 
-  // --- Estados de Modal de Cámara ---
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">(
@@ -229,25 +231,31 @@ export default function MyPlants() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Estados de Selección y Exportación ---
   const [selectedPlants, setSelectedPlants] = useState(new Set<number>());
   const [isExporting, setIsExporting] = useState(false);
 
-  // --- AÑADIDO: Estado para colapsar controles ---
   const [isControlsVisible, setIsControlsVisible] = useState(true);
+
+  // --- NUEVOS ESTADOS PARA EDICIÓN DE NOMBRE ---
+  const [editingNameId, setEditingNameId] = useState<number | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState("");
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
   // ---------------------------------------------
 
-  // --- useEffect para fetchPlants (Sin cambios) ---
+  // --- useEffect para fetchPlants (Actualizado) ---
   useEffect(() => {
     const fetchPlants = async () => {
-      // ... (lógica existente)
+      setLoading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
+        // Solicitamos explícitamente la nueva columna 'common_name'
         const { data, error } = await supabase
           .from("plants")
-          .select("*")
+          .select(
+            "id, created_at, name, common_name, image_url, care_instructions, care_level, pet_friendly, is_toxic"
+          )
           .eq("user_id", user.id);
         if (error) {
           setError("No se pudieron cargar tus plantas.");
@@ -256,7 +264,7 @@ export default function MyPlants() {
             (data || []).map(async (plant) => {
               const { data: reminders } = await supabase
                 .from("reminders")
-                .select("*")
+                .select("care_type, frequency_days")
                 .eq("plant_id", plant.id)
                 .eq("user_id", user.id);
               let watering_frequency = null;
@@ -282,7 +290,6 @@ export default function MyPlants() {
     fetchPlants();
   }, [supabase]);
 
-  // --- useEffect para Limpieza de cámara (Sin cambios) ---
   useEffect(() => {
     return () => {
       if (cameraStream) {
@@ -291,15 +298,13 @@ export default function MyPlants() {
     };
   }, [cameraStream]);
 
-  // --- AÑADIDO: useEffect para colapsar en móvil ---
   useEffect(() => {
-    // Colapsar controles por defecto en pantallas pequeñas
     if (window.innerWidth <= 768) {
       setIsControlsVisible(false);
     }
-  }, []); // Se ejecuta solo una vez al montar
+  }, []);
 
-  // --- LÓGICA DE FILTRADO Y ORDENAMIENTO (Sin cambios) ---
+  // --- LÓGICA DE FILTRADO Y ORDENAMIENTO (Actualizada) ---
   const processedPlants = useMemo(() => {
     let processed = [...plants];
     if (difficultyFilter !== "all") {
@@ -310,8 +315,12 @@ export default function MyPlants() {
       processed = processed.filter((p) => p.pet_friendly === isPetFriendly);
     }
     if (searchTerm) {
-      processed = processed.filter((p) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      // Ahora busca en el nombre científico Y en el nombre común
+      const lowerSearch = searchTerm.toLowerCase();
+      processed = processed.filter(
+        (p) =>
+          p.name.toLowerCase().includes(lowerSearch) ||
+          (p.common_name && p.common_name.toLowerCase().includes(lowerSearch))
       );
     }
     if (sortBy === "oldest") {
@@ -419,6 +428,7 @@ export default function MyPlants() {
   };
 
   const getDifficultyClass = (level: Plant["care_level"]) => {
+    // ... (lógica existente sin cambios)
     if (level === "Fácil") return styles.levelEasy;
     if (level === "Media") return styles.levelMedium;
     if (level === "Difícil") return styles.levelHard;
@@ -427,11 +437,13 @@ export default function MyPlants() {
 
   // --- Funciones para actualizar imagen (Sin cambios) ---
   const handleOpenUpdateModal = (plantId: number) => {
+    // ... (lógica existente sin cambios)
     setCurrentPlantToUpdate(plantId);
     setShowCameraModal(true);
     openCamera(facingMode);
   };
   const openCamera = async (mode: "user" | "environment") => {
+    // ... (lógica existente sin cambios)
     setError(null);
     try {
       if (cameraStream)
@@ -454,6 +466,7 @@ export default function MyPlants() {
     }
   };
   const closeCamera = () => {
+    // ... (lógica existente sin cambios)
     if (cameraStream) cameraStream.getTracks().forEach((track) => track.stop());
     setCameraStream(null);
     setShowCameraModal(false);
@@ -461,16 +474,19 @@ export default function MyPlants() {
     setIsCompressing(false);
   };
   const switchCamera = () => {
+    // ... (lógica existente sin cambios)
     const newMode = facingMode === "environment" ? "user" : "environment";
     openCamera(newMode);
   };
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // ... (lógica existente sin cambios)
     if (e.target.files && e.target.files[0]) {
       await processImage(e.target.files[0]);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
   const handleCapturePhoto = async () => {
+    // ... (lógica existente sin cambios)
     if (!videoRef.current || !cameraStream) return;
     try {
       const capturedImage = await capturePhotoFromVideo(videoRef.current);
@@ -481,6 +497,7 @@ export default function MyPlants() {
     }
   };
   const processImage = async (file: File) => {
+    // ... (lógica existente sin cambios)
     if (!currentPlantToUpdate) return;
     setIsCompressing(true);
     try {
@@ -494,6 +511,7 @@ export default function MyPlants() {
     }
   };
   const handleUpdateImage = async (imageFile: File) => {
+    // ... (lógica existente sin cambios)
     if (!currentPlantToUpdate) return;
     setIsUpdatingImage(true);
     setError(null);
@@ -530,9 +548,62 @@ export default function MyPlants() {
     }
   };
 
-  // --- Lógica de Selección y Exportación (Actualizada) ---
+  // --- NUEVAS FUNCIONES PARA EDITAR NOMBRE ---
+  const handleEditNameClick = (plant: Plant) => {
+    setEditingNameId(plant.id);
+    setEditingNameValue(plant.common_name || ""); // Usar el nombre común o vacío
+    setError(null);
+    setExpandedPlant(null); // Cierra el acordeón si está abierto
+  };
 
+  const handleCancelEditName = () => {
+    setEditingNameId(null);
+    setEditingNameValue("");
+    setIsUpdatingName(false);
+  };
+
+  const handleSaveName = async (plantId: number) => {
+    setIsUpdatingName(true);
+    setError(null);
+
+    const newCommonName = editingNameValue.trim();
+
+    try {
+      const response = await fetch("/api/my-plants/update-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plantId: plantId,
+          commonName: newCommonName, // Puede ser "" para borrar
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al guardar el nombre.");
+      }
+
+      const updatedPlant = await response.json(); // API devuelve { id, name, common_name }
+
+      // Actualizar el estado local
+      setPlants((prevPlants) =>
+        prevPlants.map((p) =>
+          p.id === plantId ? { ...p, common_name: updatedPlant.common_name } : p
+        )
+      );
+      handleCancelEditName(); // Salir del modo edición
+    } catch (err) {
+      console.error("Error saving name:", err);
+      setError(err instanceof Error ? err.message : "Error desconocido.");
+    } finally {
+      setIsUpdatingName(false);
+    }
+  };
+  // ------------------------------------------
+
+  // --- Lógica de Selección y Exportación (Actualizada) ---
   const handlePlantSelect = (plantId: number) => {
+    // ... (lógica existente sin cambios)
     setSelectedPlants((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(plantId)) {
@@ -545,20 +616,23 @@ export default function MyPlants() {
   };
 
   const handleSelectAll = () => {
+    // ... (lógica existente sin cambios)
     const allVisibleIds = processedPlants.map((p) => p.id);
     setSelectedPlants(new Set(allVisibleIds));
   };
 
   const handleDeselectAll = () => {
+    // ... (lógica existente sin cambios)
     setSelectedPlants(new Set());
   };
 
   const getSelectedPlantsData = () => {
+    // ... (lógica existente sin cambios)
     return processedPlants.filter((p) => selectedPlants.has(p.id));
   };
 
-  // --- MODIFICADO: handleExportExcel ---
   const handleExportExcel = () => {
+    // --- MODIFICADO: Añadido common_name a la exportación ---
     setIsExporting(true);
     const plantsToExport = getSelectedPlantsData();
     if (plantsToExport.length === 0) {
@@ -569,9 +643,13 @@ export default function MyPlants() {
 
     const dataForExcel = plantsToExport.map((plant) => {
       const careData = parseCareInstructionsForExport(plant.care_instructions);
+      // Excluir 'Nombre Común' de careData si existe
+      delete careData["Nombre Común"];
+
       return {
         ID: plant.id,
-        Nombre: plant.name,
+        "Nombre Común": plant.common_name || "N/A", // <-- AÑADIDO
+        "Nombre Científico": plant.name,
         Nivel_Cuidado: plant.care_level,
         Apta_Mascotas: plant.pet_friendly ? "Sí" : "No",
         Es_Toxica: plant.is_toxic ? "Sí" : "No",
@@ -588,6 +666,7 @@ export default function MyPlants() {
   };
 
   const handleExportPDF = async () => {
+    // --- MODIFICADO: Añadido common_name al PDF ---
     setIsExporting(true);
     const plantsToExport = getSelectedPlantsData();
     if (plantsToExport.length === 0) {
@@ -627,8 +706,20 @@ export default function MyPlants() {
 
       pdf.setFontSize(16);
       pdf.setTextColor(69, 160, 73);
-      pdf.text(plant.name, margin, yPos);
-      yPos += 10;
+      // Mostrar nombre común primero si existe, si no, el científico
+      pdf.text(plant.common_name || plant.name, margin, yPos);
+      yPos += 7;
+
+      // Mostrar nombre científico si había uno común
+      if (plant.common_name) {
+        pdf.setFontSize(11);
+        pdf.setTextColor(100, 100, 100);
+        pdf.setFont("helvetica", "italic");
+        pdf.text(plant.name, margin, yPos);
+        pdf.setFont("helvetica", "normal"); // Resetear
+        yPos += 3;
+      }
+      yPos += 3; // Espacio extra
 
       try {
         const imgData = await getImageAsBase64(plant.image_url);
@@ -672,7 +763,7 @@ export default function MyPlants() {
         yPos = Math.max(yPos + imgHeight + 8, textY + 8);
 
         const tableBody = Object.entries(careData)
-          .filter(([key]) => key !== "General")
+          .filter(([key]) => key !== "General" && key !== "Nombre Común") // Excluir
           .map(([key, value]) => [key, value]);
 
         if (yPos + 20 > pageHeight - margin) {
@@ -705,7 +796,6 @@ export default function MyPlants() {
   };
   // ----------------------------------------------------
 
-  // --- Renderizado ---
   if (loading) {
     return (
       <div className={styles.container}>
@@ -799,10 +889,11 @@ export default function MyPlants() {
       <div className={styles.container}>
         <div className={styles.header}>
           <h1>🌿 Mis Plantas</h1>
-          <p>Busca, filtra y gestiona todas tus plantas y sus cuidados.</p>
+          <p>
+            Busca, filtra y gestiona todas tus plantas guardadas y sus cuidados.
+          </p>
         </div>
 
-        {/* --- AÑADIDO: Botón para colapsar --- */}
         <button
           onClick={() => setIsControlsVisible(!isControlsVisible)}
           className={styles.controlsToggleButton}
@@ -829,7 +920,7 @@ export default function MyPlants() {
           <div className={styles.controlsContent}>
             <input
               type="text"
-              placeholder="Buscar por nombre..."
+              placeholder="Buscar por nombre común o científico..."
               className={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -913,16 +1004,21 @@ export default function MyPlants() {
           </div>
         </div>
 
+        {/* --- MODIFICADO: Grid de Plantas con Lógica de Edición --- */}
         {processedPlants.length > 0 ? (
           <div className={styles.myPlantsGrid}>
             {processedPlants.map((plant) => {
               const isSelected = selectedPlants.has(plant.id);
+              // Comprueba si esta planta específica está en modo edición de nombre
+              const isEditingName = editingNameId === plant.id;
               return (
                 <div
                   key={plant.id}
                   className={`${styles.plantCard} ${
                     expandedPlant === plant.id ? styles.plantCardExpanded : ""
-                  } ${isSelected ? styles.selected : ""}`}
+                  } ${isSelected ? styles.selected : ""} ${
+                    isEditingName ? styles.plantCardEditing : "" // Estilo para resaltar
+                  }`}
                 >
                   <div className={styles.plantSelectCheckboxContainer}>
                     <input
@@ -961,92 +1057,169 @@ export default function MyPlants() {
                         e.stopPropagation();
                         handleOpenUpdateModal(plant.id);
                       }}
-                      disabled={isUpdatingImage || isCompressing}
+                      disabled={
+                        isUpdatingImage || isCompressing || isEditingName
+                      }
                     >
                       <FiEdit2 />
                     </button>
+
+                    {/* --- MODIFICADO: Overlay de Nombre con Lógica de Edición --- */}
                     <div className={styles.plantNameOverlay}>
-                      <h3>{plant.name}</h3>
+                      {/* 1. Nombre Científico (No editable) */}
+                      <h3
+                        onClick={() => !isEditingName && togglePlant(plant.id)}
+                      >
+                        {plant.name}
+                      </h3>
+
+                      {isEditingName ? (
+                        // --- 2. VISTA DE EDICIÓN DE NOMBRE COMÚN ---
+                        <div
+                          className={styles.nameEditWrapper}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="text"
+                            value={editingNameValue}
+                            onChange={(e) =>
+                              setEditingNameValue(e.target.value)
+                            }
+                            className={styles.nameEditInput}
+                            placeholder="Añadir apodo o nombre común"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveName(plant.id);
+                              if (e.key === "Escape") handleCancelEditName();
+                            }}
+                            disabled={isUpdatingName}
+                          />
+                          <div className={styles.nameEditActions}>
+                            <button
+                              onClick={handleCancelEditName}
+                              className={styles.nameEditButtonCancel}
+                              disabled={isUpdatingName}
+                              title="Cancelar"
+                            >
+                              <FiX />
+                            </button>
+                            <button
+                              onClick={() => handleSaveName(plant.id)}
+                              className={styles.nameEditButtonSave}
+                              disabled={isUpdatingName}
+                              title="Guardar"
+                            >
+                              {isUpdatingName ? (
+                                <div className={styles.miniSpinner}></div>
+                              ) : (
+                                <FiSave />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // --- 3. VISTA NORMAL DE NOMBRE COMÚN ---
+                        <p
+                          className={styles.commonNameDisplay}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditNameClick(plant);
+                          }}
+                        >
+                          {plant.common_name || "Añadir apodo"}
+                          <FiEdit2
+                            className={styles.editNameIcon}
+                            title="Editar nombre"
+                          />
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className={styles.plantCardContent}>
-                    <div className={styles.generalInfo}>
-                      {plant.care_level && (
-                        <span
-                          className={`${styles.infoTag} ${getDifficultyClass(
-                            plant.care_level
-                          )}`}
-                        >
-                          Dificultad: {plant.care_level}
-                        </span>
-                      )}
-                      {plant.pet_friendly === true && (
-                        <span
-                          className={`${styles.infoTag} ${styles.petFriendly}`}
-                        >
-                          <LiaPawSolid /> Apta para Mascotas
-                        </span>
-                      )}
-                      {plant.is_toxic === true && (
-                        <span className={`${styles.infoTag} ${styles.isToxic}`}>
-                          <FiAlertTriangle /> Venenosa
-                        </span>
-                      )}
-                    </div>
-                    <div className={styles.buttonGroup}>
-                      <button
-                        onClick={() => togglePlant(plant.id)}
-                        className={styles.toggleButton}
-                      >
-                        {expandedPlant === plant.id
-                          ? "Ocultar"
-                          : "Ver Cuidados"}
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDeletePlant(plant.id, plant.image_url)
-                        }
-                        className={styles.deleteButton}
-                        title="Eliminar planta"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                    {expandedPlant === plant.id && (
-                      <div className={styles.careInstructionsWrapper}>
-                        <div className={styles.remindersSection}>
-                          <h3>Recordatorios</h3>
-                          <ReminderSetup
-                            plantId={plant.id}
-                            careType="Riego"
-                            initialFrequency={plant.watering_frequency_days}
-                            onSave={(f) =>
-                              handleSaveReminder(plant.id, "Riego", f)
-                            }
-                          />
-                          <ReminderSetup
-                            plantId={plant.id}
-                            careType="Fertilizante"
-                            initialFrequency={plant.fertilizing_frequency_days}
-                            onSave={(f) =>
-                              handleSaveReminder(plant.id, "Fertilizante", f)
-                            }
-                          />
-                        </div>
-                        <div className={styles.diaryLinkContainer}>
-                          <Link
-                            href={`/plant-diary/${plant.id}`}
-                            className={styles.diaryLinkButton}
+                  {/* No mostrar contenido si se está editando el nombre */}
+                  {!isEditingName && (
+                    <div className={styles.plantCardContent}>
+                      <div className={styles.generalInfo}>
+                        {plant.care_level && (
+                          <span
+                            className={`${styles.infoTag} ${getDifficultyClass(
+                              plant.care_level
+                            )}`}
                           >
-                            Ver Diario de la Planta <FiBookOpen />
-                          </Link>
-                        </div>
-                        <h3 className={styles.careTitle}>Guía de Cuidados</h3>
-                        <CareInstructions text={plant.care_instructions} />
+                            Dificultad: {plant.care_level}
+                          </span>
+                        )}
+                        {plant.pet_friendly === true && (
+                          <span
+                            className={`${styles.infoTag} ${styles.petFriendly}`}
+                          >
+                            <LiaPawSolid /> Apta para Mascotas
+                          </span>
+                        )}
+                        {plant.is_toxic === true && (
+                          <span
+                            className={`${styles.infoTag} ${styles.isToxic}`}
+                          >
+                            <FiAlertTriangle /> Venenosa
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      <div className={styles.buttonGroup}>
+                        <button
+                          onClick={() => togglePlant(plant.id)}
+                          className={styles.toggleButton}
+                        >
+                          {expandedPlant === plant.id
+                            ? "Ocultar"
+                            : "Ver Cuidados"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDeletePlant(plant.id, plant.image_url)
+                          }
+                          className={styles.deleteButton}
+                          title="Eliminar planta"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                      {expandedPlant === plant.id && (
+                        <div className={styles.careInstructionsWrapper}>
+                          <div className={styles.remindersSection}>
+                            <h3>Recordatorios</h3>
+                            <ReminderSetup
+                              plantId={plant.id}
+                              careType="Riego"
+                              initialFrequency={plant.watering_frequency_days}
+                              onSave={(f) =>
+                                handleSaveReminder(plant.id, "Riego", f)
+                              }
+                            />
+                            <ReminderSetup
+                              plantId={plant.id}
+                              careType="Fertilizante"
+                              initialFrequency={
+                                plant.fertilizing_frequency_days
+                              }
+                              onSave={(f) =>
+                                handleSaveReminder(plant.id, "Fertilizante", f)
+                              }
+                            />
+                          </div>
+                          <div className={styles.diaryLinkContainer}>
+                            <Link
+                              href={`/plant-diary/${plant.id}`}
+                              className={styles.diaryLinkButton}
+                            >
+                              Ver Diario de la Planta <FiBookOpen />
+                            </Link>
+                          </div>
+                          <h3 className={styles.careTitle}>Guía de Cuidados</h3>
+                          <CareInstructions text={plant.care_instructions} />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
