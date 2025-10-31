@@ -114,13 +114,13 @@ function extractPlantMetadata(careInstructions: string): {
   }
 
   // Extraer Apta para mascotas
-  const petMatch = generalText.match(/Apta para mascotas:\s*(Sí|No)/i);
+  const petMatch = generalText.match(/Apta para mascotas:\s*(S[íi]|No)/i);
   if (petMatch) {
     result.pet_friendly = petMatch[1].toLowerCase() === "sí";
   }
 
   // Extraer Venenosa
-  const toxicMatch = generalText.match(/Venenosa:\s*(Sí|No)/i);
+  const toxicMatch = generalText.match(/Venenosa:\s*(S[íi]|No)/i);
   if (toxicMatch) {
     result.is_toxic = toxicMatch[1].toLowerCase() === "sí";
   }

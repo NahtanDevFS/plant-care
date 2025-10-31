@@ -161,7 +161,6 @@ const CareInstructions = ({ text }: { text: string }) => {
   );
 };
 
-// --- Helper para parsear cuidados para Exportación (Sin cambios) ---
 const parseCareInstructionsForExport = (text: string) => {
   const sections = text.split("### ").filter((s) => s);
   const careData: { [key: string]: string } = {};
@@ -177,7 +176,6 @@ const parseCareInstructionsForExport = (text: string) => {
   return careData;
 };
 
-// --- Helper para convertir imagen a base64 (Sin cambios) ---
 const getImageAsBase64 = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     fetch(url)
@@ -823,13 +821,11 @@ export default function MyPlants() {
           />
         </button>
 
-        {/* --- MODIFICADO: Contenedor de controles colapsable --- */}
         <div
           className={`${styles.controlsContainer} ${
             !isControlsVisible ? styles.controlsCollapsed : ""
           }`}
         >
-          {/* --- AÑADIDO: Contenedor interno para la transición --- */}
           <div className={styles.controlsContent}>
             <input
               type="text"
@@ -916,7 +912,6 @@ export default function MyPlants() {
             )}
           </div>
         </div>
-        {/* ----------------------------------------------- */}
 
         {processedPlants.length > 0 ? (
           <div className={styles.myPlantsGrid}>
