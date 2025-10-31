@@ -13,14 +13,12 @@
   text-align: center;
   color: var(--color-primary);
   margin-bottom: 0.5rem;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
 }
 
-/* --- AÑADIDO --- */
 .pageContainer h1 svg {
   font-size: 2.2rem;
   stroke-width: 2.5;
@@ -34,9 +32,8 @@
 
 .calculatorSection {
   display: grid;
-  /* Cambiado a 40% / 60% para dar más espacio a la configuración */
   grid-template-columns: 40% 1fr;
-  gap: 2.5rem; /* Aumentar separación */
+  gap: 2.5rem;
   margin-bottom: 2rem;
 }
 
@@ -49,12 +46,49 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-/* --- NUEVO: Estilos para el área de añadir componente --- */
+/* --- NUEVO: Estilos para las explicaciones --- */
+.componentExplanations {
+  background-color: #f8f9fa;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.explanationItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.explanationItem span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.explanationItem span svg {
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+.explanationItem p {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  line-height: 1.4;
+  margin: 0;
+}
+/* ------------------------------------------- */
+
 .addComponentArea {
   display: flex;
-  flex-direction: column; /* Apila el select y el botón */
+  flex-direction: column;
   gap: 1rem;
-  margin-bottom: 1.5rem; /* Espacio antes de la lista de añadidos */
+  margin-bottom: 1.5rem;
 }
 
 .componentSelect {
@@ -70,6 +104,14 @@
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* --- NUEVO: Estilo para optgroup --- */
+.optGroup {
+  font-weight: bold;
+  font-style: italic;
+  background-color: #f0f0f0;
+  color: var(--color-primary-dark);
 }
 
 .addButton {
@@ -91,7 +133,6 @@
   cursor: not-allowed;
 }
 
-/* --- NUEVO: Estilos para la lista informativa de componentes añadidos --- */
 .addedComponentsInfo {
   margin-top: 2rem;
   padding: 1rem;
@@ -114,28 +155,28 @@
 }
 .addedComponentsInfo li {
   margin-bottom: 0.3rem;
-  /* padding-left: 1.2em; --- REEMPLAZADO --- */
-  /* position: relative; --- REEMPLAZADO --- */
-  display: flex; /* --- AÑADIDO --- */
-  align-items: center; /* --- AÑADIDO --- */
-  gap: 0.5rem; /* --- AÑADIDO --- */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap; /* Para que el texto se ajuste */
 }
 .addedComponentsInfo li::before {
-  /* content: "🌱"; --- REEMPLAZADO --- */
-  /* position: absolute; --- REEMPLAZADO --- */
-  /* left: 0; --- REEMPLAZADO --- */
-  /* top: 0; --- REEMPLAZADO --- */
-  display: none; /* --- AÑADIDO --- */
+  display: none;
 }
 
-/* --- AÑADIDO --- */
 .addedComponentsInfo li svg {
   font-size: 1.1rem;
   color: var(--color-primary);
   flex-shrink: 0;
 }
 
-/* --- Estilos Anteriores (Ajustados/Sin Cambios) --- */
+/* --- MODIFICADO: de .componentPh a .componentInfo --- */
+.componentInfo {
+  font-size: 0.8rem;
+  color: #888;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
 
 .placeholder {
   color: var(--color-text-light);
@@ -159,9 +200,9 @@
   align-items: center;
   gap: 0.75rem;
   background-color: #f8f9fa;
-  padding: 0.75rem 1rem; /* Más padding */
+  padding: 0.75rem 1rem;
   border-radius: calc(var(--border-radius) / 2);
-  border: 1px solid var(--color-border); /* Añadir borde sutil */
+  border: 1px solid var(--color-border);
 }
 
 .selectedItemName {
@@ -169,47 +210,62 @@
   font-weight: 500;
 }
 
-.partsInput {
-  width: 70px; /* Un poco más ancho */
+.componentPhLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.percentageInput {
+  width: 80px;
   padding: 0.5rem;
   border-radius: calc(var(--border-radius) / 2);
   border: 1px solid var(--color-border);
   text-align: center;
-  font-size: 1rem; /* Asegurar tamaño */
+  font-size: 1rem;
 }
-.partsInput:focus {
+.percentageInput:focus {
   outline: none;
   border-color: var(--color-primary);
 }
 
-.selectedItem span:not(.selectedItemName) {
-  /* Estilo para "partes (X%)" */
-  font-size: 0.85rem;
+.percentageSymbol {
+  font-size: 1rem;
   color: var(--color-text-light);
-  white-space: nowrap; /* Evita que se parta */
+  font-weight: 500;
 }
 
 .removeButton {
   background: none;
   border: none;
   color: #dc3545;
-  font-size: 1.6rem; /* Más grande */
+  font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
   padding: 0 0.5rem;
-  margin-left: 0.5rem; /* Pequeño espacio extra */
+  margin-left: 0.5rem;
 }
 .removeButton:hover {
   color: #a0202d;
 }
 
-.totalParts {
+.totalPercentage {
   font-weight: bold;
   text-align: right;
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px dashed var(--color-border);
-  font-size: 1.1rem; /* Más grande */
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.warning {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+  font-style: italic;
 }
 
 /* -- PH Indicator (Sin Cambios) -- */
@@ -310,14 +366,12 @@
   transition: background-color 0.2s ease;
   font-size: 1rem;
   width: 100%;
-  /* --- AÑADIDO --- */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
 }
 
-/* --- AÑADIDO --- */
 .saveButton svg {
   font-size: 1.1rem;
   stroke-width: 2.5;
@@ -331,7 +385,7 @@
   cursor: not-allowed;
 }
 
-/* --- Saved Mixes (Sin Cambios) --- */
+/* --- Saved Mixes --- */
 .separator {
   border: none;
   border-top: 1px solid var(--color-border);
@@ -341,14 +395,12 @@
   color: var(--color-primary-dark);
   text-align: center;
   margin-bottom: 2rem;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
 }
 
-/* --- AÑADIDO --- */
 .savedMixesSection h2 svg {
   font-size: 1.8rem;
   stroke-width: 2;
@@ -365,7 +417,14 @@
   border-radius: var(--border-radius);
   padding: 1.5rem;
   position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
+.savedMixCard.editing {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
 .savedMixHeader {
   display: flex;
   justify-content: space-between;
@@ -378,28 +437,46 @@
   font-size: 1.2rem;
   flex-grow: 1;
   margin-right: 0.5rem;
+  word-break: break-word;
 }
+
+.headerButtons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.editMixButton,
 .deleteMixButton {
   background: none;
   border: none;
   color: #adb5bd;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   cursor: pointer;
-  padding: 0;
+  padding: 0.25rem;
   line-height: 1;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  transition: all 0.2s ease;
 }
-/* --- AÑADIDO --- */
+.editMixButton svg,
 .deleteMixButton svg {
   stroke-width: 2.5;
 }
 
+.editMixButton:hover {
+  color: #007bff;
+  background-color: #e7f3ff;
+}
 .deleteMixButton:hover {
   color: #dc3545;
+  background-color: #fbebee;
 }
+
 .savedMixPh {
   font-weight: bold;
   margin-bottom: 1rem;
@@ -413,12 +490,23 @@
   margin-bottom: 0.3rem;
   font-size: 0.9rem;
 }
+
+/* --- MODIFICADO: de .savedMixComponentPh a .savedMixComponentInfo --- */
+.savedMixComponentInfo {
+  font-size: 0.8rem;
+  color: #777;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+
 .savedMixNotes {
   font-size: 0.9rem;
   color: var(--color-text-light);
   border-left: 3px solid var(--color-border);
   padding-left: 0.75rem;
   margin-top: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .savedMixDate {
   font-size: 0.75rem;
@@ -450,11 +538,79 @@
 
 /* Responsive */
 @media (max-width: 900px) {
-  /* Ajusta el breakpoint si es necesario */
   .calculatorSection {
-    grid-template-columns: 1fr; /* Apila en pantallas medianas/pequeñas */
+    grid-template-columns: 1fr;
   }
   .componentSelection {
     margin-bottom: 2rem;
   }
+}
+
+/* --- NUEVOS ESTILOS PARA EL FORMULARIO DE EDICIÓN --- */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.editForm label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  margin-bottom: -0.25rem;
+}
+.editInput,
+.editTextArea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--border-radius) / 2);
+  font-size: 1rem;
+  font-family: var(--font-main);
+}
+.editInput:focus,
+.editTextArea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+.editTextArea {
+  resize: vertical;
+  min-height: 80px;
+}
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.editSaveButton,
+.editCancelButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: calc(var(--border-radius) / 2);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+.editSaveButton {
+  background-color: var(--color-primary);
+  color: white;
+}
+.editSaveButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+.editCancelButton {
+  background-color: #f0f0f0;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.editCancelButton:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+.editSaveButton:disabled,
+.editCancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

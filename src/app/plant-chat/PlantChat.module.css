@@ -514,3 +514,91 @@
     padding: 1rem;
   }
 }
+
+/* --- NUEVO: Separador "O" --- */
+.separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 2rem 1rem 1rem 1rem; /* Ajustado */
+  color: var(--color-text-light);
+  font-weight: 500;
+}
+.separator::before,
+.separator::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+.separator span {
+  padding: 0 1rem;
+  background-color: white;
+}
+
+/* --- NUEVO: Botón de Chat General --- */
+.generalChatContainer {
+  margin-bottom: 0rem; /* Ajustado */
+}
+
+.generalChatButton {
+  width: 100%;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+.generalChatButton:hover {
+  background-color: #e8f5e9;
+  border-color: var(--color-primary-dark);
+}
+
+.generalChatButton svg {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.generalChatButton span {
+  display: flex;
+  flex-direction: column;
+}
+
+.generalChatButton span strong {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.generalChatButton span small {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+}
+
+/* Ajuste al botón de chat específico */
+.selectButton {
+  background-color: var(--color-primary);
+}
+
+/* --- MODIFICADO: Ajuste al avatar de IA en el chat --- */
+.messageAI .messageAvatar svg {
+  font-size: 1.5rem;
+  stroke-width: 2.5;
+}
+
+/* Ajuste responsive para los nuevos botones */
+@media (max-width: 768px) {
+  .generalChatButton {
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .generalChatButton svg {
+    font-size: 2rem;
+  }
+}

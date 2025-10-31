@@ -32,30 +32,56 @@ export async function POST(request: NextRequest) {
   try {
     const { message, plantId, chatHistory } = await request.json();
 
-    if (!message || !plantId) {
+    // Modificamos la validación: plantId PUEDE ser 0 (para chat general)
+    if (!message || typeof plantId !== "number") {
       return NextResponse.json(
-        { error: "Faltan datos requeridos" },
+        { error: "Faltan datos requeridos (message o plantId)" },
         { status: 400 }
       );
     }
 
-    // Obtener información completa de la planta
-    const { data: plant, error: plantError } = await supabase
-      .from("plants")
-      .select("*")
-      .eq("id", plantId)
-      .eq("user_id", user.id)
-      .single();
+    let plantContext: string;
+    let plantName: string;
+    let initialAssistantMessage: string;
 
-    if (plantError || !plant) {
-      return NextResponse.json(
-        { error: "Planta no encontrada" },
-        { status: 404 }
-      );
-    }
+    if (plantId === 0) {
+      // --- MODO: CHAT GENERAL ---
+      plantName = "Botánica General";
+      plantContext = `
+Eres un experto botánico y jardinero profesional. Estás ayudando a un usuario con preguntas generales sobre botánica, jardinería, y recomendaciones de plantas.
 
-    // Construir el contexto de la planta
-    const plantContext = `
+INSTRUCCIONES PARA TI:
+1. Responde de forma clara, amigable y profesional.
+2. Si el usuario pregunta por recomendaciones (ej. "plantas de interior"), proporciona listas o sugerencias.
+3. Si la pregunta es sobre síntomas (hojas amarillas, etc.) en general, da causas comunes.
+4. Proporciona soluciones prácticas y fáciles de implementar.
+5. Si la pregunta no está relacionada con plantas o jardinería, gentilmente redirige al usuario.
+6. Mantén las respuestas concisas pero completas (máximo 250 palabras).
+7. Usa emojis ocasionalmente para hacer la conversación más amena 🌿.
+8. IMPORTANTE: Usa formato de texto simple. Si necesitas resaltar algo importante, usa texto en MAYÚSCULAS o emojis destacados, pero evita usar asteriscos ** o símbolos de markdown.
+
+CONTEXTO ADICIONAL:
+El usuario está en Guatemala, con clima templado a subtropical. Ten esto en cuenta para tus recomendaciones.
+`;
+      initialAssistantMessage = `¡Hola! Soy tu asistente de botánica general. ¿Qué te gustaría saber sobre el mundo de las plantas? 🌳 (Ej. "recomiéndame plantas de interior")`;
+    } else {
+      // --- MODO: CHAT DE PLANTA ESPECÍFICA (Lógica existente) ---
+      const { data: plant, error: plantError } = await supabase
+        .from("plants")
+        .select("*")
+        .eq("id", plantId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (plantError || !plant) {
+        return NextResponse.json(
+          { error: "Planta no encontrada" },
+          { status: 404 }
+        );
+      }
+
+      plantName = plant.name;
+      plantContext = `
 Eres un experto botánico y jardinero profesional especializado en el cuidado de plantas. Estás ayudando a un usuario con su planta específica.
 
 INFORMACIÓN DE LA PLANTA DEL USUARIO:
@@ -83,6 +109,8 @@ INSTRUCCIONES PARA TI:
 CONTEXTO ADICIONAL:
 El usuario está en Guatemala, con clima templado a subtropical.
 `;
+      initialAssistantMessage = `¡Entendido! Estoy listo para ayudarte con tu ${plant.name}. Tengo toda la información sobre sus cuidados y características. ¿Qué te gustaría saber? 🌱`;
+    }
 
     let responseText: string;
 
@@ -92,7 +120,7 @@ El usuario está en Guatemala, con clima templado a subtropical.
         { role: "user" as const, content: plantContext },
         {
           role: "assistant" as const,
-          content: `¡Entendido! Estoy listo para ayudarte con tu ${plant.name}. Tengo toda la información sobre sus cuidados y características. ¿Qué te gustaría saber? 🌱`,
+          content: initialAssistantMessage,
         },
         ...(chatHistory || []).map((msg: any) => ({
           role: (msg.role === "user" ? "user" : "assistant") as
@@ -128,7 +156,7 @@ El usuario está en Guatemala, con clima templado a subtropical.
             role: "model",
             parts: [
               {
-                text: `¡Entendido! Estoy listo para ayudarte con tu ${plant.name}. Tengo toda la información sobre sus cuidados y características. ¿Qué te gustaría saber? 🌱`,
+                text: initialAssistantMessage,
               },
             ],
           },
@@ -143,7 +171,7 @@ El usuario está en Guatemala, con clima templado a subtropical.
 
     return NextResponse.json({
       response: responseText,
-      plantName: plant.name,
+      plantName: plantName, // Esto será "Botánica General" o el nombre de la planta
       provider: CURRENT_LLM_PROVIDER,
     });
   } catch (error) {

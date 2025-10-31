@@ -1,11 +1,11 @@
 // src/app/plant-chat/page.tsx
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react"; // Import useMemo
+import { useEffect, useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./PlantChat.module.css";
 import Image from "next/image";
-// --- 1. IMPORTAR ÍCONOS ---
+// Mantenemos los íconos existentes
 import { FiMessageSquare, FiArchive, FiUser, FiSend } from "react-icons/fi";
 
 type Plant = {
@@ -38,7 +38,7 @@ const formatMessage = (text: string) => {
 
 export default function PlantChatPage() {
   const supabase = createClient();
-  const [allPlants, setAllPlants] = useState<Plant[]>([]); // Renombrado
+  const [allPlants, setAllPlants] = useState<Plant[]>([]);
   const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
   const [tempSelectedPlant, setTempSelectedPlant] = useState<number | null>(
     null
@@ -48,7 +48,7 @@ export default function PlantChatPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showSelector, setShowSelector] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para la búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,18 +72,16 @@ export default function PlantChatPage() {
         .eq("user_id", user.id);
 
       if (!error && data) {
-        setAllPlants(data); // Guardar todas las plantas
+        setAllPlants(data);
       }
     }
     setLoading(false);
   };
 
-  // Filtrar plantas basado en searchTerm usando useMemo
   const filteredPlants = useMemo(() => {
     if (!searchTerm) {
-      return allPlants; // Si no hay búsqueda, devuelve todas
+      return allPlants;
     }
-    // Reiniciar planta temporalmente seleccionada si no está en los resultados filtrados
     if (
       tempSelectedPlant &&
       !allPlants.find(
@@ -97,10 +95,10 @@ export default function PlantChatPage() {
     return allPlants.filter((plant) =>
       plant.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [allPlants, searchTerm, tempSelectedPlant]); // Añadir tempSelectedPlant a dependencias
+  }, [allPlants, searchTerm, tempSelectedPlant]);
 
   const handleSelectPlant = () => {
-    const plant = allPlants.find((p) => p.id === tempSelectedPlant); // Buscar en allPlants
+    const plant = allPlants.find((p) => p.id === tempSelectedPlant);
     if (plant) {
       setSelectedPlant(plant);
       setShowSelector(false);
@@ -114,8 +112,26 @@ export default function PlantChatPage() {
     }
   };
 
+  // --- NUEVA FUNCIÓN: Para iniciar el chat general ---
+  const handleSelectGeneralChat = () => {
+    const generalChatPlant: Plant = {
+      id: 0, // ID 0 para identificar chat general en el backend
+      name: "Botánica General",
+      image_url: "/plant-care.png", // Usar el logo de la app
+      care_level: null,
+    };
+    setSelectedPlant(generalChatPlant);
+    setShowSelector(false);
+    setMessages([
+      {
+        role: "assistant",
+        content: `¡Hola! 👋 Soy tu asistente de botánica general. ¿En qué puedo ayudarte hoy? (Ej: Plantas económicas, exterior, interior...) 🌱`,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
   const sendMessage = async () => {
-    // ... (resto de la función sendMessage sin cambios)
     if (!inputMessage.trim() || !selectedPlant || sending) return;
 
     const userMessage: Message = {
@@ -141,7 +157,7 @@ export default function PlantChatPage() {
         },
         body: JSON.stringify({
           message: inputMessage,
-          plantId: selectedPlant.id,
+          plantId: selectedPlant.id, // Esto enviará 0 para chat general
           chatHistory: chatHistory,
         }),
       });
@@ -189,7 +205,7 @@ export default function PlantChatPage() {
     setSelectedPlant(null);
     setMessages([]);
     setTempSelectedPlant(null);
-    setSearchTerm(""); // Limpiar búsqueda al cambiar planta
+    setSearchTerm("");
   };
 
   if (loading) {
@@ -203,29 +219,6 @@ export default function PlantChatPage() {
     );
   }
 
-  if (allPlants.length === 0) {
-    // Comprobar allPlants
-    return (
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1>
-            <FiMessageSquare /> Aprende más sobre plantas
-          </h1>
-        </div>
-        <div className={styles.emptyState}>
-          <span className={styles.emptyIcon}>
-            <FiArchive />
-          </span>
-          <h3>No tienes plantas registradas</h3>
-          <p>
-            Primero debes identificar y guardar una planta para poder chatear
-            sobre ella.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.container}>
       {!selectedPlant && (
@@ -234,65 +227,100 @@ export default function PlantChatPage() {
             <FiMessageSquare /> Aprende más sobre plantas
           </h1>
           <p>
-            Selecciona una planta o inicia un chat para consultar dudas
-            personalizadas a una inteligencia artificial que las resolverá
+            Selecciona una planta o inicia un chat para consultar dudas de
+            botánica personalizadas a una inteligencia artificial que las
+            resolverá
           </p>
         </div>
       )}
 
       {showSelector && !selectedPlant ? (
         <div className={styles.plantSelector}>
-          <h2>Selecciona una planta</h2>
-          <div className={styles.searchContainer}>
-            <input
-              type="text"
-              placeholder="Buscar planta por nombre..."
-              className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className={styles.generalChatContainer}>
+            <button
+              onClick={handleSelectGeneralChat}
+              className={styles.generalChatButton}
+            >
+              <FiMessageSquare />
+              <span>
+                <strong>¿Preguntas generales?</strong>
+                <small>
+                  Consultar dudas de botánica, recomendaciones, etc.
+                </small>
+              </span>
+            </button>
           </div>
 
-          {filteredPlants.length > 0 ? ( // Mostrar grid solo si hay resultados
-            <div className={styles.plantsGrid}>
-              {filteredPlants.map((plant) => (
-                <div
-                  key={plant.id}
-                  className={`${styles.plantCard} ${
-                    tempSelectedPlant === plant.id ? styles.selected : ""
-                  }`}
-                  onClick={() => setTempSelectedPlant(plant.id)}
-                >
-                  <Image
-                    src={plant.image_url}
-                    alt={plant.name}
-                    width={200}
-                    height={120}
-                    className={styles.plantCardImage}
-                    unoptimized
-                  />
-                  <div className={styles.plantCardName}>{plant.name}</div>
-                </div>
-              ))}
+          <div className={styles.separator}>
+            <span>O</span>
+          </div>
+          {/* --- FIN NUEVA SECCIÓN --- */}
+
+          <h2>Selecciona una planta específica</h2>
+
+          {allPlants.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>
+                <FiArchive />
+              </span>
+              <h3>No tienes plantas registradas</h3>
+              <p>
+                Cuando identifiques y guardes plantas, aparecerán aquí para
+                chatear sobre ellas.
+              </p>
             </div>
           ) : (
-            // Mensaje si no hay resultados de búsqueda
-            <p className={styles.noResults}>
-              No se encontraron plantas con ese nombre.
-            </p>
-          )}
+            <>
+              <div className={styles.searchContainer}>
+                <input
+                  type="text"
+                  placeholder="Buscar planta por nombre..."
+                  className={styles.searchInput}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
 
-          <button
-            onClick={handleSelectPlant}
-            disabled={!tempSelectedPlant} // Deshabilitado si no hay planta seleccionada temporalmente
-            className={styles.selectButton}
-          >
-            Comenzar Chat
-          </button>
+              {filteredPlants.length > 0 ? (
+                <div className={styles.plantsGrid}>
+                  {filteredPlants.map((plant) => (
+                    <div
+                      key={plant.id}
+                      className={`${styles.plantCard} ${
+                        tempSelectedPlant === plant.id ? styles.selected : ""
+                      }`}
+                      onClick={() => setTempSelectedPlant(plant.id)}
+                    >
+                      <Image
+                        src={plant.image_url}
+                        alt={plant.name}
+                        width={200}
+                        height={120}
+                        className={styles.plantCardImage}
+                        unoptimized
+                      />
+                      <div className={styles.plantCardName}>{plant.name}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.noResults}>
+                  No se encontraron plantas con ese nombre.
+                </p>
+              )}
+
+              <button
+                onClick={handleSelectPlant}
+                disabled={!tempSelectedPlant}
+                className={styles.selectButton}
+              >
+                Comenzar Chat Específico
+              </button>
+            </>
+          )}
         </div>
       ) : selectedPlant ? (
         <div className={styles.chatContainer}>
-          {/* ... (resto del componente de chat sin cambios) ... */}
           <div className={styles.chatHeader}>
             <div className={styles.chatHeaderInfo}>
               <Image
@@ -302,6 +330,7 @@ export default function PlantChatPage() {
                 height={50}
                 className={styles.chatHeaderImage}
                 unoptimized
+                key={selectedPlant.id}
               />
               <div className={styles.chatHeaderText}>
                 <h3>{selectedPlant.name}</h3>
@@ -309,7 +338,7 @@ export default function PlantChatPage() {
               </div>
             </div>
             <button onClick={changePlant} className={styles.changePlantButton}>
-              Cambiar Planta
+              Cambiar Chat
             </button>
           </div>
 
@@ -324,8 +353,13 @@ export default function PlantChatPage() {
                 }`}
               >
                 <div className={styles.messageAvatar}>
-                  {/* --- 4. ÍCONO REEMPLAZADO (USUARIO) --- */}
-                  {message.role === "user" ? <FiUser /> : "🌿"}
+                  {message.role === "user" ? (
+                    <FiUser />
+                  ) : selectedPlant.id === 0 ? (
+                    <FiMessageSquare />
+                  ) : (
+                    "🌿"
+                  )}
                 </div>
                 <div className={styles.messageBubble}>
                   <div
@@ -345,7 +379,9 @@ export default function PlantChatPage() {
 
             {sending && (
               <div className={`${styles.message} ${styles.messageAI}`}>
-                <div className={styles.messageAvatar}>🌿</div>
+                <div className={styles.messageAvatar}>
+                  {selectedPlant.id === 0 ? <FiMessageSquare /> : "🌿"}
+                </div>
                 <div className={styles.typingIndicator}>
                   <span className={styles.typingDot}></span>
                   <span className={styles.typingDot}></span>
@@ -362,7 +398,7 @@ export default function PlantChatPage() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Escribe tu pregunta sobre la planta..."
+              placeholder="Escribe tu pregunta..."
               className={styles.messageInput}
               disabled={sending}
               rows={1}
