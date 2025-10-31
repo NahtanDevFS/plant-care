@@ -517,7 +517,7 @@ export default function SubstrateCalculatorPage() {
                 {Object.entries(groupedAvailableComponents).map(
                   ([groupName, components]) => (
                     <optgroup
-                      label={`${groupName}`}
+                      label={`${groupName}---`}
                       key={groupName}
                       className={styles.optGroup}
                     >
