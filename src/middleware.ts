@@ -44,7 +44,9 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const authRoutes = ["/login", "/register", "/forgot-password"];
+
+  const authRoutes = ["/login", "/register", "/forgot-password", "/demo"];
+
   const protectedRoutes = [
     "/",
     "/my-plants",
@@ -55,12 +57,11 @@ export async function middleware(request: NextRequest) {
     "/profile",
   ];
 
-  // Si no hay usuario y la ruta está protegida, redirige a /login
+  // Si no hay usuario y la ruta está protegida, redirige a /demo
   if (!user && protectedRoutes.includes(pathname)) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL("/demo", request.url));
   }
 
-  // Si hay usuario y la ruta es de autenticación, redirige a la página principal
   if (user && authRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL("/", request.url));
   }

@@ -116,13 +116,13 @@ function extractPlantMetadata(careInstructions: string): {
   // Extraer Apta para mascotas
   const petMatch = generalText.match(/Apta para mascotas:\s*(S[íi]|No)/i);
   if (petMatch) {
-    result.pet_friendly = petMatch[1].toLowerCase() === "sí";
+    result.pet_friendly = petMatch[1].toLowerCase().startsWith("s");
   }
 
   // Extraer Venenosa
   const toxicMatch = generalText.match(/Venenosa:\s*(S[íi]|No)/i);
   if (toxicMatch) {
-    result.is_toxic = toxicMatch[1].toLowerCase() === "sí";
+    result.is_toxic = toxicMatch[1].toLowerCase().startsWith("s");
   }
 
   return result;
@@ -159,7 +159,6 @@ export async function POST(request: NextRequest) {
 
     const careInstructions = await getCareInstructions(plantName);
 
-    // --- EXTRAER METADATA ---
     const metadata = extractPlantMetadata(careInstructions);
 
     const fileName = `${user.id}/${Date.now()}-${image.name}`;
@@ -173,7 +172,6 @@ export async function POST(request: NextRequest) {
       data: { publicUrl },
     } = supabase.storage.from("plant_images").getPublicUrl(fileName);
 
-    // --- GUARDAR CON METADATA ---
     const { error: dbError } = await supabase.from("plants").insert([
       {
         name: plantName,
