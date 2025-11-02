@@ -15,7 +15,7 @@ import {
   FiDroplet,
   FiThermometer,
 } from "react-icons/fi";
-import { toast } from "sonner"; // <-- 1. IMPORTAR TOAST
+import { toast } from "sonner";
 
 // Tipo para tareas pasadas/presentes (desde task_history)
 type Task = {
@@ -147,13 +147,11 @@ export default function UnifiedCalendar() {
           });
         }
       });
-      // ---------------------------------------------------------
 
       setTasks(groupedTasks);
       setFutureReminderDetails(groupedFutureReminders);
     } catch (error) {
       console.error("Error loading calendar data:", error);
-      // --- 2. REEMPLAZO DE ERROR ---
       toast.error(
         "Error al cargar datos del calendario: " +
           (error instanceof Error ? error.message : "Error desconocido")

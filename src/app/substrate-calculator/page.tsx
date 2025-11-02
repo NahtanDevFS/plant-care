@@ -17,6 +17,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 import { GiPlantSeed } from "react-icons/gi";
+import { toast } from "sonner"; // <-- ¡CAMBIO! Importar toast
 
 type SubstrateComponent = {
   id: number;
@@ -221,23 +222,25 @@ export default function SubstrateCalculatorPage() {
   }, [selectedComponents]);
 
   const handleSaveMix = async () => {
-    // ... (lógica sin cambios) ...
     if (!mixName.trim()) {
       setError("Por favor, dale un nombre a tu mezcla.");
+      toast.warning("Por favor, dale un nombre a tu mezcla."); // Mensaje efímero
       return;
     }
     if (selectedComponents.length === 0) {
       setError("Añade al menos un componente.");
+      toast.warning("Añade al menos un componente.");
       return;
     }
     if (Math.abs(totalPercentage - 100) > 0.1) {
-      setError(
-        `El total de porcentajes debe ser 100%. Actualmente es ${totalPercentage}%.`
-      );
+      const msg = `El total de porcentajes debe ser 100%. Actualmente es ${totalPercentage}%.`;
+      setError(msg);
+      toast.warning(msg);
       return;
     }
     if (calculatedPh === null) {
       setError("No se pudo calcular el pH. Revisa los porcentajes.");
+      toast.warning("No se pudo calcular el pH. Revisa los porcentajes.");
       return;
     }
     setIsSaving(true);
@@ -248,6 +251,7 @@ export default function SubstrateCalculatorPage() {
     } = await supabase.auth.getUser();
     if (!user) {
       setError("Necesitas iniciar sesión para guardar mezclas.");
+      toast.error("Necesitas iniciar sesión para guardar mezclas.");
       setIsSaving(false);
       return;
     }
@@ -298,50 +302,69 @@ export default function SubstrateCalculatorPage() {
         setSavedMixes((prev) => [newMixFormatted, ...prev]);
       }
       setSuccessMessage(`Mezcla "${mixName.trim()}" guardada!`);
+      toast.success(`Mezcla "${mixName.trim()}" guardada!`);
       setSelectedComponents([]);
       setMixName("");
       setMixNotes("");
     } catch (err) {
       console.error("Error saving mix:", err);
-      setError(
-        err instanceof Error ? err.message : "Error desconocido al guardar."
-      );
+      const errorMsg =
+        err instanceof Error ? err.message : "Error desconocido al guardar.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsSaving(false);
     }
   };
 
+  // --- ¡CAMBIO! Reemplazo de confirm por toast ---
   const handleDeleteMix = async (mixId: number) => {
-    // ... (lógica sin cambios) ...
-    if (!confirm("¿Seguro que quieres eliminar esta mezcla guardada?")) {
-      return;
-    }
     setError(null);
     setSuccessMessage(null);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setError("Necesitas iniciar sesión.");
-      return;
-    }
-    try {
-      const { error: deleteError } = await supabase
-        .from("user_substrate_mixes")
-        .delete()
-        .eq("id", mixId)
-        .eq("user_id", user.id);
-      if (deleteError) throw deleteError;
-      setSavedMixes((prev) => prev.filter((mix) => mix.id !== mixId));
-      setSuccessMessage("Mezcla eliminada.");
-    } catch (err) {
-      console.error("Error deleting mix:", err);
-      setError(err instanceof Error ? err.message : "Error al eliminar.");
-    }
+
+    const performDelete = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setError("Necesitas iniciar sesión.");
+        toast.error("Necesitas iniciar sesión.");
+        return;
+      }
+      try {
+        const { error: deleteError } = await supabase
+          .from("user_substrate_mixes")
+          .delete()
+          .eq("id", mixId)
+          .eq("user_id", user.id);
+        if (deleteError) throw deleteError;
+        setSavedMixes((prev) => prev.filter((mix) => mix.id !== mixId));
+        setSuccessMessage("Mezcla eliminada.");
+        toast.success("Mezcla eliminada.");
+      } catch (err) {
+        console.error("Error deleting mix:", err);
+        const errorMsg =
+          err instanceof Error ? err.message : "Error al eliminar.";
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
+    };
+
+    // Mostrar confirmación con sonner
+    toast.warning("¿Seguro que quieres eliminar esta mezcla guardada?", {
+      description: "Esta acción no se puede deshacer.",
+      action: {
+        label: "Eliminar",
+        onClick: () => performDelete(),
+      },
+      cancel: {
+        label: "Cancelar",
+        onClick: () => {},
+      },
+    });
   };
 
   const handleEditClick = (mix: UserMix) => {
-    // ... (lógica sin cambios) ...
     setEditingMixId(mix.id);
     setEditingMixName(mix.mix_name);
     setEditingMixNotes(mix.notes || "");
@@ -350,7 +373,6 @@ export default function SubstrateCalculatorPage() {
   };
 
   const handleCancelEdit = () => {
-    // ... (lógica sin cambios) ...
     setEditingMixId(null);
     setEditingMixName("");
     setEditingMixNotes("");
@@ -358,9 +380,9 @@ export default function SubstrateCalculatorPage() {
   };
 
   const handleUpdateMix = async (mixId: number) => {
-    // ... (lógica sin cambios) ...
     if (!editingMixName.trim()) {
       setError("El nombre de la mezcla no puede estar vacío.");
+      toast.warning("El nombre de la mezcla no puede estar vacío.");
       return;
     }
     setIsUpdatingMix(true);
@@ -372,6 +394,7 @@ export default function SubstrateCalculatorPage() {
     } = await supabase.auth.getUser();
     if (!user) {
       setError("Necesitas iniciar sesión para editar.");
+      toast.error("Necesitas iniciar sesión para editar.");
       setIsUpdatingMix(false);
       return;
     }
@@ -403,12 +426,14 @@ export default function SubstrateCalculatorPage() {
       );
 
       setSuccessMessage("Mezcla actualizada con éxito.");
+      toast.success("Mezcla actualizada con éxito.");
       handleCancelEdit();
     } catch (err) {
       console.error("Error updating mix:", err);
-      setError(
-        err instanceof Error ? err.message : "Error desconocido al actualizar."
-      );
+      const errorMsg =
+        err instanceof Error ? err.message : "Error desconocido al actualizar.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsUpdatingMix(false);
     }
