@@ -112,7 +112,6 @@ export default function PlantChatPage() {
     }
   };
 
-  // --- NUEVA FUNCIÓN: Para iniciar el chat general ---
   const handleSelectGeneralChat = () => {
     const generalChatPlant: Plant = {
       id: 0, // ID 0 para identificar chat general en el backend

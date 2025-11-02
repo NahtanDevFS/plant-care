@@ -3,15 +3,17 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
+// --- CORRECCIÓN DE RUTAS DE IMPORTACIÓN ---
 import { createClient } from "@/lib/supabase/client";
 import {
   compressImage,
   getCameraStream,
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
-import styles from "./PlantDiary.module.css";
-// --- 1. IMPORTAR ÍCONOS ---
+import styles from "@/components/PlantDiary.module.css";
+// ------------------------------------------
 import { FiUpload, FiCamera, FiRefreshCw, FiX, FiTrash2 } from "react-icons/fi";
+import { toast } from "sonner";
 
 type DiaryEntry = {
   id: number;
@@ -34,7 +36,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   const supabase = createClient();
   const [allEntries, setAllEntries] = useState<DiaryEntry[]>([]); // Almacena todas las entradas
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // El estado de error ya no es necesario, usaremos toasts
+  // const [error, setError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [newImage, setNewImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -60,6 +63,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
 
   useEffect(() => {
     fetchEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plantId]);
 
   // Limpieza del stream de cámara
@@ -73,17 +77,15 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
 
   const fetchEntries = async () => {
     setLoading(true);
-    setError(null);
     try {
-      // Optimizacion: Podríamos pasar filtros a la API aquí si fueran muchos datos
       const response = await fetch(`/api/diary?plantId=${plantId}`);
       if (!response.ok) {
         throw new Error("Error al cargar las entradas del diario.");
       }
       const data: DiaryEntry[] = await response.json();
-      setAllEntries(data); // Guarda todas las entradas
+      setAllEntries(data);
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Error desconocido al cargar."
       );
     } finally {
@@ -96,17 +98,16 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     let filtered = [...allEntries];
     const now = new Date();
 
-    // Aplicar filtro de fecha
     if (dateFilter !== "all") {
       let startDate: Date | null = null;
-      let endDate: Date | null = new Date(now); // Por defecto hasta hoy
-      endDate.setHours(23, 59, 59, 999); // Final del día actual
+      let endDate: Date | null = new Date(now);
+      endDate.setHours(23, 59, 59, 999);
 
       switch (dateFilter) {
         case "week":
           startDate = new Date(now);
           startDate.setDate(now.getDate() - 7);
-          startDate.setHours(0, 0, 0, 0); // Inicio del día hace 7 días
+          startDate.setHours(0, 0, 0, 0);
           break;
         case "month":
           startDate = new Date(now);
@@ -121,15 +122,12 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
         case "custom":
           if (customStartDate) {
             startDate = new Date(customStartDate);
-            startDate.setHours(0, 0, 0, 0); // Inicio del día de inicio
+            startDate.setHours(0, 0, 0, 0);
           }
           if (customEndDate) {
             endDate = new Date(customEndDate);
-            endDate.setHours(23, 59, 59, 999); // Final del día de fin
+            endDate.setHours(23, 59, 59, 999);
           }
-          // Si solo hay fecha de inicio, filtra desde esa fecha hasta hoy
-          // Si solo hay fecha de fin, filtra desde el inicio hasta esa fecha
-          // Si ambas, filtra en el rango
           break;
       }
 
@@ -141,7 +139,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       });
     }
 
-    // Aplicar ordenación
     filtered.sort((a, b) => {
       const dateA = new Date(a.entry_date).getTime();
       const dateB = new Date(b.entry_date).getTime();
@@ -154,14 +151,13 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
 
   const processImageFile = async (file: File) => {
     setIsCompressing(true);
-    setError(null);
     try {
       const compressed = await compressImage(file, 800, 800, 0.8);
       setNewImage(compressed);
       setImagePreview(URL.createObjectURL(compressed));
     } catch (compressError) {
       console.error("Error processing image:", compressError);
-      setError("Error al procesar la imagen. Intenta de nuevo.");
+      toast.error("Error al procesar la imagen. Intenta de nuevo.");
       setNewImage(null);
       setImagePreview(null);
     } finally {
@@ -190,10 +186,9 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newNote.trim() && !newImage) {
-      setError("Debes añadir una nota o una imagen.");
+      toast.warning("Debes añadir una nota o una imagen.");
       return;
     }
-    setError(null);
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -201,7 +196,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     if (newNote.trim()) {
       formData.append("notes", newNote.trim());
     } else if (!newImage) {
-      setError("Se requiere una nota o una imagen.");
+      toast.warning("Se requiere una nota o una imagen.");
       setIsSubmitting(false);
       return;
     }
@@ -222,46 +217,52 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       }
 
       const newEntry: DiaryEntry = await response.json();
-      // Actualiza allEntries, useMemo se encargará del resto
-      setAllEntries([newEntry, ...allEntries]);
+      setAllEntries((prevEntries) => [newEntry, ...prevEntries]); // Añadir al inicio
       clearForm();
+      toast.success("Entrada del diario guardada.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al guardar.");
+      toast.error(err instanceof Error ? err.message : "Error al guardar.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (entryId: number) => {
-    if (!confirm("¿Seguro que quieres eliminar esta entrada del diario?")) {
-      return;
-    }
-    setError(null);
+    const performDelete = async () => {
+      try {
+        const response = await fetch(`/api/diary?entryId=${entryId}`, {
+          method: "DELETE",
+        });
 
-    try {
-      const response = await fetch(`/api/diary?entryId=${entryId}`, {
-        method: "DELETE",
-      });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Error al eliminar la entrada.");
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error al eliminar la entrada.");
+        setAllEntries(allEntries.filter((entry) => entry.id !== entryId));
+        toast.success("Entrada eliminada.");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Error al eliminar.");
+        console.error("Delete error:", err);
       }
+    };
 
-      // Actualiza allEntries, useMemo se encargará del resto
-      setAllEntries(allEntries.filter((entry) => entry.id !== entryId));
-      alert("Entrada eliminada.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al eliminar.");
-      console.error("Delete error:", err);
-    }
+    toast.warning("¿Seguro que quieres eliminar esta entrada del diario?", {
+      description: "Esta acción no se puede deshacer.",
+      action: {
+        label: "Eliminar",
+        onClick: () => performDelete(),
+      },
+      cancel: {
+        label: "Cancelar",
+        onClick: () => {},
+      },
+    });
   };
 
   const formatDate = (dateString: string) => {
-    // Intenta crear la fecha asumiendo que puede o no tener 'Z'
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      // Si falla, intenta añadiendo 'Z' si no está
       if (!dateString.endsWith("Z")) {
         const dateUTC = new Date(dateString + "Z");
         if (!isNaN(dateUTC.getTime())) {
@@ -271,13 +272,12 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-            timeZone: "UTC", // Especifica UTC si la fecha original lo era
+            timeZone: "UTC",
           });
         }
       }
-      return "Fecha inválida"; // Fallback
+      return "Fecha inválida";
     }
-    // Si la fecha original es válida, formatea en la zona horaria local
     return date.toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
@@ -294,7 +294,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   };
 
   const openCamera = async (mode: "user" | "environment") => {
-    setError(null);
     try {
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
@@ -310,7 +309,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       }
     } catch (error) {
       console.error("Error al abrir cámara:", error);
-      setError(
+      toast.error(
         error instanceof Error ? error.message : "Error al acceder a la cámara"
       );
       setShowCamera(false);
@@ -319,7 +318,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
 
   const capturePhoto = async () => {
     if (!videoRef.current || !cameraStream) {
-      setError("Error: La cámara no está activa");
+      toast.error("Error: La cámara no está activa");
       return;
     }
     setIsCompressing(true);
@@ -329,7 +328,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       closeCamera();
     } catch (error) {
       console.error("Error al capturar foto:", error);
-      setError("Error al capturar la foto");
+      toast.error("Error al capturar la foto");
     } finally {
       setIsCompressing(false);
     }
@@ -356,7 +355,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
         <div className={styles.cameraModal}>
           <div className={styles.cameraContainer}>
             <div className={styles.cameraHeader}>
-              {/* --- 2. ÍCONO REEMPLAZADO --- */}
               <h2>
                 <FiCamera /> Tomar Foto
               </h2>
@@ -378,7 +376,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                 className={styles.switchCameraButton}
                 disabled={isCompressing}
               >
-                {/* --- 3. ÍCONO REEMPLAZADO --- */}
                 <FiRefreshCw /> Cambiar
               </button>
               <button
@@ -386,7 +383,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                 className={styles.captureButton}
                 disabled={isCompressing}
               >
-                {/* --- 4. ÍCONO REEMPLAZADO --- */}
                 {isCompressing ? (
                   "Procesando..."
                 ) : (
@@ -415,7 +411,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             htmlFor={`image-upload-${plantId}`}
             className={styles.uploadLabel}
           >
-            {/* --- 5. ÍCONO REEMPLAZADO --- */}
             <FiUpload />
             {isCompressing && !newImage
               ? "Procesando..."
@@ -438,7 +433,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             className={styles.cameraButtonForm}
             disabled={isSubmitting || isCompressing}
           >
-            {/* --- 6. ÍCONO REEMPLAZADO --- */}
             <FiCamera /> Tomar Foto
           </button>
 
@@ -450,6 +444,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                 width={50}
                 height={50}
                 className={styles.imagePreview}
+                unoptimized // Añadido por si acaso
               />
               <button
                 type="button"
@@ -460,7 +455,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                 }}
                 className={styles.removePreviewButton}
               >
-                {/* --- 7. ÍCONO REEMPLAZADO --- */}
                 <FiX />
               </button>
             </div>
@@ -475,12 +469,12 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             {isSubmitting ? "Guardando..." : "Guardar Entrada"}
           </button>
         </div>
-        {error && <p className={styles.errorMessageForm}>{error}</p>}
+        {/* El 'error' ahora se maneja con toasts, no se necesita este <p> */}
+        {/* {error && <p className={styles.errorMessageForm}>{error}</p>} */}
       </form>
 
       {/* --- Controles de Filtro y Ordenación --- */}
       <div className={styles.filterControls}>
-        {/* Filtro de Fecha */}
         <div className={styles.filterGroup}>
           <label htmlFor={`date-filter-${plantId}`}>Mostrar:</label>
           <select
@@ -496,7 +490,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
           </select>
         </div>
 
-        {/* Inputs para Rango Personalizado (condicional) */}
         {dateFilter === "custom" && (
           <div className={`${styles.filterGroup} ${styles.customDateInputs}`}>
             <label htmlFor={`start-date-${plantId}`}>Desde:</label>
@@ -505,7 +498,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
               id={`start-date-${plantId}`}
               value={customStartDate}
               onChange={(e) => setCustomStartDate(e.target.value)}
-              max={customEndDate || undefined} // Evita fecha inicio > fecha fin
+              max={customEndDate || undefined}
             />
             <label htmlFor={`end-date-${plantId}`}>Hasta:</label>
             <input
@@ -513,12 +506,11 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
               id={`end-date-${plantId}`}
               value={customEndDate}
               onChange={(e) => setCustomEndDate(e.target.value)}
-              min={customStartDate || undefined} // Evita fecha fin < fecha inicio
+              min={customStartDate || undefined}
             />
           </div>
         )}
 
-        {/* Ordenación */}
         <div className={styles.filterGroup}>
           <label htmlFor={`sort-order-${plantId}`}>Ordenar por:</label>
           <select
@@ -531,19 +523,16 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
           </select>
         </div>
       </div>
-      {/* ------------------------------------------ */}
 
       {/* --- Lista de Entradas --- */}
       {loading && <p>Cargando diario...</p>}
-      {!loading &&
-        filteredAndSortedEntries.length === 0 && ( // Usa la variable filtrada
-          <p className={styles.emptyMessage}>
-            {dateFilter === "all"
-              ? "Aún no hay entradas en el diario."
-              : "No hay entradas que coincidan con los filtros seleccionados."}
-          </p>
-        )}
-      {/* Muestra las entradas filtradas y ordenadas */}
+      {!loading && filteredAndSortedEntries.length === 0 && (
+        <p className={styles.emptyMessage}>
+          {dateFilter === "all"
+            ? "Aún no hay entradas en el diario."
+            : "No hay entradas que coincidan con los filtros seleccionados."}
+        </p>
+      )}
       {!loading && filteredAndSortedEntries.length > 0 && (
         <div className={styles.entriesList}>
           {filteredAndSortedEntries.map((entry) => (
@@ -557,7 +546,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                   className={styles.deleteEntryButton}
                   title="Eliminar entrada"
                 >
-                  {/* --- 8. ÍCONO REEMPLAZADO --- */}
                   <FiTrash2 />
                 </button>
               </div>

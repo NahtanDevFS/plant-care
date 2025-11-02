@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import Sidebar from "./Sidebar";
 import styles from "@/app/Layout.module.css";
 import type { User } from "@supabase/supabase-js";
+import { Toaster } from "sonner";
 
 export default function ClientLayout({
   children,
@@ -23,6 +24,7 @@ export default function ClientLayout({
     "/register",
     "/forgot-password",
     "/reset-password",
+    "/demo",
   ];
 
   useEffect(() => {
@@ -49,15 +51,26 @@ export default function ClientLayout({
   const isAuthRoute = authRoutes.includes(pathname);
 
   if (isAuthRoute) {
-    return <div className={styles.contentAreaFull}>{children}</div>;
+    return (
+      <div className={styles.contentAreaFull}>
+        <Toaster richColors closeButton position="top-right" />
+        {children}
+      </div>
+    );
   }
 
   if (!user) {
-    return <div className={styles.contentAreaFull}>{children}</div>;
+    return (
+      <div className={styles.contentAreaFull}>
+        <Toaster richColors closeButton position="top-right" />
+        {children}
+      </div>
+    );
   }
 
   return (
     <div className={styles.appContainer}>
+      <Toaster richColors closeButton position="top-right" />
       <Sidebar />
       <main className={styles.contentArea}>{children}</main>
     </div>

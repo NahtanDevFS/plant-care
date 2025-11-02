@@ -18,7 +18,6 @@ import {
 } from "react-icons/fi";
 import { GiPlantSeed } from "react-icons/gi";
 
-// --- MODIFICADO: Añadido function_type ---
 type SubstrateComponent = {
   id: number;
   name: string;
@@ -185,7 +184,7 @@ export default function SubstrateCalculatorPage() {
           component_id: component.id,
           name: component.name,
           ph_value: component.ph_value,
-          function_type: component.function_type, // <-- AÑADIDO
+          function_type: component.function_type,
           percentage: newPercentage,
         },
       ]);
@@ -530,7 +529,6 @@ export default function SubstrateCalculatorPage() {
                   )
                 )}
               </select>
-              {/* ------------------------------------------------ */}
               <button
                 onClick={handleAddComponent}
                 disabled={!componentToAdd}

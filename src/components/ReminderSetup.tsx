@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import styles from "./ReminderSetup.module.css";
 // --- 1. IMPORTAR ÍCONOS ---
 import { FiDroplet, FiThermometer } from "react-icons/fi";
+import { toast } from "sonner"; // <-- 1. IMPORTAR TOAST
 
 type ReminderSetupProps = {
   plantId: number;
@@ -27,7 +28,7 @@ export default function ReminderSetup({
 
   const handleSave = async () => {
     if (frequency === null || frequency <= 0) {
-      alert("Por favor, introduce un número de días válido.");
+      toast.warning("Por favor, introduce un número de días válido.");
       return;
     }
 
@@ -38,8 +39,7 @@ export default function ReminderSetup({
       } = await supabase.auth.getUser();
 
       if (!user) {
-        alert("No estás autenticado");
-        return;
+        throw new Error("No estás autenticado");
       }
 
       // 1. Obtener el recordatorio actual
@@ -85,10 +85,10 @@ export default function ReminderSetup({
       // Llamar al callback onSave sin recargar
       await onSave(frequency);
       setIsEditing(false);
-      alert("Recordatorio guardado correctamente");
+      toast.success("Recordatorio guardado correctamente");
     } catch (error) {
       console.error("Error:", error);
-      alert(
+      toast.error(
         "Error: " + (error instanceof Error ? error.message : "desconocido")
       );
     } finally {
@@ -96,7 +96,6 @@ export default function ReminderSetup({
     }
   };
 
-  // --- 2. REEMPLAZAR EMOJI POR ÍCONO ---
   const icon = careType === "Riego" ? <FiDroplet /> : <FiThermometer />;
   const label = careType === "Riego" ? "Regar cada" : "Fertilizar cada";
 

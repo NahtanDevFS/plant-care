@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./Sidebar.module.css";
-// --- 1. IMPORTAR LOS ÍCONOS ---
 import {
   FiSearch,
   FiGrid,

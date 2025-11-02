@@ -18,7 +18,7 @@ import {
   FiBookOpen,
   FiArchive,
   FiInfo,
-  FiEdit2, // <-- Ícono para editar nombre
+  FiEdit2,
   FiUpload,
   FiCamera,
   FiRefreshCw,
@@ -29,7 +29,7 @@ import {
   FiSquare,
   FiChevronDown,
   FiFilter,
-  FiSave, // <-- Ícono para guardar nombre
+  FiSave,
 } from "react-icons/fi";
 import { LiaPawSolid, LiaBugSolid, LiaDeafSolid } from "react-icons/lia";
 import { GiPlantSeed } from "react-icons/gi";
@@ -38,17 +38,18 @@ import {
   getCameraStream,
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
+import { toast } from "sonner"; // <-- Importado
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
-// --- TIPOS DE DATOS (Actualizado) ---
+// --- TIPOS DE DATOS ---
 type PlantFromDB = {
   id: number;
   created_at: string;
   name: string; // Nombre científico
-  common_name: string | null; // <-- AÑADIDO
+  common_name: string | null;
   image_url: string;
   care_instructions: string;
   watering_frequency_days: number | null;
@@ -59,7 +60,7 @@ type PlantFromDB = {
 };
 type Plant = PlantFromDB;
 
-// --- CONFIGURACIÓN DE TARJETAS DE CUIDADO (Sin cambios) ---
+// --- CONFIGURACIÓN DE TARJETAS DE CUIDADO ---
 const careConfig = {
   Riego: { icon: <FiDroplet />, color: "#2196F3", bgColor: "#E3F2FD" },
   Luz: { icon: <FiSun />, color: "#FF9800", bgColor: "#FFF3E0" },
@@ -84,7 +85,7 @@ const careConfig = {
 };
 type CareKey = keyof typeof careConfig;
 
-// --- COMPONENTES (PestDiseaseParser, CareInstructions - sin cambios) ---
+// --- COMPONENTES ---
 const PestDiseaseParser = ({ text }: { text: string }) => {
   const items = text.split(/\d+\.\s+/).filter((s) => s.trim().length > 0);
   return (
@@ -120,6 +121,7 @@ const PestDiseaseParser = ({ text }: { text: string }) => {
     </div>
   );
 };
+
 const CareInstructions = ({ text }: { text: string }) => {
   const sections = text.split("### ").filter((s) => s);
   return (
@@ -127,15 +129,19 @@ const CareInstructions = ({ text }: { text: string }) => {
       {sections.map((section) => {
         const [title, ...contentParts] = section.split(":");
         const content = contentParts.join(":").trim();
+
         const trimmedTitle = title.trim();
         if (trimmedTitle === "General" || trimmedTitle === "Nombre Común") {
           return null;
         }
+
         const configKey = trimmedTitle as CareKey;
         const config = careConfig[configKey] || careConfig["General"];
+
         const isComplex = ["Plagas Comunes", "Enfermedades Comunes"].includes(
           trimmedTitle
         );
+
         return (
           <div
             key={title}
@@ -163,7 +169,7 @@ const CareInstructions = ({ text }: { text: string }) => {
   );
 };
 
-// --- Helper para parsear cuidados para Exportación (Actualizado) ---
+// --- Helpers ---
 const parseCareInstructionsForExport = (text: string) => {
   const sections = text.split("### ").filter((s) => s);
   const careData: { [key: string]: string } = {};
@@ -179,7 +185,6 @@ const parseCareInstructionsForExport = (text: string) => {
   return careData;
 };
 
-// --- Helper para convertir imagen a base64 (Sin cambios) ---
 const getImageAsBase64 = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     fetch(url)
@@ -212,12 +217,10 @@ export default function MyPlants() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedPlant, setExpandedPlant] = useState<number | null>(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [petFilter, setPetFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
-
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">(
@@ -230,19 +233,13 @@ export default function MyPlants() {
   const [isUpdatingImage, setIsUpdatingImage] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [selectedPlants, setSelectedPlants] = useState(new Set<number>());
   const [isExporting, setIsExporting] = useState(false);
-
   const [isControlsVisible, setIsControlsVisible] = useState(true);
-
-  // --- NUEVOS ESTADOS PARA EDICIÓN DE NOMBRE ---
   const [editingNameId, setEditingNameId] = useState<number | null>(null);
   const [editingNameValue, setEditingNameValue] = useState("");
   const [isUpdatingName, setIsUpdatingName] = useState(false);
-  // ---------------------------------------------
 
-  // --- useEffect para fetchPlants (Actualizado) ---
   useEffect(() => {
     const fetchPlants = async () => {
       setLoading(true);
@@ -250,7 +247,6 @@ export default function MyPlants() {
         data: { user },
       } = await supabase.auth.getUser();
       if (user) {
-        // Solicitamos explícitamente la nueva columna 'common_name'
         const { data, error } = await supabase
           .from("plants")
           .select(
@@ -304,7 +300,6 @@ export default function MyPlants() {
     }
   }, []);
 
-  // --- LÓGICA DE FILTRADO Y ORDENAMIENTO (Actualizada) ---
   const processedPlants = useMemo(() => {
     let processed = [...plants];
     if (difficultyFilter !== "all") {
@@ -315,7 +310,6 @@ export default function MyPlants() {
       processed = processed.filter((p) => p.pet_friendly === isPetFriendly);
     }
     if (searchTerm) {
-      // Ahora busca en el nombre científico Y en el nombre común
       const lowerSearch = searchTerm.toLowerCase();
       processed = processed.filter(
         (p) =>
@@ -337,7 +331,6 @@ export default function MyPlants() {
     return processed;
   }, [plants, searchTerm, difficultyFilter, petFilter, sortBy]);
 
-  // --- HANDLERS (Guardar recordatorio, borrar planta, etc. - Sin cambios) ---
   const togglePlant = (plantId: number) => {
     setExpandedPlant(expandedPlant === plantId ? null : plantId);
   };
@@ -347,13 +340,19 @@ export default function MyPlants() {
     careType: "Riego" | "Fertilizante",
     frequency: number
   ) => {
-    // ... (lógica existente sin cambios)
+    // --- REEMPLAZO DE ALERTS CON TOASTS ---
+    if (frequency === null || frequency <= 0) {
+      toast.warning("Por favor, introduce un número de días válido.");
+      return;
+    }
+
+    setIsUpdatingName(true); // Re-usar un spinner, o crear uno específico
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        alert("No estás autenticado");
+        toast.error("No estás autenticado");
         return;
       }
       const { data: reminder, error: reminderError } = await supabase
@@ -376,7 +375,7 @@ export default function MyPlants() {
           },
         ]);
         if (insertError) throw insertError;
-        alert("Recordatorio creado correctamente");
+        toast.success("Recordatorio creado correctamente");
       } else {
         const { error: updateError } = await supabase
           .from("reminders")
@@ -386,64 +385,90 @@ export default function MyPlants() {
           })
           .eq("id", reminder.id);
         if (updateError) throw updateError;
-        alert("Recordatorio actualizado correctamente");
+        toast.success("Recordatorio actualizado correctamente");
       }
+
+      // Actualizar estado local para reflejar el cambio
+      setPlants((prevPlants) =>
+        prevPlants.map((p) => {
+          if (p.id === plantId) {
+            if (careType === "Riego") {
+              return { ...p, watering_frequency_days: frequency };
+            } else if (careType === "Fertilizante") {
+              return { ...p, fertilizing_frequency_days: frequency };
+            }
+          }
+          return p;
+        })
+      );
     } catch (error) {
       console.error("Error:", error);
-      alert(
+      toast.error(
         "Error: " + (error instanceof Error ? error.message : "desconocido")
       );
+    } finally {
+      setIsUpdatingName(false); // Desactivar spinner
     }
   };
 
   const handleDeletePlant = async (plantId: number, imageUrl: string) => {
-    // ... (lógica existente sin cambios)
-    if (!confirm("¿Estás seguro de que deseas eliminar esta planta?")) return;
-    try {
-      if (imageUrl) {
-        const urlParts = new URL(imageUrl);
-        const pathInStorage = urlParts.pathname.split("/plant_images/")[1];
-        if (pathInStorage) {
-          await supabase.storage.from("plant_images").remove([pathInStorage]);
+    const performDelete = async () => {
+      try {
+        if (imageUrl) {
+          const urlParts = new URL(imageUrl);
+          const pathInStorage = urlParts.pathname.split("/plant_images/")[1];
+          if (pathInStorage) {
+            await supabase.storage.from("plant_images").remove([pathInStorage]);
+          }
         }
+        const { error } = await supabase
+          .from("plants")
+          .delete()
+          .eq("id", plantId);
+        if (error) throw error;
+        setPlants(plants.filter((p) => p.id !== plantId));
+        setSelectedPlants((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(plantId);
+          return newSet;
+        });
+        toast.success("Planta eliminada correctamente");
+      } catch (error) {
+        console.error("Error al eliminar planta:", error);
+        toast.error(
+          "Error al eliminar: " +
+            (error instanceof Error ? error.message : "desconocido")
+        );
       }
-      const { error } = await supabase
-        .from("plants")
-        .delete()
-        .eq("id", plantId);
-      if (error) throw error;
-      setPlants(plants.filter((p) => p.id !== plantId));
-      setSelectedPlants((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(plantId);
-        return newSet;
-      });
-      alert("Planta eliminada correctamente");
-    } catch (error) {
-      console.error("Error al eliminar planta:", error);
-      alert(
-        "Error: " + (error instanceof Error ? error.message : "desconocido")
-      );
-    }
+    };
+
+    toast.warning("¿Estás seguro de que deseas eliminar esta planta?", {
+      description: "Esta acción no se puede deshacer.",
+      action: {
+        label: "Eliminar",
+        onClick: () => performDelete(),
+      },
+      cancel: {
+        label: "Cancelar",
+        onClick: () => {},
+      },
+    });
   };
 
   const getDifficultyClass = (level: Plant["care_level"]) => {
-    // ... (lógica existente sin cambios)
     if (level === "Fácil") return styles.levelEasy;
     if (level === "Media") return styles.levelMedium;
     if (level === "Difícil") return styles.levelHard;
     return "";
   };
 
-  // --- Funciones para actualizar imagen (Sin cambios) ---
+  // --- REEMPLAZO DE ALERTS EN CÁMARA/IMAGEN ---
   const handleOpenUpdateModal = (plantId: number) => {
-    // ... (lógica existente sin cambios)
     setCurrentPlantToUpdate(plantId);
     setShowCameraModal(true);
     openCamera(facingMode);
   };
   const openCamera = async (mode: "user" | "environment") => {
-    // ... (lógica existente sin cambios)
     setError(null);
     try {
       if (cameraStream)
@@ -459,14 +484,13 @@ export default function MyPlants() {
       }
     } catch (error) {
       console.error("Error al abrir cámara:", error);
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "Error al acceder a la cámara"
       );
       closeCamera();
     }
   };
   const closeCamera = () => {
-    // ... (lógica existente sin cambios)
     if (cameraStream) cameraStream.getTracks().forEach((track) => track.stop());
     setCameraStream(null);
     setShowCameraModal(false);
@@ -474,30 +498,26 @@ export default function MyPlants() {
     setIsCompressing(false);
   };
   const switchCamera = () => {
-    // ... (lógica existente sin cambios)
     const newMode = facingMode === "environment" ? "user" : "environment";
     openCamera(newMode);
   };
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // ... (lógica existente sin cambios)
     if (e.target.files && e.target.files[0]) {
       await processImage(e.target.files[0]);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
   const handleCapturePhoto = async () => {
-    // ... (lógica existente sin cambios)
     if (!videoRef.current || !cameraStream) return;
     try {
       const capturedImage = await capturePhotoFromVideo(videoRef.current);
       await processImage(capturedImage);
     } catch (error) {
       console.error("Error al capturar foto:", error);
-      alert("Error al capturar la foto");
+      toast.error("Error al capturar la foto");
     }
   };
   const processImage = async (file: File) => {
-    // ... (lógica existente sin cambios)
     if (!currentPlantToUpdate) return;
     setIsCompressing(true);
     try {
@@ -506,12 +526,11 @@ export default function MyPlants() {
       await handleUpdateImage(compressed);
     } catch (compressError) {
       console.error("Error processing image:", compressError);
-      alert("Error al procesar la imagen. Intenta de nuevo.");
+      toast.error("Error al procesar la imagen. Intenta de nuevo.");
       setIsCompressing(false);
     }
   };
   const handleUpdateImage = async (imageFile: File) => {
-    // ... (lógica existente sin cambios)
     if (!currentPlantToUpdate) return;
     setIsUpdatingImage(true);
     setError(null);
@@ -534,13 +553,13 @@ export default function MyPlants() {
           p.id === currentPlantToUpdate ? { ...p, image_url: newImageUrl } : p
         )
       );
-      alert("¡Imagen de planta actualizada!");
+      toast.success("¡Imagen de planta actualizada!");
     } catch (err) {
       console.error("Error updating image:", err);
-      setError(err instanceof Error ? err.message : "Error desconocido.");
-      alert(
-        `Error al actualizar: ${err instanceof Error ? err.message : "Error"}`
-      );
+      const errorMsg =
+        err instanceof Error ? err.message : "Error desconocido.";
+      setError(errorMsg);
+      toast.error(`Error al actualizar: ${errorMsg}`);
     } finally {
       setIsUpdatingImage(false);
       setCurrentPlantToUpdate(null);
@@ -548,12 +567,12 @@ export default function MyPlants() {
     }
   };
 
-  // --- NUEVAS FUNCIONES PARA EDITAR NOMBRE ---
+  // --- REEMPLAZO DE ALERTS EN EDICIÓN DE NOMBRE ---
   const handleEditNameClick = (plant: Plant) => {
     setEditingNameId(plant.id);
-    setEditingNameValue(plant.common_name || ""); // Usar el nombre común o vacío
+    setEditingNameValue(plant.common_name || "");
     setError(null);
-    setExpandedPlant(null); // Cierra el acordeón si está abierto
+    setExpandedPlant(null);
   };
 
   const handleCancelEditName = () => {
@@ -565,7 +584,6 @@ export default function MyPlants() {
   const handleSaveName = async (plantId: number) => {
     setIsUpdatingName(true);
     setError(null);
-
     const newCommonName = editingNameValue.trim();
 
     try {
@@ -574,36 +592,34 @@ export default function MyPlants() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plantId: plantId,
-          commonName: newCommonName, // Puede ser "" para borrar
+          commonName: newCommonName,
         }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Error al guardar el nombre.");
       }
-
-      const updatedPlant = await response.json(); // API devuelve { id, name, common_name }
-
-      // Actualizar el estado local
+      const updatedPlant = await response.json();
       setPlants((prevPlants) =>
         prevPlants.map((p) =>
           p.id === plantId ? { ...p, common_name: updatedPlant.common_name } : p
         )
       );
-      handleCancelEditName(); // Salir del modo edición
+      handleCancelEditName();
+      toast.success("Nombre común actualizado.");
     } catch (err) {
       console.error("Error saving name:", err);
-      setError(err instanceof Error ? err.message : "Error desconocido.");
+      const errorMsg =
+        err instanceof Error ? err.message : "Error desconocido.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsUpdatingName(false);
     }
   };
-  // ------------------------------------------
 
-  // --- Lógica de Selección y Exportación (Actualizada) ---
+  // --- REEMPLAZO DE ALERTS EN EXPORTACIÓN ---
   const handlePlantSelect = (plantId: number) => {
-    // ... (lógica existente sin cambios)
     setSelectedPlants((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(plantId)) {
@@ -614,41 +630,30 @@ export default function MyPlants() {
       return newSet;
     });
   };
-
   const handleSelectAll = () => {
-    // ... (lógica existente sin cambios)
     const allVisibleIds = processedPlants.map((p) => p.id);
     setSelectedPlants(new Set(allVisibleIds));
   };
-
   const handleDeselectAll = () => {
-    // ... (lógica existente sin cambios)
     setSelectedPlants(new Set());
   };
-
   const getSelectedPlantsData = () => {
-    // ... (lógica existente sin cambios)
     return processedPlants.filter((p) => selectedPlants.has(p.id));
   };
-
   const handleExportExcel = () => {
-    // --- MODIFICADO: Añadido common_name a la exportación ---
     setIsExporting(true);
     const plantsToExport = getSelectedPlantsData();
     if (plantsToExport.length === 0) {
-      alert("Por favor, selecciona al menos una planta para exportar.");
+      toast.info("Por favor, selecciona al menos una planta para exportar.");
       setIsExporting(false);
       return;
     }
-
     const dataForExcel = plantsToExport.map((plant) => {
       const careData = parseCareInstructionsForExport(plant.care_instructions);
-      // Excluir 'Nombre Común' de careData si existe
       delete careData["Nombre Común"];
-
       return {
         ID: plant.id,
-        "Nombre Común": plant.common_name || "N/A", // <-- AÑADIDO
+        "Nombre Común": plant.common_name || "N/A",
         "Nombre Científico": plant.name,
         Nivel_Cuidado: plant.care_level,
         Apta_Mascotas: plant.pet_friendly ? "Sí" : "No",
@@ -657,7 +662,6 @@ export default function MyPlants() {
         ...careData,
       };
     });
-
     const ws = XLSX.utils.json_to_sheet(dataForExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "MisPlantas");
@@ -666,81 +670,65 @@ export default function MyPlants() {
   };
 
   const handleExportPDF = async () => {
-    // --- MODIFICADO: Añadido common_name al PDF ---
     setIsExporting(true);
     const plantsToExport = getSelectedPlantsData();
     if (plantsToExport.length === 0) {
-      alert("Por favor, selecciona al menos una planta para exportar.");
+      toast.info("Por favor, selecciona al menos una planta para exportar.");
       setIsExporting(false);
       return;
     }
-
     const pdf = new jsPDF("p", "mm", "a4");
     const margin = 15;
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
-
     pdf.setFontSize(18);
     pdf.setTextColor(69, 160, 73);
     pdf.text("Reporte de Mis Plantas", pageWidth / 2, yPos, {
       align: "center",
     });
     yPos += 15;
-
     for (let i = 0; i < plantsToExport.length; i++) {
       const plant = plantsToExport[i];
       const plantHeaderHeight = 10;
       if (i > 0) yPos += 8;
-
       if (yPos + plantHeaderHeight > pageHeight - margin) {
         pdf.addPage();
         yPos = margin;
       }
-
       if (i > 0) {
         pdf.setDrawColor(200, 200, 200);
         pdf.line(margin, yPos - 4, pageWidth - margin, yPos - 4);
       }
-
       pdf.setFontSize(16);
       pdf.setTextColor(69, 160, 73);
-      // Mostrar nombre común primero si existe, si no, el científico
       pdf.text(plant.common_name || plant.name, margin, yPos);
       yPos += 7;
-
-      // Mostrar nombre científico si había uno común
       if (plant.common_name) {
         pdf.setFontSize(11);
         pdf.setTextColor(100, 100, 100);
         pdf.setFont("helvetica", "italic");
         pdf.text(plant.name, margin, yPos);
-        pdf.setFont("helvetica", "normal"); // Resetear
+        pdf.setFont("helvetica", "normal");
         yPos += 3;
       }
-      yPos += 3; // Espacio extra
-
+      yPos += 3;
       try {
         const imgData = await getImageAsBase64(plant.image_url);
         const imgProps = pdf.getImageProperties(imgData);
         const imgWidth = contentWidth * 0.4;
         const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
         if (yPos + imgHeight > pageHeight - margin) {
           pdf.addPage();
           yPos = margin;
         }
-
         pdf.addImage(imgData, "PNG", margin, yPos, imgWidth, imgHeight);
-
         const textX = margin + imgWidth + 8;
         const textWidth = contentWidth - imgWidth - 8;
         let textY = yPos;
-
         pdf.setFontSize(10);
         pdf.setTextColor(51, 51, 51);
-
         const careData = parseCareInstructionsForExport(
           plant.care_instructions
         );
@@ -749,28 +737,22 @@ export default function MyPlants() {
           `Mascotas: ${plant.pet_friendly ? "Sí" : "No"}`,
           `Tóxica: ${plant.is_toxic ? "Sí" : "No"}`,
         ];
-
         pdf.setFont("helvetica", "bold");
         pdf.text("General", textX, textY);
         textY += 5;
-
         pdf.setFont("helvetica", "normal");
         generalInfo.forEach((info) => {
           pdf.text(info, textX, textY);
           textY += 5;
         });
-
         yPos = Math.max(yPos + imgHeight + 8, textY + 8);
-
         const tableBody = Object.entries(careData)
-          .filter(([key]) => key !== "General" && key !== "Nombre Común") // Excluir
+          .filter(([key]) => key !== "General" && key !== "Nombre Común")
           .map(([key, value]) => [key, value]);
-
         if (yPos + 20 > pageHeight - margin) {
           pdf.addPage();
           yPos = margin;
         }
-
         autoTable(pdf, {
           startY: yPos,
           head: [["Aspecto", "Instrucción"]],
@@ -779,7 +761,6 @@ export default function MyPlants() {
           headStyles: { fillColor: [69, 160, 73] },
           margin: { left: margin, right: margin },
         });
-
         // @ts-expect-error jspdf-autotable no tipa correctamente 'finalY'
         yPos = pdf.lastAutoTable.finalY + 10;
       } catch (imgError) {
@@ -790,12 +771,12 @@ export default function MyPlants() {
         yPos += 6;
       }
     }
-
     pdf.save("mis_plantas.pdf");
     setIsExporting(false);
   };
   // ----------------------------------------------------
 
+  // --- RENDERIZADO ---
   if (loading) {
     return (
       <div className={styles.container}>
@@ -807,7 +788,8 @@ export default function MyPlants() {
     );
   }
 
-  if (error) {
+  // El error de carga inicial se mantiene, pero los errores de acción usarán toasts
+  if (error && plants.length === 0) {
     return (
       <div className={styles.container}>
         <p className={styles.errorMessage}>{error}</p>
@@ -1004,12 +986,10 @@ export default function MyPlants() {
           </div>
         </div>
 
-        {/* --- MODIFICADO: Grid de Plantas con Lógica de Edición --- */}
         {processedPlants.length > 0 ? (
           <div className={styles.myPlantsGrid}>
             {processedPlants.map((plant) => {
               const isSelected = selectedPlants.has(plant.id);
-              // Comprueba si esta planta específica está en modo edición de nombre
               const isEditingName = editingNameId === plant.id;
               return (
                 <div
@@ -1017,7 +997,7 @@ export default function MyPlants() {
                   className={`${styles.plantCard} ${
                     expandedPlant === plant.id ? styles.plantCardExpanded : ""
                   } ${isSelected ? styles.selected : ""} ${
-                    isEditingName ? styles.plantCardEditing : "" // Estilo para resaltar
+                    isEditingName ? styles.plantCardEditing : ""
                   }`}
                 >
                   <div className={styles.plantSelectCheckboxContainer}>
@@ -1064,9 +1044,7 @@ export default function MyPlants() {
                       <FiEdit2 />
                     </button>
 
-                    {/* --- MODIFICADO: Overlay de Nombre con Lógica de Edición --- */}
                     <div className={styles.plantNameOverlay}>
-                      {/* 1. Nombre Científico (No editable) */}
                       <h3
                         onClick={() => !isEditingName && togglePlant(plant.id)}
                       >
@@ -1074,7 +1052,6 @@ export default function MyPlants() {
                       </h3>
 
                       {isEditingName ? (
-                        // --- 2. VISTA DE EDICIÓN DE NOMBRE COMÚN ---
                         <div
                           className={styles.nameEditWrapper}
                           onClick={(e) => e.stopPropagation()}
@@ -1118,7 +1095,6 @@ export default function MyPlants() {
                           </div>
                         </div>
                       ) : (
-                        // --- 3. VISTA NORMAL DE NOMBRE COMÚN ---
                         <p
                           className={styles.commonNameDisplay}
                           onClick={(e) => {
@@ -1136,7 +1112,6 @@ export default function MyPlants() {
                     </div>
                   </div>
 
-                  {/* No mostrar contenido si se está editando el nombre */}
                   {!isEditingName && (
                     <div className={styles.plantCardContent}>
                       <div className={styles.generalInfo}>

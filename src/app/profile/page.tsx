@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
 import styles from "./ProfilePage.module.css"; // Crearemos este CSS
 import type { User } from "@supabase/supabase-js"; // Importar User type
-// --- 1. IMPORTAR ÍCONO ---
 import { FiUser } from "react-icons/fi";
 
 type Profile = {

@@ -8,7 +8,6 @@ import PlantDiary from "@/components/PlantDiary"; // Reutilizaremos el component
 import styles from "./PlantDiaryPage.module.css"; // Crearemos este CSS
 import Image from "next/image";
 import Link from "next/link"; // Para el botón de volver
-// --- 1. IMPORTAR ÍCONOS ---
 import { FiBook, FiArrowLeft } from "react-icons/fi";
 
 type Plant = {

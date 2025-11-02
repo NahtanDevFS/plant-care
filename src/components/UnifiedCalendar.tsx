@@ -5,7 +5,6 @@ import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./UnifiedCalendar.module.css";
 import Image from "next/image";
-// --- 1. IMPORTAR ÍCONOS ---
 import {
   FiCalendar,
   FiCheck,
@@ -16,6 +15,7 @@ import {
   FiDroplet,
   FiThermometer,
 } from "react-icons/fi";
+import { toast } from "sonner"; // <-- 1. IMPORTAR TOAST
 
 // Tipo para tareas pasadas/presentes (desde task_history)
 type Task = {
@@ -85,7 +85,7 @@ export default function UnifiedCalendar() {
     const lastDayOfMonth = new Date(year, month + 1, 0);
     const endOffset = 6 - ((lastDayOfMonth.getDay() + 6) % 7);
     const lastDayOfCalendar = new Date(lastDayOfMonth);
-    lastDayOfCalendar.setDate(lastDayOfMonth.getDate() + endOffset + 7); // Añadir una semana extra para asegurar la carga del mes siguiente
+    lastDayOfCalendar.setDate(lastDayOfMonth.getDate() + endOffset + 7);
 
     const firstDayString = firstDayOfCalendar.toISOString().split("T")[0];
     const lastDayString = lastDayOfCalendar.toISOString().split("T")[0];
@@ -106,7 +106,7 @@ export default function UnifiedCalendar() {
         .from("reminders")
         .select(
           "id, next_reminder_date, care_type, plants!inner(name, image_url)"
-        ) // Usar !inner para asegurar que plants exista
+        )
         .eq("user_id", user.id)
         .gte("next_reminder_date", firstDayString)
         .lte("next_reminder_date", lastDayString);
@@ -122,7 +122,7 @@ export default function UnifiedCalendar() {
           groupedTasks[dateKey] = [];
         }
         groupedTasks[dateKey].push({
-          id: task.id.toString(), // Asegurar que sea string
+          id: task.id.toString(),
           plantName: task.plants?.name || "Planta desconocida",
           careType: task.care_type,
           isCompleted: task.is_completed,
@@ -134,14 +134,13 @@ export default function UnifiedCalendar() {
       // --- Agrupar DETALLES de recordatorios futuros por fecha ---
       const groupedFutureReminders: { [key: string]: FutureReminder[] } = {};
       reminderData?.forEach((reminder: any) => {
-        // Ya filtramos con !inner, pero una comprobación extra no hace daño
         if (reminder.plants) {
           const dateKey = reminder.next_reminder_date;
           if (!groupedFutureReminders[dateKey]) {
             groupedFutureReminders[dateKey] = [];
           }
           groupedFutureReminders[dateKey].push({
-            id: reminder.id, // ID del reminder
+            id: reminder.id,
             plantName: reminder.plants.name,
             careType: reminder.care_type,
             imageUrl: reminder.plants.image_url || "/plant-care.png",
@@ -151,9 +150,14 @@ export default function UnifiedCalendar() {
       // ---------------------------------------------------------
 
       setTasks(groupedTasks);
-      setFutureReminderDetails(groupedFutureReminders); // Guardar detalles
+      setFutureReminderDetails(groupedFutureReminders);
     } catch (error) {
       console.error("Error loading calendar data:", error);
+      // --- 2. REEMPLAZO DE ERROR ---
+      toast.error(
+        "Error al cargar datos del calendario: " +
+          (error instanceof Error ? error.message : "Error desconocido")
+      );
     } finally {
       setLoading(false);
     }
@@ -185,15 +189,15 @@ export default function UnifiedCalendar() {
       const date = new Date(year, month - 1, dayNum);
       const dateString = date.toISOString().split("T")[0];
       const dayTasks = tasks[dateString] || [];
-      const futureReminders = futureReminderDetails[dateString] || []; // Detalles futuros
+      const futureReminders = futureReminderDetails[dateString] || [];
       days.push({
         date,
         isCurrentMonth: false,
         tasks: dayTasks,
         completedCount: dayTasks.filter((t) => t.isCompleted).length,
         pendingCount: dayTasks.filter((t) => !t.isCompleted).length,
-        futureRemindersCount: futureReminders.length, // Conteo
-        futureReminderDetails: futureReminders, // Detalles
+        futureRemindersCount: futureReminders.length,
+        futureReminderDetails: futureReminders,
       });
     }
 
@@ -204,7 +208,7 @@ export default function UnifiedCalendar() {
       const dayTasks = tasks[dateString] || [];
       const completedCount = dayTasks.filter((t) => t.isCompleted).length;
       const pendingCount = dayTasks.length - completedCount;
-      const futureReminders = futureReminderDetails[dateString] || []; // Detalles futuros
+      const futureReminders = futureReminderDetails[dateString] || [];
 
       days.push({
         date,
@@ -212,8 +216,8 @@ export default function UnifiedCalendar() {
         tasks: dayTasks,
         completedCount,
         pendingCount,
-        futureRemindersCount: futureReminders.length, // Conteo
-        futureReminderDetails: futureReminders, // Detalles
+        futureRemindersCount: futureReminders.length,
+        futureReminderDetails: futureReminders,
       });
     }
 
@@ -225,15 +229,15 @@ export default function UnifiedCalendar() {
       const date = new Date(year, month + 1, i);
       const dateString = date.toISOString().split("T")[0];
       const dayTasks = tasks[dateString] || [];
-      const futureReminders = futureReminderDetails[dateString] || []; // Detalles futuros
+      const futureReminders = futureReminderDetails[dateString] || [];
       days.push({
         date,
         isCurrentMonth: false,
         tasks: dayTasks,
         completedCount: dayTasks.filter((t) => t.isCompleted).length,
         pendingCount: dayTasks.filter((t) => !t.isCompleted).length,
-        futureRemindersCount: futureReminders.length, // Conteo
-        futureReminderDetails: futureReminders, // Detalles
+        futureRemindersCount: futureReminders.length,
+        futureReminderDetails: futureReminders,
       });
     }
 
@@ -254,13 +258,13 @@ export default function UnifiedCalendar() {
 
     if (!taskToUpdate || !taskDateKey) {
       console.error(`Task with ID ${taskId} not found in local state.`);
-      alert("Error: No se encontró la tarea localmente.");
+      toast.error("Error: No se encontró la tarea localmente.");
       return;
     }
 
     const todayStr = new Date().toISOString().split("T")[0];
     if (taskDateKey > todayStr) {
-      alert("No puedes completar una tarea programada para el futuro.");
+      toast.warning("No puedes completar una tarea programada para el futuro.");
       return;
     }
 
@@ -287,11 +291,9 @@ export default function UnifiedCalendar() {
         }
         return newTasks;
       });
-      // No necesitamos recargar todo si la UI se actualiza bien
-      // await loadCalendarData();
     } catch (error) {
       console.error("Error al completar tarea:", error);
-      alert("Error al completar la tarea");
+      toast.error("Error al completar la tarea");
     }
   };
 
@@ -316,9 +318,7 @@ export default function UnifiedCalendar() {
       )
     : null;
   const selectedDateTasks = selectedDayData?.tasks || [];
-  // --- OBTENER DETALLES FUTUROS PARA LA FECHA SELECCIONADA ---
   const selectedFutureReminders = selectedDayData?.futureReminderDetails || [];
-  // -----------------------------------------------------------
 
   const monthName = currentMonth.toLocaleDateString("es-ES", {
     month: "long",
@@ -339,14 +339,12 @@ export default function UnifiedCalendar() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        {/* --- 2. ÍCONO REEMPLAZADO --- */}
         <h1>
           <FiCalendar /> Calendario de Tareas
         </h1>
         <p>Visualiza tus tareas completadas, pendientes y próximas</p>
       </div>
 
-      {/* --- 3. LEYENDA ACTUALIZADA CON ÍCONOS --- */}
       <div className={styles.legend}>
         <div className={styles.legendItem}>
           <span className={`${styles.legendSymbol} ${styles.legendCompleted}`}>
@@ -378,7 +376,6 @@ export default function UnifiedCalendar() {
       <div className={styles.calendarWrapper}>
         <div className={styles.calendar}>
           <div className={styles.monthHeader}>
-            {/* --- 4. ÍCONOS DE NAVEGACIÓN REEMPLAZADOS --- */}
             <button onClick={handlePrevMonth} className={styles.navButton}>
               <FiArrowLeft />
             </button>
@@ -408,13 +405,11 @@ export default function UnifiedCalendar() {
                     !day.isCurrentMonth ? styles.otherMonth : ""
                   } ${isSelected ? styles.selected : ""}`}
                   onClick={() =>
-                    (day.tasks.length > 0 ||
-                      day.futureRemindersCount > 0) /* Usa count aquí */ &&
+                    (day.tasks.length > 0 || day.futureRemindersCount > 0) &&
                     setSelectedDate(dateString)
                   }
                 >
                   <div className={styles.dayNumber}>{day.date.getDate()}</div>
-                  {/* --- 5. INDICADORES DE DÍA ACTUALIZADOS --- */}
                   {(day.tasks.length > 0 || day.futureRemindersCount > 0) && (
                     <div className={styles.taskIndicators}>
                       {day.completedCount > 0 && (
@@ -449,7 +444,6 @@ export default function UnifiedCalendar() {
           </div>
         </div>
 
-        {/* Mostrar panel si hay fecha seleccionada Y hay tareas O recordatorios futuros */}
         {selectedDate &&
           (selectedDateTasks.length > 0 ||
             selectedFutureReminders.length > 0) && (
@@ -465,12 +459,11 @@ export default function UnifiedCalendar() {
                   }
                 )}
               </h3>
-              {/* Renderizar tareas (pasado/presente) */}
               {selectedDateTasks.length > 0 && (
                 <div className={styles.taskList}>
                   {selectedDateTasks.map((task) => (
                     <div
-                      key={`task-${task.id}`} // Prefijo para evitar colisión de key
+                      key={`task-${task.id}`}
                       className={`${styles.taskItem} ${
                         task.isCompleted
                           ? styles.taskCompleted
@@ -488,7 +481,6 @@ export default function UnifiedCalendar() {
                       <div className={styles.taskInfo}>
                         <div className={styles.taskPlant}>{task.plantName}</div>
                         <div className={styles.taskCare}>
-                          {/* --- 6. ÍCONOS DE TAREA REEMPLAZADOS --- */}
                           {task.careType === "Riego" ? (
                             <FiDroplet />
                           ) : (
@@ -509,7 +501,6 @@ export default function UnifiedCalendar() {
                                 : "Completada"
                             }
                           >
-                            {/* --- 7. ÍCONO DE BADGE REEMPLAZADO --- */}
                             <FiCheck />
                           </div>
                         ) : (
@@ -529,10 +520,9 @@ export default function UnifiedCalendar() {
                   ))}
                 </div>
               )}
-              {/* --- Renderizar recordatorios futuros --- */}
+
               {selectedFutureReminders.length > 0 && (
                 <>
-                  {/* Opcional: Separador si hay ambos tipos de items */}
                   {selectedDateTasks.length > 0 && (
                     <hr className={styles.detailSeparator} />
                   )}
@@ -542,8 +532,8 @@ export default function UnifiedCalendar() {
                   <div className={styles.taskList}>
                     {selectedFutureReminders.map((reminder) => (
                       <div
-                        key={`reminder-${reminder.id}`} // Prefijo para key única
-                        className={`${styles.taskItem} ${styles.taskFuture}`} // Nueva clase para estilo
+                        key={`reminder-${reminder.id}`}
+                        className={`${styles.taskItem} ${styles.taskFuture}`}
                       >
                         <Image
                           src={reminder.imageUrl}
@@ -558,7 +548,6 @@ export default function UnifiedCalendar() {
                             {reminder.plantName}
                           </div>
                           <div className={styles.taskCare}>
-                            {/* --- 6. ÍCONOS DE TAREA REEMPLAZADOS --- */}
                             {reminder.careType === "Riego" ? (
                               <FiDroplet />
                             ) : (
@@ -568,12 +557,10 @@ export default function UnifiedCalendar() {
                           </div>
                         </div>
                         <div className={styles.taskStatus}>
-                          {/* No hay botón, mostramos un indicador */}
                           <div
                             className={styles.futureBadge}
                             title="Tarea futura"
                           >
-                            {/* --- 7. ÍCONO DE BADGE REEMPLAZADO --- */}
                             <FiSquare />
                           </div>
                         </div>
@@ -582,9 +569,7 @@ export default function UnifiedCalendar() {
                   </div>
                 </>
               )}
-              {/* -------------------------------------- */}
 
-              {/* Mensaje si no hay nada que mostrar (debería ser raro con la lógica externa) */}
               {selectedDateTasks.length === 0 &&
                 selectedFutureReminders.length === 0 && (
                   <p className={styles.noTasksMessage}>

@@ -6,7 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./PlantDiaryList.module.css";
-// --- 1. IMPORTAR ÍCONOS ---
 import { FiBook, FiArchive } from "react-icons/fi";
 
 type Plant = {
@@ -17,7 +16,7 @@ type Plant = {
 
 export default function SelectPlantForDiaryPage() {
   const supabase = createClient();
-  const [allPlants, setAllPlants] = useState<Plant[]>([]); // Renombrado para claridad
+  const [allPlants, setAllPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState(""); // Estado para la búsqueda
@@ -77,7 +76,6 @@ export default function SelectPlantForDiaryPage() {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
-          {/* --- 2. ÍCONO REEMPLAZADO --- */}
           <h1>
             <FiBook /> Diario de Plantas
           </h1>
@@ -90,14 +88,12 @@ export default function SelectPlantForDiaryPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        {/* --- 2. ÍCONO REEMPLAZADO --- */}
         <h1>
           <FiBook /> Diario de Plantas
         </h1>
         <p>Selecciona una planta para ver o añadir entradas a su diario.</p>
       </div>
 
-      {/* --- Barra de Búsqueda --- */}
       <div className={styles.searchContainer}>
         <input
           type="text"
@@ -107,7 +103,6 @@ export default function SelectPlantForDiaryPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      {/* ------------------------ */}
 
       {allPlants.length === 0 ? ( // Comprueba si originalmente no había plantas
         <div className={styles.emptyState}>
@@ -121,7 +116,6 @@ export default function SelectPlantForDiaryPage() {
         </div>
       ) : filteredPlants.length === 0 ? ( // Comprueba si no hay resultados de búsqueda
         <div className={styles.emptyState}>
-          {/* --- 3. ÍCONO REEMPLAZADO --- */}
           <span className={styles.emptyIcon}>
             <FiArchive />
           </span>

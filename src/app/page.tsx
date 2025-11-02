@@ -11,8 +11,8 @@ import {
   getCameraStream,
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
-// --- 1. IMPORTAR ÍCONOS ---
 import { FiUpload, FiCamera, FiRefreshCw } from "react-icons/fi";
+import { toast } from "sonner";
 
 type PlantSuggestion = {
   name: string;
@@ -120,7 +120,7 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error("Error al abrir cámara:", error);
-      alert(
+      toast.error(
         error instanceof Error ? error.message : "Error al acceder a la cámara"
       );
       setShowCamera(false);
@@ -133,7 +133,7 @@ export default function HomePage() {
     ) as HTMLVideoElement;
 
     if (!videoElement || !cameraStream) {
-      alert("Error: La cámara no está activa");
+      toast.error("Error: La cámara no está activa");
       return;
     }
 
@@ -144,7 +144,7 @@ export default function HomePage() {
       closeCamera();
     } catch (error) {
       console.error("Error al capturar foto:", error);
-      alert("Error al capturar la foto");
+      toast.error("Error al capturar la foto");
     } finally {
       setIsCompressing(false);
     }
@@ -190,7 +190,7 @@ export default function HomePage() {
       setCareInfo("");
     } catch (error) {
       console.error("Error al procesar imagen:", error);
-      alert("Error al procesar la imagen. Por favor, intenta con otra.");
+      toast.error("Error al procesar la imagen. Por favor, intenta con otra.");
     } finally {
       setIsCompressing(false);
     }
@@ -198,7 +198,7 @@ export default function HomePage() {
 
   const handleIdentifyClick = async () => {
     if (!image) {
-      alert("Por favor, sube una imagen primero.");
+      toast.error("Por favor, sube una imagen primero.");
       return;
     }
 
@@ -227,7 +227,7 @@ export default function HomePage() {
       setResults(data);
     } catch (error) {
       console.error(error);
-      alert("Ocurrió un error al identificar la planta.");
+      toast.error("Ocurrió un error al identificar la planta.");
     } finally {
       setLoading(false);
     }
@@ -235,7 +235,7 @@ export default function HomePage() {
 
   const handleSelectPlant = async (suggestion: PlantSuggestion) => {
     if (!image) {
-      alert("Error: no se encuentra la imagen original.");
+      toast.error("Error: no se encuentra la imagen original.");
       return;
     }
 
@@ -262,6 +262,8 @@ export default function HomePage() {
       const data = await response.json();
       setCareInfo(data.careInstructions);
 
+      toast.success(`Planta "${suggestion.name}" guardada con éxito.`);
+
       setTimeout(() => {
         router.push("/my-plants");
       }, 1000);
@@ -269,11 +271,9 @@ export default function HomePage() {
       console.error(error);
       setCareInfo("");
       setIsSavingPlant(false);
-      alert(
-        `Ocurrió un error: ${
-          error instanceof Error ? error.message : "Error desconocido"
-        }`
-      );
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      toast.error(`Ocurrió un error: ${errorMsg}`);
     }
   };
 
