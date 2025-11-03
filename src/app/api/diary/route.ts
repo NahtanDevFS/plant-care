@@ -2,7 +2,20 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers"; // Importa cookies desde next/headers
+import { cookies } from "next/headers";
+
+// Helper para obtener la fecha 'YYYY-MM-DD' en Guatemala
+const getGuatemalaDateString = (): string => {
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "America/Guatemala",
+  };
+
+  // Esto devolverá la fecha local de Guatemala
+  return new Intl.DateTimeFormat("sv", options).format(new Date());
+};
 
 // Helper para crear cliente Supabase en Route Handlers
 async function createSupabaseClient() {
@@ -113,9 +126,12 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           notes: notes,
           image_url: imageUrl,
+          // --- INICIO DE LA MODIFICACIÓN ---
           entry_date: entryDate
             ? new Date(entryDate).toISOString()
-            : new Date().toISOString(), // Usar fecha del cliente o actual
+            : // : new Date().toISOString(), // <--- ANTERIOR (INCORRECTO)
+              getGuatemalaDateString(), // <--- NUEVO (CORRECTO)
+          // --- FIN DE LA MODIFICACIÓN ---
         },
       ])
       .select() // Devuelve la entrada creada
