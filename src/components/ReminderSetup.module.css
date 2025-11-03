@@ -12,14 +12,12 @@
 }
 
 .icon {
-  /* font-size: 1.2rem; <-- REEMPLAZADO */
-  display: flex; /* AÑADIDO */
-  align-items: center; /* AÑADIDO */
-  justify-content: center; /* AÑADIDO */
-  color: var(--color-primary); /* AÑADIDO: Damos color al ícono */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
 }
 
-/* --- AÑADIDO --- */
 .icon svg {
   font-size: 1.2rem;
   stroke-width: 2.5;
@@ -74,4 +72,30 @@
   background-color: transparent;
   color: #888;
   padding: 0.5rem;
+}
+
+.deleteButton {
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background-color: transparent;
+  color: #d32f2f; /* Color rojo para eliminar */
+  font-size: 1rem; /* Tamaño del ícono */
+  display: flex; /* Para centrar el ícono */
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background-color: #ffcdd2; /* Fondo rojo claro al pasar el mouse */
+  color: #d32f2f;
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

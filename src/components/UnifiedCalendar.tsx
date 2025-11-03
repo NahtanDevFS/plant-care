@@ -17,6 +17,16 @@ import {
 } from "react-icons/fi";
 import { toast } from "sonner";
 
+// Helper para obtener la fecha local como string 'YYYY-MM-DD'
+// Esto evita la conversión a UTC de .toISOString()
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+// --- FIN DEL CAMBIO ---
+
 // Tipo para tareas pasadas/presentes (desde task_history)
 type Task = {
   id: string; // ID de task_history
@@ -87,8 +97,10 @@ export default function UnifiedCalendar() {
     const lastDayOfCalendar = new Date(lastDayOfMonth);
     lastDayOfCalendar.setDate(lastDayOfMonth.getDate() + endOffset + 7);
 
-    const firstDayString = firstDayOfCalendar.toISOString().split("T")[0];
-    const lastDayString = lastDayOfCalendar.toISOString().split("T")[0];
+    // --- ¡CAMBIO! Usar la función helper local ---
+    const firstDayString = toLocalDateString(firstDayOfCalendar);
+    const lastDayString = toLocalDateString(lastDayOfCalendar);
+    // --- FIN DEL CAMBIO ---
 
     try {
       const { data: taskData, error: taskError } = await supabase
@@ -147,6 +159,7 @@ export default function UnifiedCalendar() {
           });
         }
       });
+      // ---------------------------------------------------------
 
       setTasks(groupedTasks);
       setFutureReminderDetails(groupedFutureReminders);
@@ -185,7 +198,9 @@ export default function UnifiedCalendar() {
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const dayNum = daysInPrevMonth - i;
       const date = new Date(year, month - 1, dayNum);
-      const dateString = date.toISOString().split("T")[0];
+      // --- ¡CAMBIO! Usar la función helper local ---
+      const dateString = toLocalDateString(date);
+      // --- FIN DEL CAMBIO ---
       const dayTasks = tasks[dateString] || [];
       const futureReminders = futureReminderDetails[dateString] || [];
       days.push({
@@ -202,7 +217,9 @@ export default function UnifiedCalendar() {
     // Días del mes actual
     for (let i = 1; i <= daysInCurrentMonth; i++) {
       const date = new Date(year, month, i);
-      const dateString = date.toISOString().split("T")[0];
+      // --- ¡CAMBIO! Usar la función helper local ---
+      const dateString = toLocalDateString(date);
+      // --- FIN DEL CAMBIO ---
       const dayTasks = tasks[dateString] || [];
       const completedCount = dayTasks.filter((t) => t.isCompleted).length;
       const pendingCount = dayTasks.length - completedCount;
@@ -225,7 +242,9 @@ export default function UnifiedCalendar() {
 
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(year, month + 1, i);
-      const dateString = date.toISOString().split("T")[0];
+      // --- ¡CAMBIO! Usar la función helper local ---
+      const dateString = toLocalDateString(date);
+      // --- FIN DEL CAMBIO ---
       const dayTasks = tasks[dateString] || [];
       const futureReminders = futureReminderDetails[dateString] || [];
       days.push({
@@ -260,14 +279,18 @@ export default function UnifiedCalendar() {
       return;
     }
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    // --- ¡CAMBIO! Usar la función helper local ---
+    const todayStr = toLocalDateString(new Date());
+    // --- FIN DEL CAMBIO ---
     if (taskDateKey > todayStr) {
       toast.warning("No puedes completar una tarea programada para el futuro.");
       return;
     }
 
     try {
-      const today = new Date().toISOString().split("T")[0];
+      // --- ¡CAMBIO! Usar la función helper local ---
+      const today = toLocalDateString(new Date());
+      // --- FIN DEL CAMBIO ---
       const { error } = await supabase
         .from("task_history")
         .update({
@@ -310,11 +333,13 @@ export default function UnifiedCalendar() {
   };
 
   const calendarDays = generateCalendarDays();
+
+  // --- ¡CAMBIO! Usar la función helper local ---
   const selectedDayData = selectedDate
-    ? calendarDays.find(
-        (day) => day.date.toISOString().split("T")[0] === selectedDate
-      )
+    ? calendarDays.find((day) => toLocalDateString(day.date) === selectedDate)
     : null;
+  // --- FIN DEL CAMBIO ---
+
   const selectedDateTasks = selectedDayData?.tasks || [];
   const selectedFutureReminders = selectedDayData?.futureReminderDetails || [];
 
@@ -393,7 +418,9 @@ export default function UnifiedCalendar() {
 
           <div className={styles.days}>
             {calendarDays.map((day, index) => {
-              const dateString = day.date.toISOString().split("T")[0];
+              // --- ¡CAMBIO! Usar la función helper local ---
+              const dateString = toLocalDateString(day.date);
+              // --- FIN DEL CAMBIO ---
               const isSelected = selectedDate === dateString;
 
               return (
@@ -447,7 +474,12 @@ export default function UnifiedCalendar() {
             selectedFutureReminders.length > 0) && (
             <div className={styles.taskDetail}>
               <h3>
-                {new Date(selectedDate + "T00:00:00").toLocaleDateString(
+                {/* ¡CAMBIO! 
+                  Sumamos la hora local para que toLocaleDateString 
+                  interprete la fecha seleccionada 'YYYY-MM-DD' como local 
+                  y no como UTC.
+                */}
+                {new Date(selectedDate + "T12:00:00").toLocaleDateString(
                   "es-ES",
                   {
                     weekday: "long",
@@ -494,7 +526,8 @@ export default function UnifiedCalendar() {
                             title={
                               task.completedDate
                                 ? `Completada el ${new Date(
-                                    task.completedDate + "T00:00:00"
+                                    // ¡CAMBIO! Se añade la hora local para interpretar correctamente
+                                    task.completedDate + "T12:00:00"
                                   ).toLocaleDateString("es-ES")}`
                                 : "Completada"
                             }
@@ -505,10 +538,11 @@ export default function UnifiedCalendar() {
                           <button
                             onClick={() => handleCompleteTask(task.id)}
                             className={styles.completeButton}
+                            // --- ¡CAMBIO! Usar la función helper local ---
                             disabled={
-                              selectedDate >
-                              new Date().toISOString().split("T")[0]
+                              selectedDate > toLocalDateString(new Date())
                             }
+                            // --- FIN DEL CAMBIO ---
                           >
                             Marcar
                           </button>

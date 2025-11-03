@@ -38,7 +38,7 @@ import {
   getCameraStream,
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
-import { toast } from "sonner"; // <-- Importado
+import { toast } from "sonner";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -335,81 +335,71 @@ export default function MyPlants() {
     setExpandedPlant(expandedPlant === plantId ? null : plantId);
   };
 
-  const handleSaveReminder = async (
+  // --- ¡CAMBIO! ---
+  // Esta función AHORA SÓLO actualiza el estado local.
+  // El componente hijo (ReminderSetup) se encarga de la llamada a Supabase.
+  const handleSaveReminderStateUpdate = (
     plantId: number,
     careType: "Riego" | "Fertilizante",
     frequency: number
   ) => {
-    // --- REEMPLAZO DE ALERTS CON TOASTS ---
-    if (frequency === null || frequency <= 0) {
-      toast.warning("Por favor, introduce un número de días válido.");
-      return;
-    }
-
-    setIsUpdatingName(true); // Re-usar un spinner, o crear uno específico
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("No estás autenticado");
-        return;
-      }
-      const { data: reminder, error: reminderError } = await supabase
-        .from("reminders")
-        .select("*")
-        .eq("plant_id", plantId)
-        .eq("care_type", careType)
-        .eq("user_id", user.id)
-        .single();
-      const nextDate = new Date();
-      nextDate.setDate(nextDate.getDate() + frequency);
-      if (reminderError || !reminder) {
-        const { error: insertError } = await supabase.from("reminders").insert([
-          {
-            plant_id: plantId,
-            user_id: user.id,
-            care_type: careType,
-            frequency_days: frequency,
-            next_reminder_date: nextDate.toISOString().split("T")[0],
-          },
-        ]);
-        if (insertError) throw insertError;
-        toast.success("Recordatorio creado correctamente");
-      } else {
-        const { error: updateError } = await supabase
-          .from("reminders")
-          .update({
-            frequency_days: frequency,
-            next_reminder_date: nextDate.toISOString().split("T")[0],
-          })
-          .eq("id", reminder.id);
-        if (updateError) throw updateError;
-        toast.success("Recordatorio actualizado correctamente");
-      }
-
-      // Actualizar estado local para reflejar el cambio
-      setPlants((prevPlants) =>
-        prevPlants.map((p) => {
-          if (p.id === plantId) {
-            if (careType === "Riego") {
-              return { ...p, watering_frequency_days: frequency };
-            } else if (careType === "Fertilizante") {
-              return { ...p, fertilizing_frequency_days: frequency };
-            }
+    setPlants((prevPlants) =>
+      prevPlants.map((p) => {
+        if (p.id === plantId) {
+          if (careType === "Riego") {
+            return { ...p, watering_frequency_days: frequency };
+          } else if (careType === "Fertilizante") {
+            return { ...p, fertilizing_frequency_days: frequency };
           }
-          return p;
-        })
-      );
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error(
-        "Error: " + (error instanceof Error ? error.message : "desconocido")
-      );
-    } finally {
-      setIsUpdatingName(false); // Desactivar spinner
-    }
+        }
+        return p;
+      })
+    );
   };
+  // --- FIN DEL CAMBIO ---
+
+  // --- ¡NUEVO! ---
+  // Esta función SÍ hace la llamada a Supabase para ELIMINAR.
+  // Es llamada por el 'onDelete' de ReminderSetup.
+  const handleDeleteReminder = async (
+    plantId: number,
+    careType: "Riego" | "Fertilizante"
+  ) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("No estás autenticado");
+    }
+
+    // 1. Eliminar de Supabase
+    const { error: deleteError } = await supabase
+      .from("reminders")
+      .delete()
+      .eq("plant_id", plantId)
+      .eq("care_type", careType)
+      .eq("user_id", user.id);
+
+    if (deleteError) {
+      console.error("Error deleting reminder:", deleteError);
+      throw new Error("Error al eliminar el recordatorio de la base de datos.");
+    }
+
+    // 2. Actualizar el estado local si la eliminación fue exitosa
+    setPlants((prevPlants) =>
+      prevPlants.map((p) => {
+        if (p.id === plantId) {
+          if (careType === "Riego") {
+            return { ...p, watering_frequency_days: null };
+          } else if (careType === "Fertilizante") {
+            return { ...p, fertilizing_frequency_days: null };
+          }
+        }
+        return p;
+      })
+    );
+  };
+  // --- FIN DE LO NUEVO ---
 
   const handleDeletePlant = async (plantId: number, imageUrl: string) => {
     const performDelete = async () => {
@@ -462,7 +452,6 @@ export default function MyPlants() {
     return "";
   };
 
-  // --- REEMPLAZO DE ALERTS EN CÁMARA/IMAGEN ---
   const handleOpenUpdateModal = (plantId: number) => {
     setCurrentPlantToUpdate(plantId);
     setShowCameraModal(true);
@@ -567,7 +556,6 @@ export default function MyPlants() {
     }
   };
 
-  // --- REEMPLAZO DE ALERTS EN EDICIÓN DE NOMBRE ---
   const handleEditNameClick = (plant: Plant) => {
     setEditingNameId(plant.id);
     setEditingNameValue(plant.common_name || "");
@@ -618,7 +606,6 @@ export default function MyPlants() {
     }
   };
 
-  // --- REEMPLAZO DE ALERTS EN EXPORTACIÓN ---
   const handlePlantSelect = (plantId: number) => {
     setSelectedPlants((prev) => {
       const newSet = new Set(prev);
@@ -774,7 +761,6 @@ export default function MyPlants() {
     pdf.save("mis_plantas.pdf");
     setIsExporting(false);
   };
-  // ----------------------------------------------------
 
   // --- RENDERIZADO ---
   if (loading) {
@@ -788,7 +774,6 @@ export default function MyPlants() {
     );
   }
 
-  // El error de carga inicial se mantiene, pero los errores de acción usarán toasts
   if (error && plants.length === 0) {
     return (
       <div className={styles.container}>
@@ -1166,9 +1151,18 @@ export default function MyPlants() {
                               plantId={plant.id}
                               careType="Riego"
                               initialFrequency={plant.watering_frequency_days}
+                              // --- ¡CAMBIO! ---
                               onSave={(f) =>
-                                handleSaveReminder(plant.id, "Riego", f)
+                                handleSaveReminderStateUpdate(
+                                  plant.id,
+                                  "Riego",
+                                  f
+                                )
                               }
+                              onDelete={() =>
+                                handleDeleteReminder(plant.id, "Riego")
+                              }
+                              // --- FIN DEL CAMBIO ---
                             />
                             <ReminderSetup
                               plantId={plant.id}
@@ -1176,9 +1170,18 @@ export default function MyPlants() {
                               initialFrequency={
                                 plant.fertilizing_frequency_days
                               }
+                              // --- ¡CAMBIO! ---
                               onSave={(f) =>
-                                handleSaveReminder(plant.id, "Fertilizante", f)
+                                handleSaveReminderStateUpdate(
+                                  plant.id,
+                                  "Fertilizante",
+                                  f
+                                )
                               }
+                              onDelete={() =>
+                                handleDeleteReminder(plant.id, "Fertilizante")
+                              }
+                              // --- FIN DEL CAMBIO ---
                             />
                           </div>
                           <div className={styles.diaryLinkContainer}>
