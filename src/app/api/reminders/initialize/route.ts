@@ -4,21 +4,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// --- INICIO DE LA MODIFICACIÓN ---
-// Helper para obtener la fecha 'YYYY-MM-DD' en Guatemala
-const getGuatemalaDateString = (): string => {
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "America/Guatemala",
-  };
-
-  // Esto devolverá la fecha local de Guatemala
-  return new Intl.DateTimeFormat("sv", options).format(new Date());
-};
-// --- FIN DE LA MODIFICACIÓN ---
-
 export async function POST(request: NextRequest) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,19 +45,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- INICIO DE LA MODIFICACIÓN ---
-    // const today = new Date(); // <-- ANTERIOR
-    const todayString = getGuatemalaDateString(); // <--- NUEVO
-    // --- FIN DE LA MODIFICACIÓN ---
-
+    const today = new Date();
     const remindersToCreate = careTpes.map((careType: string) => ({
       plant_id: plantId,
       user_id: user.id,
       care_type: careType,
-      // --- INICIO DE LA MODIFICACIÓN ---
-      // next_reminder_date: today.toISOString().split("T")[0], // <--- ANTERIOR
-      next_reminder_date: todayString, // <--- NUEVO
-      // --- FIN DE LA MODIFICACIÓN ---
+      next_reminder_date: today.toISOString().split("T")[0],
       frequency_days: 7, // Default, se actualiza cuando el usuario configura
     }));
 

@@ -4,18 +4,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const getGuatemalaDateString = (): string => {
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "America/Guatemala",
-  };
-
-  // Usamos 'sv' (Suecia) porque formatea como YYYY-MM-DD
-  return new Intl.DateTimeFormat("sv", options).format(new Date());
-};
-
 export async function POST(request: NextRequest) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,10 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear un registro de historial para hoy
-    // --- INICIO DE LA MODIFICACIÓN ---
-    // const today = new Date().toISOString().split("T")[0]; // <-- ANTERIOR (INCORRECTO)
-    const today = getGuatemalaDateString(); // <-- NUEVO (CORRECTO)
-    // --- FIN DE LA MODIFICACIÓN ---
+    const today = new Date().toISOString().split("T")[0];
 
     const { error } = await supabase.from("task_history").insert([
       {
@@ -73,3 +58,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
+// --- EDGE FUNCTION PARA CREAR TAREAS DIARIAMENTE ---
+// Archivo: supabase/functions/create-daily-tasks/index.ts
+// Se ejecuta diariamente para crear registros de task_history
