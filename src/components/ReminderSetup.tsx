@@ -4,15 +4,15 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./ReminderSetup.module.css";
-// --- 1. IMPORTAR ÍCONOS ---
-import { FiDroplet, FiThermometer } from "react-icons/fi";
-import { toast } from "sonner"; // <-- 1. IMPORTAR TOAST
+import { FiDroplet, FiThermometer, FiTrash2 } from "react-icons/fi";
+import { toast } from "sonner";
 
 type ReminderSetupProps = {
   plantId: number;
   careType: "Riego" | "Fertilizante";
   initialFrequency: number | null;
-  onSave: (frequency: number) => Promise<void>;
+  onSave: (frequency: number) => void; // Síncrono para actualizar estado local
+  onDelete: () => Promise<void>;
 };
 
 export default function ReminderSetup({
@@ -20,10 +20,12 @@ export default function ReminderSetup({
   careType,
   initialFrequency,
   onSave,
+  onDelete, // <-- Prop nueva
 }: ReminderSetupProps) {
   const supabase = createClient();
   const [frequency, setFrequency] = useState<number | null>(initialFrequency);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false); // Estado para borrado
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSave = async () => {
@@ -32,7 +34,7 @@ export default function ReminderSetup({
       return;
     }
 
-    setIsLoading(true);
+    setIsSaving(true);
     try {
       const {
         data: { user },
@@ -42,7 +44,6 @@ export default function ReminderSetup({
         throw new Error("No estás autenticado");
       }
 
-      // 1. Obtener el recordatorio actual
       const { data: reminder, error: reminderError } = await supabase
         .from("reminders")
         .select("*")
@@ -51,10 +52,20 @@ export default function ReminderSetup({
         .eq("user_id", user.id)
         .single();
 
-      // 2. Calcular la próxima fecha
+      // --- INICIO DE LA MODIFICACIÓN (GTM-6) ---
+      // Obtenemos la fecha y hora local del navegador
       const today = new Date();
+
+      // Restamos 6 horas para compensar la zona horaria GTM-6
+      // Esto asegura que si son las 9 PM (GTM-6), se considere el mismo día
+      today.setHours(today.getHours() - 6);
+
       const nextReminderDate = new Date(today);
       nextReminderDate.setDate(nextReminderDate.getDate() + frequency);
+
+      // .toISOString() convierte a UTC. Restar 6h antes asegura que el día UTC sea el correcto.
+      const nextDateString = nextReminderDate.toISOString().split("T")[0];
+      // --- FIN DE LA MODIFICACIÓN ---
 
       if (reminderError || !reminder) {
         // Si no existe, crear uno nuevo
@@ -64,7 +75,7 @@ export default function ReminderSetup({
             user_id: user.id,
             care_type: careType,
             frequency_days: frequency,
-            next_reminder_date: nextReminderDate.toISOString().split("T")[0],
+            next_reminder_date: nextDateString,
           },
         ]);
 
@@ -75,25 +86,58 @@ export default function ReminderSetup({
           .from("reminders")
           .update({
             frequency_days: frequency,
-            next_reminder_date: nextReminderDate.toISOString().split("T")[0],
+            next_reminder_date: nextDateString,
           })
           .eq("id", reminder.id);
 
         if (updateError) throw updateError;
       }
 
-      // Llamar al callback onSave sin recargar
-      await onSave(frequency);
+      onSave(frequency); // Llamada síncrona
       setIsEditing(false);
       toast.success("Recordatorio guardado correctamente");
     } catch (error) {
       console.error("Error:", error);
       toast.error(
-        "Error: " + (error instanceof Error ? error.message : "desconocido")
+        "Error al guardar: " +
+          (error instanceof Error ? error.message : "desconocido")
       );
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
+  };
+
+  const handleDelete = async () => {
+    toast.warning(
+      `¿Seguro que quieres eliminar el recordatorio de ${careType.toLowerCase()}?`,
+      {
+        description: "Esta acción no se puede deshacer.",
+        action: {
+          label: "Eliminar",
+          onClick: async () => {
+            setIsDeleting(true);
+            try {
+              await onDelete();
+              setFrequency(null);
+              setIsEditing(false);
+              toast.success("Recordatorio eliminado.");
+            } catch (error) {
+              console.error("Error deleting reminder:", error);
+              toast.error(
+                "Error al eliminar: " +
+                  (error instanceof Error ? error.message : "Error desconocido")
+              );
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+        cancel: {
+          label: "Cancelar",
+          onClick: () => {},
+        },
+      }
+    );
   };
 
   const icon = careType === "Riego" ? <FiDroplet /> : <FiThermometer />;
@@ -115,14 +159,18 @@ export default function ReminderSetup({
         <span>días</span>
         <button
           onClick={handleSave}
-          disabled={isLoading}
+          disabled={isSaving || isDeleting}
           className={styles.saveButton}
         >
-          {isLoading ? "..." : "Guardar"}
+          {isSaving ? "..." : "Guardar"}
         </button>
         <button
-          onClick={() => setIsEditing(false)}
+          onClick={() => {
+            setIsEditing(false);
+            setFrequency(initialFrequency); // Resetea si cancela
+          }}
           className={styles.cancelButton}
+          disabled={isSaving || isDeleting}
         >
           X
         </button>
@@ -134,13 +182,28 @@ export default function ReminderSetup({
     <div className={styles.reminderContainer}>
       <span className={styles.icon}>{icon}</span>
       <p>
-        {frequency
-          ? `${label} ${frequency} días`
+        {initialFrequency
+          ? `${label} ${initialFrequency} días`
           : `No has configurado recordatorios para ${careType.toLowerCase()}.`}
       </p>
-      <button onClick={() => setIsEditing(true)} className={styles.editButton}>
-        {frequency ? "Cambiar" : "Configurar"}
+      <button
+        onClick={() => setIsEditing(true)}
+        className={styles.editButton}
+        disabled={isDeleting}
+      >
+        {initialFrequency ? "Cambiar" : "Configurar"}
       </button>
+
+      {initialFrequency && (
+        <button
+          onClick={handleDelete}
+          className={styles.deleteButton}
+          disabled={isDeleting}
+          title="Eliminar recordatorio"
+        >
+          {isDeleting ? "..." : <FiTrash2 />}
+        </button>
+      )}
     </div>
   );
 }
