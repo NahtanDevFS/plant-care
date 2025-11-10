@@ -6,11 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import styles from "@/app/HomePage.module.css";
 import { useRouter } from "next/navigation";
+import { countries } from "@/lib/countries";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [country, setCountry] = useState("Guatemala");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,6 +24,7 @@ export default function RegisterPage() {
     setError(null);
     setMessage(null);
     setIsLoading(true);
+
     if (username.length < 3) {
       setError("El nombre de usuario debe tener al menos 3 caracteres.");
       setIsLoading(false);
@@ -42,6 +45,7 @@ export default function RegisterPage() {
         emailRedirectTo: `https://plant-care-mu.vercel.app/auth/callback`,
         data: {
           username: username.trim(),
+          country: country,
         },
       },
     });
@@ -112,6 +116,31 @@ export default function RegisterPage() {
           minLength={6} // Supabase requiere mínimo 6
           disabled={isLoading}
         />
+
+        <label htmlFor="country">País</label>
+        <select
+          id="country"
+          name="country"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          required
+          disabled={isLoading}
+          style={{
+            padding: "0.75rem",
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--border-radius)",
+            fontSize: "1rem",
+            backgroundColor: "white",
+            cursor: "pointer",
+          }}
+        >
+          {countries.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+
         <button className={styles.button} disabled={isLoading}>
           {isLoading ? "Registrando..." : "Registrarse"}
         </button>

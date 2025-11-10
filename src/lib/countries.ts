@@ -1,0 +1,33 @@
+// src/lib/countries.ts
+export const countries = [
+  "Alemania",
+  "Argentina",
+  "Bolivia",
+  "Brasil",
+  "Canadá",
+  "Chile",
+  "Colombia",
+  "Costa Rica",
+  "Cuba",
+  "Ecuador",
+  "El Salvador",
+  "España",
+  "Estados Unidos",
+  "Francia",
+  "Guatemala",
+  "Honduras",
+  "Italia",
+  "México",
+  "Nicaragua",
+  "Panamá",
+  "Paraguay",
+  "Perú",
+  "Portugal",
+  "Puerto Rico",
+  "Reino Unido",
+  "República Dominicana",
+  "Uruguay",
+  "Venezuela",
+];
+
+countries.sort();

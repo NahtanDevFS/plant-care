@@ -8,9 +8,12 @@ import * as GroqClient from "@/lib/groq-client";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-async function getCareInstructions(plantName: string): Promise<string> {
+async function getCareInstructions(
+  plantName: string,
+  userCountry: string
+): Promise<string> {
   try {
-    const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando un clima templado a subtropical como el de Guatemala. La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
+    const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando el clima de ${userCountry}. La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
 
 ### General:
 - Dificultad: [Fácil/Media/Difícil]
@@ -55,6 +58,7 @@ IMPORTANTE:
 - Cada sección debe empezar exactamente con "### " 
 - En Plagas y Enfermedades, numera con 1. 2. etc
 - No incluyas texto introductorio ni final`;
+    // --- FIN DE LA MODIFICACIÓN (PROMPT) ---
 
     if (CURRENT_LLM_PROVIDER === "groq") {
       const response = await GroqClient.generateContent(
@@ -146,6 +150,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  let userCountry = "Guatemala";
+  try {
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("country")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      console.warn(
+        `No se pudo cargar el perfil del usuario ${user.id}: ${profileError.message}`
+      );
+    } else if (profileData?.country) {
+      userCountry = profileData.country;
+    }
+  } catch (profileCatchError) {
+    console.error("Error al buscar el perfil:", profileCatchError);
+  }
+
   try {
     const formData = await request.formData();
     const image = formData.get("image") as File | null;
@@ -156,12 +179,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Faltan datos." }, { status: 400 });
     }
 
-    const careInstructions = await getCareInstructions(plantName);
+    const careInstructions = await getCareInstructions(plantName, userCountry);
 
-    // solo contiene care_level, pet_friendly, is_toxic
     const metadata = extractPlantMetadata(careInstructions);
 
-    // Convertir string vacío a null para la base de datos
     const commonNameForDB =
       commonNameFromClient && commonNameFromClient.trim() !== ""
         ? commonNameFromClient.trim()

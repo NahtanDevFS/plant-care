@@ -8,10 +8,12 @@ import { compressImage } from "@/lib/imageCompression";
 import styles from "./ProfilePage.module.css";
 import type { User } from "@supabase/supabase-js";
 import { FiUser } from "react-icons/fi";
+import { countries } from "@/lib/countries";
 
 type Profile = {
   username: string | null;
   avatar_url: string | null;
+  country: string | null;
 };
 
 export default function ProfilePage() {
@@ -20,6 +22,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
+  const [countryInput, setCountryInput] = useState("Guatemala");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,6 +57,7 @@ export default function ProfilePage() {
         const data: Profile = await response.json();
         setProfile(data);
         setUsernameInput(data.username || "");
+        setCountryInput(data.country || "Guatemala");
         setAvatarPreview(data.avatar_url);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido.");
@@ -113,8 +117,15 @@ export default function ProfilePage() {
       formData.append("avatar", avatarFile, avatarFile.name);
     }
 
-    // Solo llama a la API si hay algo que actualizar
-    if (!formData.has("username") && !formData.has("avatar")) {
+    if (countryInput !== (profile?.country || "Guatemala")) {
+      formData.append("country", countryInput);
+    }
+
+    if (
+      !formData.has("username") &&
+      !formData.has("avatar") &&
+      !formData.has("country")
+    ) {
       setSuccessMessage("No hay cambios para guardar.");
       setIsSaving(false);
       return;
@@ -134,6 +145,7 @@ export default function ProfilePage() {
       const updatedProfile: Profile = await response.json();
       setProfile(updatedProfile);
       setUsernameInput(updatedProfile.username || "");
+      setCountryInput(updatedProfile.country || "Guatemala");
       setAvatarPreview(updatedProfile.avatar_url);
       setAvatarFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -225,13 +237,32 @@ export default function ProfilePage() {
           </p>
         </div>
 
+        <div className={styles.fieldGroup}>
+          <label htmlFor="country">País</label>
+          <select
+            id="country"
+            name="country"
+            value={countryInput}
+            onChange={(e) => setCountryInput(e.target.value)}
+            disabled={isSaving || isCompressing}
+          >
+            {countries.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button
           type="submit"
           className={styles.saveButton}
           disabled={
             isSaving ||
             isCompressing ||
-            (!avatarFile && usernameInput.trim() === (profile?.username || ""))
+            (!avatarFile &&
+              usernameInput.trim() === (profile?.username || "") &&
+              countryInput === (profile?.country || "Guatemala"))
           }
         >
           {isSaving ? "Guardando..." : "Guardar Cambios"}

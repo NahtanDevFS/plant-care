@@ -24,7 +24,6 @@ async function createSupabaseClient() {
   );
 }
 
-// obtener perfil del usuario
 export async function GET(request: NextRequest) {
   const supabase = await createSupabaseClient();
   const {
@@ -40,7 +39,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("username, avatar_url")
+      .select("username, avatar_url, country")
       .eq("id", user.id)
       .single();
 
@@ -49,13 +48,20 @@ export async function GET(request: NextRequest) {
         console.warn(
           `Profile not found for user ${user.id}. Returning empty profile.`
         );
-        return NextResponse.json({ username: null, avatar_url: null });
+
+        return NextResponse.json({
+          username: null,
+          avatar_url: null,
+          country: null,
+        });
       }
       console.error("GET Profile DB Error:", profileError);
       throw profileError;
     }
 
-    return NextResponse.json(profile || { username: null, avatar_url: null });
+    return NextResponse.json(
+      profile || { username: null, avatar_url: null, country: null }
+    );
   } catch (error) {
     console.error("GET Profile CATCH Error:", error);
     const errorMessage =
@@ -64,7 +70,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// actualizar perfil del usuario
 export async function PUT(request: NextRequest) {
   const supabase = await createSupabaseClient();
   const {
@@ -81,11 +86,13 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData();
     const username = formData.get("username") as string | null;
     const avatarFile = formData.get("avatar") as File | null;
+    const country = formData.get("country") as string | null;
 
     let avatarUrl: string | undefined = undefined;
     const updateData: {
       username?: string;
       avatar_url?: string;
+      country?: string;
       updated_at: string;
     } = {
       updated_at: new Date().toISOString(),
@@ -111,6 +118,10 @@ export async function PUT(request: NextRequest) {
       if (trimmedUsername.length > 0) {
         updateData.username = trimmedUsername;
       }
+    }
+
+    if (country !== null) {
+      updateData.country = country;
     }
 
     if (avatarFile) {
@@ -162,13 +173,13 @@ export async function PUT(request: NextRequest) {
       updateData.avatar_url = avatarUrl;
     }
 
-    if (updateData.username || updateData.avatar_url) {
+    if (updateData.username || updateData.avatar_url || updateData.country) {
       console.log("Updating profile for", user.id, "with data:", updateData);
       const { data: updatedProfile, error: updateError } = await supabase
         .from("profiles")
         .update(updateData)
         .eq("id", user.id)
-        .select("username, avatar_url")
+        .select("username, avatar_url, country")
         .single();
 
       if (updateError) {
@@ -192,12 +203,12 @@ export async function PUT(request: NextRequest) {
       console.log("No profile data to update for", user.id);
       const { data: currentProfile, error: currentError } = await supabase
         .from("profiles")
-        .select("username, avatar_url")
+        .select("username, avatar_url, country")
         .eq("id", user.id)
         .single();
       if (currentError && currentError.code !== "PGRST116") throw currentError;
       return NextResponse.json(
-        currentProfile || { username: null, avatar_url: null }
+        currentProfile || { username: null, avatar_url: null, country: null }
       );
     }
   } catch (error) {

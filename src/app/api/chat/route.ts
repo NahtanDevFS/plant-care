@@ -29,10 +29,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  let userCountry = "Guatemala";
+  try {
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("country")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      console.warn(
+        `No se pudo cargar el perfil del usuario ${user.id}: ${profileError.message}`
+      );
+    } else if (profileData?.country) {
+      userCountry = profileData.country;
+    }
+  } catch (profileCatchError) {
+    console.error("Error al buscar el perfil:", profileCatchError);
+  }
+
   try {
     const { message, plantId, chatHistory } = await request.json();
 
-    //plantId puede ser 0 (para el chat general)
     if (!message || typeof plantId !== "number") {
       return NextResponse.json(
         { error: "Faltan datos requeridos (message o plantId)" },
@@ -60,7 +78,7 @@ INSTRUCCIONES PARA TI:
 8. IMPORTANTE: Usa formato de texto simple. Si necesitas resaltar algo importante, usa texto en MAYÚSCULAS o emojis destacados, pero evita usar asteriscos ** o símbolos de markdown.
 
 CONTEXTO ADICIONAL:
-El usuario está en Guatemala, con clima templado a subtropical. Ten esto en cuenta para tus recomendaciones.
+El usuario está en ${userCountry}. Ten esto en cuenta para tus recomendaciones.
 `;
       initialAssistantMessage = `¡Hola! Soy tu asistente de botánica general. ¿Qué te gustaría saber sobre el mundo de las plantas? 🌳 (Ej. "recomiéndame plantas de interior")`;
     } else {
@@ -95,7 +113,7 @@ ${plant.care_instructions}
 INSTRUCCIONES PARA TI:
 1. Responde de forma clara, amigable y personalizada
 2. Usa la información de la planta para dar consejos específicos
-3. Si el usuario pregunta algo que ya está en la guía de cuidados, referencia esa información (pero recuerda que la información en la guía de cuidados es limitada, tu propósito es ampliar esa información respecto a lo que el usuario desea saber.)
+3. Si el usuario pregunta algo que ya está en la guía de cuidados, referencia esa información (pero recuerda que la información en la guía de cuidados es limitada, tu propósito es ampliar esa información respecto a lo que el usuario desea saber)
 4. Si la pregunta es sobre síntomas (hojas amarillas, manchas, etc.), sé específico en el diagnóstico
 5. Proporciona soluciones prácticas y fáciles de implementar
 6. Si la pregunta no está relacionada con plantas o jardinería, gentilmente redirige al usuario
@@ -105,7 +123,7 @@ INSTRUCCIONES PARA TI:
 10. IMPORTANTE: Usa formato de texto simple. Si necesitas resaltar algo importante, usa texto en MAYÚSCULAS o emojis destacados, pero evita usar asteriscos ** o símbolos de markdown
 
 CONTEXTO ADICIONAL:
-El usuario está en Guatemala, con clima templado a subtropical.
+El usuario está en ${userCountry}.
 `;
       initialAssistantMessage = `¡Entendido! Estoy listo para ayudarte con tu ${plant.name}. Tengo toda la información sobre sus cuidados y características. ¿Qué te gustaría saber? 🌱`;
     }
@@ -113,6 +131,7 @@ El usuario está en Guatemala, con clima templado a subtropical.
     let responseText: string;
 
     if (CURRENT_LLM_PROVIDER === "groq") {
+      // Usar Groq
       const messages = [
         { role: "user" as const, content: plantContext },
         {
@@ -133,6 +152,7 @@ El usuario está en Guatemala, con clima templado a subtropical.
         messages
       );
     } else {
+      // Usar Gemini
       const model = genAI.getGenerativeModel({ model: LLM_MODELS.gemini });
 
       const history = chatHistory
@@ -167,7 +187,7 @@ El usuario está en Guatemala, con clima templado a subtropical.
 
     return NextResponse.json({
       response: responseText,
-      plantName: plantName, // Esto será "Botánica General" o el nombre de la planta
+      plantName: plantName,
       provider: CURRENT_LLM_PROVIDER,
     });
   } catch (error) {

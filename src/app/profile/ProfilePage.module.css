@@ -90,7 +90,6 @@
   }
 }
 
-/* Sección Datos */
 .fieldGroup {
   display: flex;
   flex-direction: column;
@@ -144,7 +143,6 @@
   cursor: not-allowed;
 }
 
-/* Mensajes */
 .errorMessage,
 .successMessage {
   padding: 0.8rem 1rem;
@@ -166,7 +164,6 @@
   border: 1px solid #a5d6a7;
 }
 
-/* Loading */
 .loadingSpinner {
   display: flex;
   flex-direction: column;
@@ -186,7 +183,42 @@
   animation: spin 1s linear infinite;
 }
 
-/* Responsive */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fieldGroup label {
+  font-weight: 600;
+  color: var(--color-text-light);
+}
+
+.fieldGroup input,
+.fieldGroup select {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--border-radius) / 2);
+  font-size: 1rem;
+  font-family: var(--font-main);
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.fieldGroup input:disabled,
+.fieldGroup select:disabled,
+.readOnlyInput {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+  color: #777;
+}
+
+.inputHint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: -0.2rem;
+}
+
 @media (max-width: 600px) {
   .container {
     margin: 1rem;
