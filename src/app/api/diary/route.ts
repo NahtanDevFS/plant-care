@@ -2,9 +2,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers"; // Importa cookies desde next/headers
+import { cookies } from "next/headers";
 
-// Helper para crear cliente Supabase en Route Handlers
+//Helper para crear cliente Supabase en Route Handlers
 async function createSupabaseClient() {
   const cookieStore = await cookies();
   return createServerClient(
@@ -15,13 +15,12 @@ async function createSupabaseClient() {
         async get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        // Puedes agregar set y remove si necesitas modificar cookies en la respuesta
       },
     }
   );
 }
 
-// --- OBTENER ENTRADAS DEL DIARIO PARA UNA PLANTA (GET) ---
+// obtener entradas del diario para una planta (GET)
 export async function GET(request: NextRequest) {
   const supabase = await createSupabaseClient();
   const { searchParams } = new URL(request.url);
@@ -60,7 +59,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// --- CREAR UNA NUEVA ENTRADA EN EL DIARIO (POST) ---
+// crear las entradas del diario (POST)
 export async function POST(request: NextRequest) {
   const supabase = await createSupabaseClient();
   const {
@@ -94,8 +93,6 @@ export async function POST(request: NextRequest) {
 
       if (uploadError) {
         console.error("Error uploading image:", uploadError);
-        // Considera si quieres fallar aquí o continuar sin imagen
-        // throw new Error(`Error al subir imagen: ${uploadError.message}`);
       } else if (uploadData?.path) {
         const {
           data: { publicUrl },
@@ -115,11 +112,11 @@ export async function POST(request: NextRequest) {
           image_url: imageUrl,
           entry_date: entryDate
             ? new Date(entryDate).toISOString()
-            : new Date().toISOString(), // Usar fecha del cliente o actual
+            : new Date().toISOString(), // Usar fecha actual
         },
       ])
       .select() // Devuelve la entrada creada
-      .single(); // Esperamos solo una
+      .single();
 
     if (insertError) throw insertError;
 
@@ -132,7 +129,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// --- ELIMINAR UNA ENTRADA DEL DIARIO (DELETE) ---
+// eliminar una entrada del diario (DELETE)
 export async function DELETE(request: NextRequest) {
   const supabase = await createSupabaseClient();
   const { searchParams } = new URL(request.url);
@@ -153,12 +150,12 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    // 1. Obtener la entrada para verificar el usuario y obtener la URL de la imagen
+    // Obtener la entrada para verificar el usuario y obtener la URL de la imagen
     const { data: entry, error: fetchError } = await supabase
       .from("plant_diary_entries")
       .select("image_url, user_id")
       .eq("id", entryId)
-      .eq("user_id", user.id) // ¡Importante! Asegurar que el usuario es el dueño
+      .eq("user_id", user.id) // Asegurar que el usuario es el dueño
       .single();
 
     if (fetchError || !entry) {
@@ -169,7 +166,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 2. Eliminar la imagen del storage si existe
+    // Eliminar la imagen del storage si existe
     if (entry.image_url) {
       const imageUrlPath = new URL(entry.image_url).pathname;
       const fileName = imageUrlPath.split("/").slice(3).join("/"); // Extrae 'public/plant_images/'
@@ -177,13 +174,11 @@ export async function DELETE(request: NextRequest) {
       if (fileName) {
         console.log("Attempting to delete image:", fileName);
         const { error: storageError } = await supabase.storage
-          .from("plant_images") // Usa tu bucket
+          .from("plant_images") // Usa el bucket
           .remove([fileName]);
 
         if (storageError) {
-          // Decide si quieres fallar o solo loguear el error y continuar
           console.error("Error deleting image from storage:", storageError);
-          // Considera no lanzar un error aquí para permitir borrar la entrada de DB
         } else {
           console.log("Image deleted successfully from storage.");
         }
@@ -195,12 +190,12 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    // 3. Eliminar la entrada de la base de datos
+    // Eliminar la entrada de la base de datos
     const { error: deleteError } = await supabase
       .from("plant_diary_entries")
       .delete()
       .eq("id", entryId)
-      .eq("user_id", user.id); // Doble verificación
+      .eq("user_id", user.id);
 
     if (deleteError) {
       console.error("Error deleting database entry:", deleteError);

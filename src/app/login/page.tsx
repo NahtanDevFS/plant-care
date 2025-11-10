@@ -31,7 +31,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Forzamos un refresh para que el middleware se ejecute con la nueva sesión
     router.refresh();
   };
 

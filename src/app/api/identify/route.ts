@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     const finalData = await detailsResponse.json();
 
-    // Devolvemos las sugerencias del resultado final que ya incluyen los detalles.
+    // Devolvemos las sugerencias del resultado final que ya incluyen los detalles
     return NextResponse.json({
       suggestions: finalData.result.classification.suggestions,
     });

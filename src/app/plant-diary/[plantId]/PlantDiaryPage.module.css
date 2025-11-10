@@ -1,7 +1,7 @@
 /* src/app/plant-diary/[plantId]/PlantDiaryPage.module.css */
 
 .pageContainer {
-  max-width: 900px; /* Ajusta el ancho según prefieras */
+  max-width: 900px;
   margin: 2rem auto;
   padding: 2rem;
   background-color: #fff;
@@ -16,7 +16,7 @@
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid var(--color-primary);
-  flex-wrap: wrap; /* Para pantallas pequeñas */
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
@@ -36,16 +36,14 @@
   color: var(--color-primary);
   font-size: 2rem;
   margin: 0;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-/* --- AÑADIDO --- */
 .header h1 svg {
   stroke-width: 2.5;
-  font-size: 1.8rem; /* Ligeramente más pequeño que el h1 */
+  font-size: 1.8rem;
 }
 
 .backButton {
@@ -58,13 +56,11 @@
   font-weight: 500;
   transition: all 0.2s ease;
   font-size: 0.9rem;
-  /* --- AÑADIDO --- */
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* --- AÑADIDO --- */
 .backButton svg {
   font-size: 1rem;
   stroke-width: 2.5;
@@ -110,7 +106,6 @@
   margin-top: 1rem;
 }
 
-/* Responsive */
 @media (max-width: 600px) {
   .pageContainer {
     margin: 1rem;
@@ -124,7 +119,7 @@
     font-size: 1.6rem;
   }
   .backButton {
-    align-self: flex-start; /* Alinea el botón a la izquierda */
+    align-self: flex-start;
     margin-top: 0.5rem;
   }
 }

@@ -1,6 +1,5 @@
 /* src/components/Sidebar.module.css */
 
-/* --- Estilos para la Barra Lateral (Escritorio) --- */
 .sidebar {
   width: 250px;
   background-color: #ffffff;
@@ -37,17 +36,15 @@
   font-weight: 500;
   transition: background-color 0.2s ease, color 0.2s ease;
 
-  /* --- LÍNEAS AÑADIDAS --- */
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* 12px de espacio entre ícono y texto */
+  gap: 0.75rem;
 }
 
-/* --- NUEVA REGLA para estilizar el ícono --- */
 .sidebarNav a svg {
-  flex-shrink: 0; /* Evita que el ícono se encoja */
-  font-size: 1.1rem; /* Tamaño del ícono */
-  stroke-width: 2.5; /* Grosor de línea (se ve bien con Feather icons) */
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  stroke-width: 2.5;
 }
 
 .sidebarNav a:hover {
@@ -55,7 +52,6 @@
   color: var(--color-primary);
 }
 
-/* --- NUEVO: Estilo para el enlace activo --- */
 .sidebarNav a.active {
   background-color: var(--color-primary);
   color: white;
@@ -98,23 +94,18 @@
   color: white;
 }
 
-/* --- Estilos para la Barra Superior (Móvil) --- */
 .mobileHeader {
-  display: none; /* Oculto por defecto */
+  display: none;
 }
 
-/* --- Overlay y Menú Desplegable (Móvil) --- */
 .mobileNavOverlay {
-  display: none; /* Oculto por defecto */
+  display: none;
 }
 
-/* ... al final de tu archivo src/components/Sidebar.module.css ... */
-
-/* --- Estilos para el botón de notificaciones --- */
 .notificationButton {
   width: 100%;
   padding: 0.6rem;
-  margin-bottom: 0.75rem; /* Espacio antes del botón de cerrar sesión */
+  margin-bottom: 0.75rem;
   border: 1px solid #757575;
   background-color: transparent;
   color: #757575;
@@ -137,14 +128,11 @@
   color: var(--color-primary);
 }
 
-/* --- Media Queries para Responsividad --- */
 @media (max-width: 768px) {
-  /* Ocultamos la barra lateral en móvil */
   .sidebar {
     display: none;
   }
 
-  /* Mostramos y estilizamos la barra superior */
   .mobileHeader {
     display: flex;
     align-items: center;
@@ -166,7 +154,6 @@
     margin: 0;
   }
 
-  /* Estilos del botón de hamburguesa */
   .hamburgerButton {
     background: none;
     border: none;
@@ -175,7 +162,6 @@
     color: var(--color-text);
   }
 
-  /* Estilos para el overlay del menú móvil cuando está abierto */
   .mobileNavOverlay {
     display: block;
     position: fixed;
@@ -188,7 +174,6 @@
     animation: fadeIn 0.3s ease-in-out;
   }
 
-  /* Contenido del menú que se desliza */
   .mobileNavContent {
     position: absolute;
     top: 0;
@@ -214,7 +199,6 @@
     cursor: pointer;
   }
 
-  /* Reutilizamos los estilos de la navegación y el usuario */
   .mobileNavContent .sidebarNav,
   .mobileNavContent .sidebarUser {
     display: flex;
@@ -222,11 +206,10 @@
   }
 }
 
-/* Agrégalo al final de src/components/Sidebar.module.css */
 .userEmail {
   font-size: 0.8rem;
   color: #ccc;
-  word-break: break-all; /* Para evitar que emails largos rompan el diseño */
+  word-break: break-all;
   margin-top: -10px;
   margin-bottom: 15px;
 }
@@ -250,7 +233,6 @@
   color: var(--color-text);
 }
 
-/* Animaciones para el menú móvil */
 @keyframes fadeIn {
   from {
     opacity: 0;

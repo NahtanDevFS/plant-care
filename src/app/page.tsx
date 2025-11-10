@@ -102,7 +102,6 @@ export default function HomePage() {
 
   const openCamera = async (mode: "user" | "environment") => {
     try {
-      // Detener stream anterior si existe
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
       }
@@ -111,7 +110,6 @@ export default function HomePage() {
       setCameraStream(stream);
       setFacingMode(mode);
 
-      // Asignar stream al video
       const videoElement = document.getElementById(
         "camera-video"
       ) as HTMLVideoElement;
@@ -163,13 +161,11 @@ export default function HomePage() {
     openCamera(newMode);
   };
 
-  // Efecto para abrir la cámara automáticamente cuando se muestra el modal
   useEffect(() => {
     if (showCamera && !cameraStream) {
       openCamera(facingMode);
     }
 
-    // Limpiar el stream cuando se desmonta el componente
     return () => {
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
@@ -180,7 +176,6 @@ export default function HomePage() {
   const processImage = async (file: File) => {
     setIsCompressing(true);
     try {
-      // Comprimir la imagen antes de usarla
       const compressedImage = await compressImage(file, 1200, 1200, 0.85);
 
       setImage(compressedImage);
@@ -248,7 +243,6 @@ export default function HomePage() {
     formData.append("image", image);
     formData.append("plantName", suggestion.name);
 
-    // Obtener el primer nombre común si existe, si no, enviar string vacío
     const commonName =
       suggestion.details.common_names &&
       suggestion.details.common_names.length > 0
@@ -295,7 +289,6 @@ export default function HomePage() {
         <div className={styles.cameraModal}>
           <div className={styles.cameraContainer}>
             <div className={styles.cameraHeader}>
-              {/* --- 2. ÍCONO REEMPLAZADO --- */}
               <h2>
                 <FiCamera /> Capturar Foto
               </h2>
@@ -325,7 +318,6 @@ export default function HomePage() {
                 className={styles.switchCameraButton}
                 disabled={isCompressing}
               >
-                {/* --- 3. ÍCONO REEMPLAZADO --- */}
                 <FiRefreshCw /> Cambiar Cámara
               </button>
               <button
@@ -333,7 +325,6 @@ export default function HomePage() {
                 className={styles.captureButton}
                 disabled={isCompressing}
               >
-                {/* --- 4. ÍCONO REEMPLAZADO --- */}
                 {isCompressing ? (
                   "Procesando..."
                 ) : (
@@ -349,7 +340,6 @@ export default function HomePage() {
 
       <main className={styles.container}>
         <div className={styles.header}>
-          {/* --- 5. AÑADIDO EMOJI DE LOGO --- */}
           <h1>🌿 PlantCare</h1>
           <p>Identifica tus plantas y aprende a cuidarlas al instante.</p>
         </div>
@@ -376,7 +366,6 @@ export default function HomePage() {
 
           <div className={styles.buttonGroup}>
             <label htmlFor="file-upload" className={styles.uploadButton}>
-              {/* --- 6. ÍCONO REEMPLAZADO --- */}
               <FiUpload /> Subir Foto
               <input
                 id="file-upload"
@@ -393,7 +382,6 @@ export default function HomePage() {
               disabled={loading || isCompressing}
               className={styles.cameraButton}
             >
-              {/* --- 7. ÍCONO REEMPLAZADO --- */}
               <FiCamera /> Tomar Foto
             </button>
           </div>

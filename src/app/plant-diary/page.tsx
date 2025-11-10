@@ -1,7 +1,7 @@
 // src/app/plant-diary/page.tsx
 "use client";
 
-import { useEffect, useState, useMemo } from "react"; // Import useMemo
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
@@ -19,7 +19,7 @@ export default function SelectPlantForDiaryPage() {
   const [allPlants, setAllPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para la búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -34,13 +34,13 @@ export default function SelectPlantForDiaryPage() {
           .from("plants")
           .select("id, name, image_url")
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false }); // Más recientes primero
+          .order("created_at", { ascending: false });
 
         if (fetchError) {
           console.error("Error fetching plants:", fetchError);
           setError("No se pudieron cargar tus plantas.");
         } else {
-          setAllPlants(data || []); // Guardar todas las plantas aquí
+          setAllPlants(data || []);
         }
       } else {
         setError("Usuario no autenticado.");
@@ -51,10 +51,9 @@ export default function SelectPlantForDiaryPage() {
     fetchPlants();
   }, [supabase]);
 
-  // Filtrar plantas basado en searchTerm usando useMemo
   const filteredPlants = useMemo(() => {
     if (!searchTerm) {
-      return allPlants; // Si no hay búsqueda, devuelve todas
+      return allPlants;
     }
     return allPlants.filter((plant) =>
       plant.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -114,7 +113,7 @@ export default function SelectPlantForDiaryPage() {
             Identificar Planta
           </Link>
         </div>
-      ) : filteredPlants.length === 0 ? ( // Comprueba si no hay resultados de búsqueda
+      ) : filteredPlants.length === 0 ? (
         <div className={styles.emptyState}>
           <span className={styles.emptyIcon}>
             <FiArchive />
@@ -123,7 +122,6 @@ export default function SelectPlantForDiaryPage() {
           <p>No hay plantas que coincidan con tu búsqueda: {searchTerm}.</p>
         </div>
       ) : (
-        // Mapea sobre las plantas filtradas
         <div className={styles.plantsGrid}>
           {filteredPlants.map((plant) => (
             <Link

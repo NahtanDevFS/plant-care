@@ -6,7 +6,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CURRENT_LLM_PROVIDER, LLM_MODELS } from "@/lib/llm-config";
 import * as GroqClient from "@/lib/groq-client";
 
-// Inicializa el SDK de Google
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 async function getCareInstructions(plantName: string): Promise<string> {
@@ -159,10 +158,10 @@ export async function POST(request: NextRequest) {
 
     const careInstructions = await getCareInstructions(plantName);
 
-    // 'metadata' solo contiene care_level, pet_friendly, is_toxic
+    // solo contiene care_level, pet_friendly, is_toxic
     const metadata = extractPlantMetadata(careInstructions);
 
-    // Convertir string vacío (o nulo) a null para la base de datos
+    // Convertir string vacío a null para la base de datos
     const commonNameForDB =
       commonNameFromClient && commonNameFromClient.trim() !== ""
         ? commonNameFromClient.trim()

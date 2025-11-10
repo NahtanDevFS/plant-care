@@ -5,8 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
-import styles from "./ProfilePage.module.css"; // Crearemos este CSS
-import type { User } from "@supabase/supabase-js"; // Importar User type
+import styles from "./ProfilePage.module.css";
+import type { User } from "@supabase/supabase-js";
 import { FiUser } from "react-icons/fi";
 
 type Profile = {
@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [user, setUser] = useState<User | null>(null); // Estado para el usuario de auth
+  const [user, setUser] = useState<User | null>(null);
   const [usernameInput, setUsernameInput] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -34,7 +34,6 @@ export default function ProfilePage() {
       setError(null);
       setSuccessMessage(null);
 
-      // Primero obtener el usuario de auth
       const {
         data: { user: authUser },
         error: authError,
@@ -45,17 +44,17 @@ export default function ProfilePage() {
         setLoading(false);
         return;
       }
-      setUser(authUser); // Guardar info de auth (ej. email)
+      setUser(authUser);
 
       try {
-        const response = await fetch("/api/profile"); // Llama al GET
+        const response = await fetch("/api/profile");
         if (!response.ok) {
           throw new Error("Error al cargar el perfil.");
         }
         const data: Profile = await response.json();
         setProfile(data);
-        setUsernameInput(data.username || ""); // Inicializa el input
-        setAvatarPreview(data.avatar_url); // Muestra avatar actual
+        setUsernameInput(data.username || "");
+        setAvatarPreview(data.avatar_url);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error desconocido.");
         console.error("Fetch profile error:", err);
@@ -74,14 +73,13 @@ export default function ProfilePage() {
       setError(null);
       setSuccessMessage(null);
       try {
-        const compressed = await compressImage(file, 400, 400, 0.8); // Comprime a 400x400 max
+        const compressed = await compressImage(file, 400, 400, 0.8);
         setAvatarFile(compressed);
-        setAvatarPreview(URL.createObjectURL(compressed)); // Muestra vista previa del nuevo
+        setAvatarPreview(URL.createObjectURL(compressed));
       } catch (compressError) {
         console.error("Error compressing avatar:", compressError);
         setError("Error al procesar la imagen.");
         setAvatarFile(null);
-        // Mantiene la preview anterior si falla la compresión
       } finally {
         setIsCompressing(false);
       }
@@ -95,9 +93,7 @@ export default function ProfilePage() {
     setSuccessMessage(null);
 
     const formData = new FormData();
-    // Añadir username solo si ha cambiado respecto al perfil actual
     if (usernameInput.trim() !== (profile?.username || "")) {
-      // Validar longitud mínima aquí también por si acaso
       if (usernameInput.trim().length > 0 && usernameInput.trim().length < 3) {
         setError("El nombre de usuario debe tener al menos 3 caracteres.");
         setIsSaving(false);
@@ -136,11 +132,11 @@ export default function ProfilePage() {
       }
 
       const updatedProfile: Profile = await response.json();
-      setProfile(updatedProfile); // Actualiza el estado local con la respuesta
-      setUsernameInput(updatedProfile.username || ""); // Sincroniza input
-      setAvatarPreview(updatedProfile.avatar_url); // Actualiza preview
-      setAvatarFile(null); // Limpia el archivo seleccionado
-      if (fileInputRef.current) fileInputRef.current.value = ""; // Limpia input file visualmente
+      setProfile(updatedProfile);
+      setUsernameInput(updatedProfile.username || "");
+      setAvatarPreview(updatedProfile.avatar_url);
+      setAvatarFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setSuccessMessage("Perfil actualizado con éxito!");
     } catch (err) {
       setError(
@@ -165,7 +161,6 @@ export default function ProfilePage() {
 
   return (
     <div className={styles.container}>
-      {/* --- 2. ÍCONO REEMPLAZADO --- */}
       <h1>
         <FiUser /> Mi Perfil
       </h1>
@@ -176,17 +171,16 @@ export default function ProfilePage() {
       )}
 
       <form onSubmit={handleSaveProfile} className={styles.profileForm}>
-        {/* Sección Avatar */}
         <div className={styles.avatarSection}>
           <div className={styles.avatarPreview}>
             <Image
-              src={avatarPreview || "/plant-care.png"} // Fallback a imagen por defecto
+              src={avatarPreview || "/plant-care.png"}
               alt="Avatar"
               width={120}
               height={120}
               className={styles.avatarImage}
-              unoptimized // Si usas Supabase Storage gratuito
-              key={avatarPreview} // Forza re-render si la URL cambia
+              unoptimized
+              key={avatarPreview}
             />
           </div>
           <label htmlFor="avatar-upload" className={styles.uploadButton}>
@@ -204,14 +198,13 @@ export default function ProfilePage() {
           {isCompressing && <div className={styles.miniSpinner}></div>}
         </div>
 
-        {/* Sección Datos */}
         <div className={styles.fieldGroup}>
           <label htmlFor="email">Correo Electrónico</label>
           <input
             id="email"
             type="email"
-            value={user?.email || ""} // Muestra el email de auth
-            disabled // No editable
+            value={user?.email || ""}
+            disabled
             className={styles.readOnlyInput}
           />
         </div>

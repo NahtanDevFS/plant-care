@@ -11,7 +11,7 @@ type ReminderSetupProps = {
   plantId: number;
   careType: "Riego" | "Fertilizante";
   initialFrequency: number | null;
-  onSave: (frequency: number) => void; // Síncrono para actualizar estado local
+  onSave: (frequency: number) => void;
   onDelete: () => Promise<void>;
 };
 
@@ -25,7 +25,7 @@ export default function ReminderSetup({
   const supabase = createClient();
   const [frequency, setFrequency] = useState<number | null>(initialFrequency);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false); // Estado para borrado
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSave = async () => {
@@ -52,22 +52,16 @@ export default function ReminderSetup({
         .eq("user_id", user.id)
         .single();
 
-      // Obtenemos la fecha y hora local del navegador
       const today = new Date();
 
-      // Restamos 6 horas para compensar la zona horaria GTM-6
-      // Esto asegura que si son las 9 PM (GTM-6), se considere el mismo día
       today.setHours(today.getHours() - 6);
 
       const nextReminderDate = new Date(today);
       nextReminderDate.setDate(nextReminderDate.getDate() + frequency);
 
-      // .toISOString() convierte a UTC. Restar 6h antes asegura que el día UTC sea el correcto.
       const nextDateString = nextReminderDate.toISOString().split("T")[0];
-      // --- FIN DE LA MODIFICACIÓN ---
 
       if (reminderError || !reminder) {
-        // Si no existe, crear uno nuevo
         const { error: insertError } = await supabase.from("reminders").insert([
           {
             plant_id: plantId,
@@ -80,7 +74,6 @@ export default function ReminderSetup({
 
         if (insertError) throw insertError;
       } else {
-        // 3. Actualizar el recordatorio existente
         const { error: updateError } = await supabase
           .from("reminders")
           .update({
@@ -92,7 +85,7 @@ export default function ReminderSetup({
         if (updateError) throw updateError;
       }
 
-      onSave(frequency); // Llamada síncrona
+      onSave(frequency);
       setIsEditing(false);
       toast.success("Recordatorio guardado correctamente");
     } catch (error) {
@@ -166,7 +159,7 @@ export default function ReminderSetup({
         <button
           onClick={() => {
             setIsEditing(false);
-            setFrequency(initialFrequency); // Resetea si cancela
+            setFrequency(initialFrequency);
           }}
           className={styles.cancelButton}
           disabled={isSaving || isDeleting}

@@ -20,8 +20,6 @@ export default function ResetPasswordPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    // El middleware ya ha intercambiado el código por una sesión.
-    // Solo necesitamos verificar que la sesión de usuario existe.
     const checkUserSession = async () => {
       const {
         data: { user },
@@ -60,15 +58,13 @@ export default function ResetPasswordPage() {
       "¡Tu contraseña ha sido actualizada con éxito! Serás redirigido."
     );
 
-    // Después de actualizar, cerramos la sesión de recuperación y vamos a login.
     await supabase.auth.signOut();
     setTimeout(() => {
       router.push("/login");
-      router.refresh(); // Forzamos un refresh para limpiar el estado.
+      router.refresh();
     }, 3000);
   };
 
-  // Muestra un estado de carga mientras se valida la sesión.
   if (checkingSession) {
     return (
       <div className={styles.authContainer}>
@@ -82,7 +78,6 @@ export default function ResetPasswordPage() {
     );
   }
 
-  // Si no se encontró una sesión de usuario, el enlace es inválido.
   if (!user) {
     return (
       <div className={styles.authContainer}>
@@ -97,7 +92,6 @@ export default function ResetPasswordPage() {
     );
   }
 
-  // Si hay sesión, muestra el formulario para cambiar la contraseña.
   return (
     <div className={styles.authContainer}>
       <form onSubmit={handleResetPassword} className={styles.authForm}>

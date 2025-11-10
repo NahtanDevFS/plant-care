@@ -76,7 +76,6 @@ export default function DemoPage() {
         </div>
       )}
 
-      {/* Este div captura todos los clics */}
       <div className={styles.demoWrapper} onClick={triggerModal}>
         <main className={styles.container}>
           <div className={styles.header}>
@@ -110,7 +109,6 @@ export default function DemoPage() {
             <button className={styles.button}>Identificar Planta</button>
           </div>
 
-          {/* Sección de resultados de ejemplo (estática) */}
           <div className={styles.resultsContainer}>
             <h2>Posibles Coincidencias</h2>
             <ul className={styles.resultsList}>

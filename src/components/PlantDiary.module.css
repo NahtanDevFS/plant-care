@@ -50,7 +50,6 @@
   transition: background-color 0.2s ease;
   font-size: 0.9rem;
   white-space: nowrap;
-  /* --- AÑADIDO --- */
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -85,7 +84,6 @@
   line-height: 1;
   cursor: pointer;
   font-weight: bold;
-  /* --- MODIFICADO --- */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -95,7 +93,7 @@
 }
 
 .entryForm button[type="submit"] {
-  margin-left: auto; /* Empuja el botón a la derecha */
+  margin-left: auto;
   padding: 0.6rem 1.5rem;
   background-color: var(--color-primary);
   color: white;
@@ -123,7 +121,7 @@
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin: 0 10px; /* Ajusta según necesites */
+  margin: 0 10px;
 }
 
 @keyframes spin {
@@ -139,7 +137,6 @@
   width: 100%;
 }
 
-/* --- Lista de Entradas --- */
 .entriesList {
   display: flex;
   flex-direction: column;
@@ -174,12 +171,10 @@
   font-size: 1rem;
   color: #999;
   padding: 5px;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   justify-content: center;
 }
-/* --- AÑADIDO --- */
 .deleteEntryButton svg {
   stroke-width: 2.5;
 }
@@ -189,22 +184,22 @@
 
 .entryImageContainer {
   margin-bottom: 1rem;
-  text-align: center; /* O ajusta según prefieras */
+  text-align: center;
 }
 
 .entryImage {
   max-width: 100%;
   height: auto;
-  max-height: 300px; /* Limita altura máxima */
+  max-height: 300px;
   border-radius: calc(var(--border-radius) / 2);
-  object-fit: cover; /* Cambiado a cover para llenar */
+  object-fit: cover;
   border: 1px solid var(--color-border);
 }
 
 .entryNotes {
   line-height: 1.6;
   color: var(--color-text);
-  white-space: pre-wrap; /* Respeta saltos de línea y espacios */
+  white-space: pre-wrap;
 }
 
 .emptyMessage {
@@ -214,10 +209,9 @@
   padding: 2rem 0;
 }
 
-/* --- Estilos para Botón Tomar Foto en el Formulario --- */
 .cameraButtonForm {
   padding: 0.6rem 1rem;
-  background-color: #e0e0e0; /* Similar al de subir */
+  background-color: #e0e0e0;
   color: var(--color-text);
   border: none;
   border-radius: calc(var(--border-radius) / 2);
@@ -226,7 +220,6 @@
   transition: background-color 0.2s ease;
   font-size: 0.9rem;
   white-space: nowrap;
-  /* --- AÑADIDO --- */
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -239,26 +232,24 @@
   cursor: not-allowed;
 }
 
-/* --- AÑADIDO --- */
 .uploadLabel svg,
 .cameraButtonForm svg {
   font-size: 1rem;
   stroke-width: 2.5;
 }
 
-/* --- Estilos Modal de Cámara (Adaptados de HomePage.module.css) --- */
 .cameraModal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.9); /* Un poco menos opaco */
+  background-color: rgba(0, 0, 0, 0.9);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000; /* Asegura que esté por encima de todo */
-  padding: 15px; /* Espacio por si el modal es grande */
+  z-index: 2000;
+  padding: 15px;
   animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -273,12 +264,12 @@
 
 .cameraContainer {
   width: 95%;
-  max-width: 700px; /* Un poco más pequeño quizás */
+  max-width: 700px;
   background-color: #1a1a1a;
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  display: flex; /* Para organizar header, video, controls */
+  display: flex;
   flex-direction: column;
 }
 
@@ -286,7 +277,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem; /* Ajustar padding */
+  padding: 1rem 1.5rem;
   background-color: #2a2a2a;
   border-bottom: 2px solid var(--color-primary);
 }
@@ -294,8 +285,7 @@
 .cameraHeader h2 {
   color: white;
   margin: 0;
-  font-size: 1.3rem; /* Ajustar tamaño */
-  /* --- AÑADIDO --- */
+  font-size: 1.3rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -304,8 +294,8 @@
 .closeModalButton {
   background: none;
   border: none;
-  color: #ccc; /* Más sutil */
-  font-size: 1.8rem; /* Ajustar tamaño */
+  color: #ccc;
+  font-size: 1.8rem;
   cursor: pointer;
   padding: 0;
   width: 35px;
@@ -330,33 +320,32 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  /* max-height: calc(100vh - 200px); Altura máxima del video */
 }
 
 .cameraVideo {
   width: 100%;
   height: auto;
-  max-height: 65vh; /* Limita la altura en pantallas altas */
-  display: block; /* Importante para evitar espacio extra */
+  max-height: 65vh;
+  display: block;
 }
 
 .cameraControls {
   display: flex;
   gap: 1rem;
-  padding: 1rem 1.5rem; /* Ajustar padding */
+  padding: 1rem 1.5rem;
   background-color: #2a2a2a;
   justify-content: center;
-  flex-wrap: wrap; /* Por si no caben los botones */
-  border-top: 1px solid #444; /* Separador sutil */
+  flex-wrap: wrap;
+  border-top: 1px solid #444;
 }
 
 .switchCameraButton,
 .captureButton {
-  padding: 0.8rem 1.5rem; /* Ajustar padding */
+  padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: calc(var(--border-radius) / 2); /* Bordes menos redondeados */
+  border-radius: calc(var(--border-radius) / 2);
   font-family: var(--font-main);
-  font-size: 0.95rem; /* Ajustar tamaño */
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -364,7 +353,7 @@
   align-items: center;
   gap: 0.5rem;
   justify-content: center;
-  min-width: 130px; /* Ancho mínimo */
+  min-width: 130px;
 }
 
 .switchCameraButton {
@@ -374,19 +363,19 @@
 
 .switchCameraButton:hover:not(:disabled) {
   background-color: #555;
-  transform: translateY(-1px); /* Efecto sutil */
+  transform: translateY(-1px);
 }
 
 .captureButton {
   background-color: var(--color-primary);
   color: white;
-  font-size: 1rem; /* Ligeramente más grande */
+  font-size: 1rem;
   box-shadow: 0 3px 8px rgba(76, 175, 80, 0.3);
 }
 
 .captureButton:hover:not(:disabled) {
   background-color: var(--color-primary-dark);
-  transform: translateY(-1px) scale(1.03); /* Efecto sutil */
+  transform: translateY(-1px) scale(1.03);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
@@ -398,7 +387,6 @@
   box-shadow: none;
 }
 
-/* --- AÑADIDO --- */
 .cameraHeader h2 svg,
 .switchCameraButton svg,
 .captureButton svg {
@@ -406,24 +394,23 @@
   font-size: 1.1rem;
 }
 
-/* --- Controles de Filtro y Ordenación --- */
 .filterControls {
   display: flex;
-  flex-wrap: wrap; /* Para que quepan en pantallas pequeñas */
-  gap: 1.5rem; /* Espacio entre grupos de filtros */
+  flex-wrap: wrap;
+  gap: 1.5rem;
   padding: 1rem 1.5rem;
-  background-color: #f8f9fa; /* Fondo ligero */
+  background-color: #f8f9fa;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
-  margin-bottom: 2rem; /* Espacio antes de la lista de entradas */
-  align-items: flex-end; /* Alinea items en la parte inferior */
+  margin-bottom: 2rem;
+  align-items: flex-end;
 }
 
 .filterGroup {
   display: flex;
-  flex-direction: column; /* Label encima del input/select */
-  gap: 0.3rem; /* Espacio entre label y control */
-  min-width: 150px; /* Ancho mínimo para cada grupo */
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 150px;
 }
 
 .filterGroup label {
@@ -442,46 +429,43 @@
   font-size: 0.95rem;
 }
 
-/* Estilos específicos para el grupo de fechas personalizadas */
 .customDateInputs {
-  flex-direction: row; /* Pone los inputs uno al lado del otro */
-  align-items: center; /* Centra verticalmente */
-  gap: 0.5rem; /* Espacio entre label e input */
-  min-width: auto; /* Anula el min-width general */
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: auto;
 }
 
 .customDateInputs label {
-  white-space: nowrap; /* Evita que el label se parta */
+  white-space: nowrap;
 }
 
 .customDateInputs input[type="date"] {
-  max-width: 140px; /* Limita el ancho de los inputs de fecha */
+  max-width: 140px;
 }
 
-/* Responsive para filtros */
 @media (max-width: 768px) {
   .filterControls {
     gap: 1rem;
     padding: 1rem;
   }
   .filterGroup {
-    min-width: 120px; /* Más pequeño en móvil */
-    flex-grow: 1; /* Permite que ocupen el espacio disponible */
+    min-width: 120px;
+    flex-grow: 1;
   }
   .customDateInputs {
-    flex-direction: column; /* Apila en móvil */
-    align-items: stretch; /* Ocupan todo el ancho */
-    width: 100%; /* Ocupa todo el ancho disponible */
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
   }
   .customDateInputs label {
     margin-bottom: 0.2rem;
   }
   .customDateInputs input[type="date"] {
-    max-width: none; /* Ancho completo en móvil */
+    max-width: none;
   }
 }
 
-/* Ajustes Responsive para Modal Cámara */
 @media (max-width: 480px) {
   .cameraHeader {
     padding: 0.8rem 1rem;

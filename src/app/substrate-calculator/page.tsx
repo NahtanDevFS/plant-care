@@ -10,30 +10,29 @@ import {
   FiArchive,
   FiTrash2,
   FiEdit2,
-  FiBox, // <-- Iconos para explicaciones
+  FiBox,
   FiCloudDrizzle,
   FiWind,
   FiFeather,
   FiZap,
 } from "react-icons/fi";
 import { GiPlantSeed } from "react-icons/gi";
-import { toast } from "sonner"; // <-- ¡CAMBIO! Importar toast
+import { toast } from "sonner";
 
 type SubstrateComponent = {
   id: number;
   name: string;
   ph_value: number;
   description?: string | null;
-  function_type?: string | null; // <-- AÑADIDO
+  function_type?: string | null;
 };
 
-// --- MODIFICADO: Añadido function_type ---
 type SelectedComponent = {
   component_id: number;
   name: string;
   ph_value: number;
   percentage: number;
-  function_type?: string | null; // <-- AÑADIDO
+  function_type?: string | null;
 };
 
 type UserMix = {
@@ -72,7 +71,6 @@ export default function SubstrateCalculatorPage() {
       setLoadingComponents(true);
       const { data, error } = await supabase
         .from("substrate_components")
-        // --- MODIFICADO: Pedir la nueva columna ---
         .select("id, name, ph_value, description, function_type")
         .order("name", { ascending: true });
 
@@ -135,7 +133,7 @@ export default function SubstrateCalculatorPage() {
             percentage: percentage,
             name: componentInfo?.name || "Desconocido",
             ph_value: componentInfo?.ph_value || 0,
-            function_type: componentInfo?.function_type || null, // <-- AÑADIDO
+            function_type: componentInfo?.function_type || null,
           };
         });
 
@@ -168,7 +166,6 @@ export default function SubstrateCalculatorPage() {
     }
   }, [selectedComponents]);
 
-  // --- MODIFICADO: Añadir 'function_type' al objeto ---
   const handleAddComponent = () => {
     if (!componentToAdd) return;
     const componentId = parseInt(componentToAdd, 10);
@@ -224,7 +221,7 @@ export default function SubstrateCalculatorPage() {
   const handleSaveMix = async () => {
     if (!mixName.trim()) {
       setError("Por favor, dale un nombre a tu mezcla.");
-      toast.warning("Por favor, dale un nombre a tu mezcla."); // Mensaje efímero
+      toast.warning("Por favor, dale un nombre a tu mezcla.");
       return;
     }
     if (selectedComponents.length === 0) {
@@ -295,7 +292,7 @@ export default function SubstrateCalculatorPage() {
               percentage: percentage,
               name: componentInfo?.name || "Desconocido",
               ph_value: componentInfo?.ph_value || 0,
-              function_type: componentInfo?.function_type || null, // <-- AÑADIDO
+              function_type: componentInfo?.function_type || null,
             };
           }),
         };
@@ -317,7 +314,6 @@ export default function SubstrateCalculatorPage() {
     }
   };
 
-  // --- ¡CAMBIO! Reemplazo de confirm por toast ---
   const handleDeleteMix = async (mixId: number) => {
     setError(null);
     setSuccessMessage(null);
@@ -350,7 +346,6 @@ export default function SubstrateCalculatorPage() {
       }
     };
 
-    // Mostrar confirmación con sonner
     toast.warning("¿Seguro que quieres eliminar esta mezcla guardada?", {
       description: "Esta acción no se puede deshacer.",
       action: {
@@ -439,10 +434,8 @@ export default function SubstrateCalculatorPage() {
     }
   };
 
-  // --- MODIFICADO: Agrupar componentes para el <select> ---
   const groupedAvailableComponents = useMemo(() => {
     const groups: { [key: string]: SubstrateComponent[] } = {};
-    // Filtra los que ya están seleccionados Y los de tipo 'Líquido'
     const available = allComponents.filter(
       (comp) =>
         !selectedComponents.some((sel) => sel.component_id === comp.id) &&
@@ -450,14 +443,13 @@ export default function SubstrateCalculatorPage() {
     );
 
     available.forEach((comp) => {
-      const type = comp.function_type || "Otros"; // Agrupa nulos en 'Otros'
+      const type = comp.function_type || "Otros";
       if (!groups[type]) {
         groups[type] = [];
       }
       groups[type].push(comp);
     });
 
-    // Ordenar los grupos
     const orderedGroups: { [key: string]: SubstrateComponent[] } = {};
     const order = [
       "Base",
@@ -475,7 +467,6 @@ export default function SubstrateCalculatorPage() {
 
     return orderedGroups;
   }, [allComponents, selectedComponents]);
-  // ------------------------------------------------------
 
   return (
     <div className={styles.pageContainer}>
@@ -493,7 +484,6 @@ export default function SubstrateCalculatorPage() {
         <div className={styles.componentSelection}>
           <h2>1. Añadir Componentes</h2>
 
-          {/* --- 4. NUEVO: Explicaciones de Categorías --- */}
           <div className={styles.componentExplanations}>
             <div className={styles.explanationItem}>
               <span>
@@ -526,7 +516,6 @@ export default function SubstrateCalculatorPage() {
               <p>Ajustan el pH o añaden minerales específicos.</p>
             </div>
           </div>
-          {/* ------------------------------------------- */}
 
           {loadingComponents ? (
             <p>Cargando componentes...</p>
@@ -567,7 +556,6 @@ export default function SubstrateCalculatorPage() {
             <div className={styles.addedComponentsInfo}>
               <h4>Componentes en la mezcla:</h4>
               <ul>
-                {/* --- 6. MODIFICADO: Mostrar pH y Tipo --- */}
                 {selectedComponents.map((c) => (
                   <li key={c.component_id}>
                     <GiPlantSeed /> {c.name}
@@ -640,7 +628,6 @@ export default function SubstrateCalculatorPage() {
 
           <div className={styles.phResult}>
             <h2>3. Resultado Estimado</h2>
-            {/* ... (Indicador de pH sin cambios) ... */}
             <div className={styles.phIndicatorContainer}>
               <div className={styles.phScale}>
                 <span className={styles.phLabelAcid}>Ácido</span>
@@ -665,7 +652,6 @@ export default function SubstrateCalculatorPage() {
 
           <div className={styles.saveSection}>
             <h2>4. Guardar Mezcla (Opcional)</h2>
-            {/* ... (Inputs de guardar sin cambios) ... */}
             <input
               type="text"
               placeholder="Nombre de la mezcla (ej. Para Suculentas)"
@@ -720,7 +706,6 @@ export default function SubstrateCalculatorPage() {
           <div className={styles.savedMixesGrid}>
             {savedMixes.map((mix) =>
               editingMixId === mix.id ? (
-                // --- VISTA DE EDICIÓN ---
                 <div
                   key={mix.id}
                   className={`${styles.savedMixCard} ${styles.editing}`}
@@ -763,7 +748,6 @@ export default function SubstrateCalculatorPage() {
                   </div>
                 </div>
               ) : (
-                // --- VISTA NORMAL ---
                 <div key={mix.id} className={styles.savedMixCard}>
                   <div className={styles.savedMixHeader}>
                     <h3>{mix.mix_name}</h3>
@@ -788,7 +772,6 @@ export default function SubstrateCalculatorPage() {
                     pH Estimado: {mix.calculated_ph.toFixed(1)}
                   </p>
                   <ul>
-                    {/* --- 7. MODIFICADO: Mostrar pH y Tipo --- */}
                     {mix.components.map((comp, index) => (
                       <li key={index}>
                         {comp.percentage.toFixed(0)}% de {comp.name}

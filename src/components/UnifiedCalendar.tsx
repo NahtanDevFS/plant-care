@@ -17,9 +17,8 @@ import {
 } from "react-icons/fi";
 import { toast } from "sonner";
 
-// Tipo para tareas pasadas/presentes (desde task_history)
 type Task = {
-  id: string; // ID de task_history
+  id: string;
   plantName: string;
   careType: "Riego" | "Fertilizante";
   isCompleted: boolean;
@@ -27,35 +26,30 @@ type Task = {
   imageUrl: string;
 };
 
-// --- NUEVO TIPO: Para recordatorios futuros (desde reminders) ---
 type FutureReminder = {
-  id: number; // ID de reminders
+  id: number;
   plantName: string;
   careType: "Riego" | "Fertilizante";
   imageUrl: string;
-  // No tiene estado 'isCompleted'
 };
-// -----------------------------------------------------------
 
 type CalendarDay = {
   date: Date;
   isCurrentMonth: boolean;
-  tasks: Task[]; // Tareas de task_history (pasado/presente)
+  tasks: Task[];
   completedCount: number;
   pendingCount: number;
-  futureRemindersCount: number; // Renombrado de futureReminders
-  futureReminderDetails: FutureReminder[]; // Detalles de recordatorios futuros
+  futureRemindersCount: number;
+  futureReminderDetails: FutureReminder[];
 };
 
 export default function UnifiedCalendar() {
   const supabase = createClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [tasks, setTasks] = useState<{ [key: string]: Task[] }>({});
-  // --- NUEVO ESTADO: Detalles de recordatorios futuros ---
   const [futureReminderDetails, setFutureReminderDetails] = useState<{
     [key: string]: FutureReminder[];
   }>({});
-  // ----------------------------------------------------
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -101,7 +95,6 @@ export default function UnifiedCalendar() {
 
       if (taskError) throw taskError;
 
-      // --- Cargar DETALLES de recordatorios futuros ---
       const { data: reminderData, error: reminderError } = await supabase
         .from("reminders")
         .select(
@@ -112,9 +105,7 @@ export default function UnifiedCalendar() {
         .lte("next_reminder_date", lastDayString);
 
       if (reminderError) throw reminderError;
-      // ---------------------------------------------
 
-      // Agrupar tareas por fecha
       const groupedTasks: { [key: string]: Task[] } = {};
       taskData?.forEach((task: any) => {
         const dateKey = task.scheduled_date;
@@ -131,7 +122,6 @@ export default function UnifiedCalendar() {
         });
       });
 
-      // --- Agrupar DETALLES de recordatorios futuros por fecha ---
       const groupedFutureReminders: { [key: string]: FutureReminder[] } = {};
       reminderData?.forEach((reminder: any) => {
         if (reminder.plants) {
@@ -181,7 +171,6 @@ export default function UnifiedCalendar() {
     const prevMonthDate = new Date(year, month - 1);
     const daysInPrevMonth = getDaysInMonth(prevMonthDate);
 
-    // Días del mes anterior
     for (let i = firstDayIndex - 1; i >= 0; i--) {
       const dayNum = daysInPrevMonth - i;
       const date = new Date(year, month - 1, dayNum);
@@ -199,7 +188,6 @@ export default function UnifiedCalendar() {
       });
     }
 
-    // Días del mes actual
     for (let i = 1; i <= daysInCurrentMonth; i++) {
       const date = new Date(year, month, i);
       const dateString = date.toISOString().split("T")[0];
@@ -219,7 +207,6 @@ export default function UnifiedCalendar() {
       });
     }
 
-    // Días del mes siguiente
     const daysRendered = days.length;
     const remainingDays = 42 - daysRendered;
 

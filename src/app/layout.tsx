@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import { Geist, Geist_Mono } from "next/font/google";
-import ClientLayout from "@/components/ClientLayout"; // Importa el nuevo layout
+import ClientLayout from "@/components/ClientLayout";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,7 +24,6 @@ export default function RootLayout({
         <title>PlantCare</title>
       </head>
       <body>
-        {/* Envuelve todo en el ClientLayout */}
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

@@ -4,18 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 export async function POST(request: NextRequest) {
-  // --- Seguridad (Opcional pero Recomendado) ---
-  // const apiKey = request.headers.get('x-api-key');
-  // if (apiKey !== process.env.EMAIL_API_SECRET) {
-  //   console.warn("Intento de acceso no autorizado a la API de correo.");
-  //   return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  // }
-  // --- Fin Seguridad ---
-
   try {
     const { userEmail, userName, plantName, careType } = await request.json();
 
-    // Validación básica de datos recibidos
+    // Validación de datos recibidos
     if (!userEmail || !plantName || !careType) {
       return NextResponse.json(
         { error: "Faltan datos requeridos (userEmail, plantName, careType)" },
@@ -28,17 +20,13 @@ export async function POST(request: NextRequest) {
       service: "gmail",
       auth: {
         user: process.env.GMAIL_FROM,
-        pass: process.env.GMAIL_APP_PASSWORD, // Usa la contraseña de aplicación
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
-      // Opciones adicionales para evitar problemas de TLS en algunos entornos
-      // tls: {
-      //     ciphers:'SSLv3'
-      // }
     });
 
     const careEmoji = careType === "Riego" ? "💧" : "🧪";
     const subject = `${careEmoji} Recordatorio de cuidado para ${plantName} | PlantCare`;
-    const greetingName = userName || "amante de las plantas"; // Usa username o un saludo genérico
+    const greetingName = userName || "amante de las plantas";
 
     // Cuerpo del correo en HTML
     const emailHtml = `
@@ -76,8 +64,8 @@ export async function POST(request: NextRequest) {
 
     // Opciones del correo
     const mailOptions = {
-      from: `"PlantCare App" <${process.env.GMAIL_FROM}>`, // Remitente con nombre
-      to: userEmail, // Destinatario
+      from: `"PlantCare App" <${process.env.GMAIL_FROM}>`,
+      to: userEmail,
       subject: subject,
       html: emailHtml,
     };
@@ -91,7 +79,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Correo enviado con éxito" });
   } catch (error) {
     console.error("Error al enviar el correo:", error);
-    // Evita exponer detalles del error al cliente
     return NextResponse.json(
       { error: "Error interno al enviar el correo." },
       { status: 500 }

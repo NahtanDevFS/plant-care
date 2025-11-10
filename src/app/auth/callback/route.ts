@@ -34,6 +34,5 @@ export async function GET(request: NextRequest) {
   }
 
   console.error("Error en el callback de autenticación o código no encontrado");
-  // Redirigir a una página de error si falla
   return NextResponse.redirect(`${origin}/login?error=auth_failed`);
 }

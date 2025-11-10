@@ -5,7 +5,6 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./PlantChat.module.css";
 import Image from "next/image";
-// Mantenemos los íconos existentes
 import { FiMessageSquare, FiArchive, FiUser, FiSend } from "react-icons/fi";
 
 type Plant = {
@@ -114,9 +113,9 @@ export default function PlantChatPage() {
 
   const handleSelectGeneralChat = () => {
     const generalChatPlant: Plant = {
-      id: 0, // ID 0 para identificar chat general en el backend
+      id: 0,
       name: "Botánica General",
-      image_url: "/plant-care.png", // Usar el logo de la app
+      image_url: "/plant-care.png",
       care_level: null,
     };
     setSelectedPlant(generalChatPlant);
@@ -156,7 +155,7 @@ export default function PlantChatPage() {
         },
         body: JSON.stringify({
           message: inputMessage,
-          plantId: selectedPlant.id, // Esto enviará 0 para chat general
+          plantId: selectedPlant.id,
           chatHistory: chatHistory,
         }),
       });
@@ -253,7 +252,6 @@ export default function PlantChatPage() {
           <div className={styles.separator}>
             <span>O</span>
           </div>
-          {/* --- FIN NUEVA SECCIÓN --- */}
 
           <h2>Selecciona una planta específica</h2>
 

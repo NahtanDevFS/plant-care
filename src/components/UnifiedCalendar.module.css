@@ -242,7 +242,7 @@
   gap: 0.25rem;
   margin-top: 0.25rem;
   justify-content: center;
-  font-size: 0.7rem; /* Tamaño de íconos pequeños */
+  font-size: 0.7rem;
 }
 
 .taskIndicators svg {
@@ -379,14 +379,12 @@
   transform: translateY(-2px);
 }
 
-/* Estilo para items de recordatorios futuros en el panel de detalle */
 .taskFuture {
   background-color: #e3f2fd;
   border-left-color: #2196f3;
-  opacity: 0.85; /* Ligeramente transparente para indicar que no es accionable */
+  opacity: 0.85;
 }
 
-/* Estilo para el título de la sección futura */
 .futureTitle {
   font-size: 1rem;
   color: var(--color-text-light);

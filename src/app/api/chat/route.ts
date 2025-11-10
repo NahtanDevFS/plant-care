@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
     let initialAssistantMessage: string;
 
     if (plantId === 0) {
-      // MODO: CHAT GENERAL
       plantName = "Botánica General";
       plantContext = `
 Eres un experto botánico y jardinero profesional. Estás ayudando a un usuario con preguntas generales sobre botánica, jardinería, y recomendaciones de plantas.
@@ -114,7 +113,6 @@ El usuario está en Guatemala, con clima templado a subtropical.
     let responseText: string;
 
     if (CURRENT_LLM_PROVIDER === "groq") {
-      // Usar Groq
       const messages = [
         { role: "user" as const, content: plantContext },
         {
@@ -135,7 +133,6 @@ El usuario está en Guatemala, con clima templado a subtropical.
         messages
       );
     } else {
-      // Usar Gemini
       const model = genAI.getGenerativeModel({ model: LLM_MODELS.gemini });
 
       const history = chatHistory

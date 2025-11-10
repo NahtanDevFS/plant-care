@@ -44,11 +44,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
-// --- TIPOS DE DATOS ---
 type PlantFromDB = {
   id: number;
   created_at: string;
-  name: string; // Nombre científico
+  name: string;
   common_name: string | null;
   image_url: string;
   care_instructions: string;
@@ -60,7 +59,6 @@ type PlantFromDB = {
 };
 type Plant = PlantFromDB;
 
-// --- CONFIGURACIÓN DE TARJETAS DE CUIDADO ---
 const careConfig = {
   Riego: { icon: <FiDroplet />, color: "#2196F3", bgColor: "#E3F2FD" },
   Luz: { icon: <FiSun />, color: "#FF9800", bgColor: "#FFF3E0" },
@@ -85,7 +83,6 @@ const careConfig = {
 };
 type CareKey = keyof typeof careConfig;
 
-// --- COMPONENTES ---
 const PestDiseaseParser = ({ text }: { text: string }) => {
   const items = text.split(/\d+\.\s+/).filter((s) => s.trim().length > 0);
   return (
@@ -169,7 +166,6 @@ const CareInstructions = ({ text }: { text: string }) => {
   );
 };
 
-// --- Helpers ---
 const parseCareInstructionsForExport = (text: string) => {
   const sections = text.split("### ").filter((s) => s);
   const careData: { [key: string]: string } = {};
@@ -335,9 +331,6 @@ export default function MyPlants() {
     setExpandedPlant(expandedPlant === plantId ? null : plantId);
   };
 
-  // --- ¡CAMBIO! ---
-  // Esta función AHORA SÓLO actualiza el estado local.
-  // El componente hijo (ReminderSetup) se encarga de la llamada a Supabase.
   const handleSaveReminderStateUpdate = (
     plantId: number,
     careType: "Riego" | "Fertilizante",
@@ -356,11 +349,7 @@ export default function MyPlants() {
       })
     );
   };
-  // --- FIN DEL CAMBIO ---
 
-  // --- ¡NUEVO! ---
-  // Esta función SÍ hace la llamada a Supabase para ELIMINAR.
-  // Es llamada por el 'onDelete' de ReminderSetup.
   const handleDeleteReminder = async (
     plantId: number,
     careType: "Riego" | "Fertilizante"
@@ -372,7 +361,6 @@ export default function MyPlants() {
       throw new Error("No estás autenticado");
     }
 
-    // 1. Eliminar de Supabase
     const { error: deleteError } = await supabase
       .from("reminders")
       .delete()
@@ -385,7 +373,6 @@ export default function MyPlants() {
       throw new Error("Error al eliminar el recordatorio de la base de datos.");
     }
 
-    // 2. Actualizar el estado local si la eliminación fue exitosa
     setPlants((prevPlants) =>
       prevPlants.map((p) => {
         if (p.id === plantId) {
@@ -399,7 +386,6 @@ export default function MyPlants() {
       })
     );
   };
-  // --- FIN DE LO NUEVO ---
 
   const handleDeletePlant = async (plantId: number, imageUrl: string) => {
     const performDelete = async () => {
@@ -762,7 +748,6 @@ export default function MyPlants() {
     setIsExporting(false);
   };
 
-  // --- RENDERIZADO ---
   if (loading) {
     return (
       <div className={styles.container}>
@@ -1151,7 +1136,6 @@ export default function MyPlants() {
                               plantId={plant.id}
                               careType="Riego"
                               initialFrequency={plant.watering_frequency_days}
-                              // --- ¡CAMBIO! ---
                               onSave={(f) =>
                                 handleSaveReminderStateUpdate(
                                   plant.id,
@@ -1162,7 +1146,6 @@ export default function MyPlants() {
                               onDelete={() =>
                                 handleDeleteReminder(plant.id, "Riego")
                               }
-                              // --- FIN DEL CAMBIO ---
                             />
                             <ReminderSetup
                               plantId={plant.id}
@@ -1170,7 +1153,6 @@ export default function MyPlants() {
                               initialFrequency={
                                 plant.fertilizing_frequency_days
                               }
-                              // --- ¡CAMBIO! ---
                               onSave={(f) =>
                                 handleSaveReminderStateUpdate(
                                   plant.id,
@@ -1181,7 +1163,6 @@ export default function MyPlants() {
                               onDelete={() =>
                                 handleDeleteReminder(plant.id, "Fertilizante")
                               }
-                              // --- FIN DEL CAMBIO ---
                             />
                           </div>
                           <div className={styles.diaryLinkContainer}>

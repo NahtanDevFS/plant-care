@@ -25,7 +25,6 @@ export async function compressImage(
       img.onerror = () => reject(new Error("Error al cargar la imagen"));
 
       img.onload = () => {
-        // Calcular nuevas dimensiones manteniendo aspect ratio
         let width = img.width;
         let height = img.height;
 
@@ -41,7 +40,6 @@ export async function compressImage(
           }
         }
 
-        // Crear canvas para redimensionar
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
@@ -52,10 +50,8 @@ export async function compressImage(
           return;
         }
 
-        // Dibujar imagen redimensionada
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Convertir a Blob con compresión JPEG
         canvas.toBlob(
           (blob) => {
             if (!blob) {
@@ -63,10 +59,9 @@ export async function compressImage(
               return;
             }
 
-            // Crear nuevo archivo con el blob comprimido
             const compressedFile = new File(
               [blob],
-              file.name.replace(/\.[^/.]+$/, ".jpg"), // Cambiar extensión a .jpg
+              file.name.replace(/\.[^/.]+$/, ".jpg"),
               {
                 type: "image/jpeg",
                 lastModified: Date.now(),

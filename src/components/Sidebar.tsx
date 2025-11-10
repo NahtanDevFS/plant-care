@@ -39,7 +39,6 @@ export default function Sidebar() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      // Solo redirige si no hay sesión Y no estamos ya en una página de autenticación
       if (
         !session &&
         ![
@@ -51,17 +50,16 @@ export default function Sidebar() {
       ) {
         router.push("/login");
       }
-      router.refresh(); // Refresca para actualizar el estado del servidor
+      router.refresh();
     });
 
     return () => {
       subscription?.unsubscribe();
     };
-  }, [supabase, router, pathname]); // Añadir pathname a las dependencias
+  }, [supabase, router, pathname]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    // Forzar recarga completa para limpiar estado y asegurar redirección por middleware
     window.location.assign("/login");
   };
 
@@ -69,7 +67,6 @@ export default function Sidebar() {
     setMobileMenuOpen(false);
   };
 
-  // No renderizar sidebar en páginas de autenticación o mientras carga
   const authRoutes = [
     "/login",
     "/register",
@@ -79,12 +76,10 @@ export default function Sidebar() {
   if (loading || authRoutes.includes(pathname)) {
     return null;
   }
-  // Si no hay usuario después de cargar y no estamos en auth, tampoco renderizar (middleware debería redirigir)
   if (!user && !authRoutes.includes(pathname)) {
     return null;
   }
 
-  // --- 2. REEMPLAZAR ÍCONOS EN NAVLINKS ---
   const NavLinks = () => (
     <nav className={styles.sidebarNav}>
       <Link
@@ -102,9 +97,8 @@ export default function Sidebar() {
         <FiGrid /> Mis Plantas
       </Link>
       <Link
-        href="/plant-diary" // Ahora apunta a la página de lista
+        href="/plant-diary"
         onClick={handleLinkClick}
-        // Se marca activo si la ruta es /plant-diary o empieza con /plant-diary/
         className={
           pathname === "/plant-diary" || pathname.startsWith("/plant-diary/")
             ? styles.active
@@ -114,11 +108,11 @@ export default function Sidebar() {
         <FiBookOpen /> Diario de Plantas
       </Link>
       <Link
-        href="/substrate-calculator" // <--- NUEVA RUTA
+        href="/substrate-calculator"
         onClick={handleLinkClick}
         className={pathname === "/substrate-calculator" ? styles.active : ""}
       >
-        <FiPercent /> Calculadora Sustrato {/* <--- NUEVO ENLACE */}
+        <FiPercent /> Calculadora Sustrato
       </Link>
       <Link
         href="/plant-chat"
@@ -135,12 +129,10 @@ export default function Sidebar() {
         <FiCalendar /> Calendario
       </Link>
 
-      {/* --- NUEVO ENLACE AL PERFIL --- */}
       <Link
         href="/profile"
         onClick={handleLinkClick}
         className={pathname === "/profile" ? styles.active : ""}
-        // Estilo para intentar ponerlo más abajo, ajusta según sea necesario
         style={{
           marginTop: "auto",
           paddingTop: "1rem",
@@ -149,14 +141,11 @@ export default function Sidebar() {
       >
         <FiUser /> Mi Perfil
       </Link>
-      {/* ----------------------------- */}
     </nav>
   );
 
   const UserSection = () => (
     <div className={styles.sidebarUser}>
-      {/* Opcional: podrías mostrar el username si lo cargas aquí */}
-      {/* <span className={styles.userEmail}>{user?.email}</span> */}
       <button onClick={handleSignOut} className={styles.logoutButton}>
         Cerrar Sesión
       </button>
@@ -174,14 +163,13 @@ export default function Sidebar() {
       <div className={styles.sidebarHeader}>
         <h2>🌿 PlantCare</h2>
       </div>
-      <NavLinks /> {/* Usa el NavLinks actualizado */}
+      <NavLinks />
       <UserSection />
     </div>
   );
 
   return (
     <>
-      {/* Sidebar para escritorio */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <h2>🌿 PlantCare</h2>
@@ -190,7 +178,6 @@ export default function Sidebar() {
         <UserSection />
       </aside>
 
-      {/* Header para móvil */}
       <header className={styles.mobileHeader}>
         <Link href="/" className={styles.mobileLogo}>
           <h2>🌿 PlantCare</h2>
@@ -204,16 +191,13 @@ export default function Sidebar() {
         </button>
       </header>
 
-      {/* Menú Overlay para móvil */}
       {isMobileMenuOpen && (
         <div
           className={styles.mobileNavOverlay}
           onClick={() => setMobileMenuOpen(false)}
         >
-          {/* Evita que el click dentro del menú cierre el overlay */}
           <div onClick={(e) => e.stopPropagation()}>
             <MobileNav />{" "}
-            {/* Asegúrate que MobileNav usa el NavLinks actualizado */}
           </div>
         </div>
       )}

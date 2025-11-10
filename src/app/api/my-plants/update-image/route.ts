@@ -31,7 +31,7 @@ function getPathFromUrl(url: string) {
   try {
     const { pathname } = new URL(url);
     const parts = pathname.split("/");
-    const bucketName = "plant_images"; // El nombre del bucket de imágenes
+    const bucketName = "plant_images";
     const bucketIndex = parts.indexOf(bucketName);
     if (bucketIndex === -1 || bucketIndex + 1 >= parts.length) {
       console.warn("No se pudo extraer el path del bucket de la URL:", url);
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       .from("plants")
       .select("image_url")
       .eq("id", plantId)
-      .eq("user_id", user.id) // Asegurar propiedad
+      .eq("user_id", user.id)
       .single();
 
     if (fetchError || !plantData) {
@@ -84,10 +84,9 @@ export async function POST(request: NextRequest) {
     const oldImagePath = getPathFromUrl(plantData.image_url);
 
     // Subir la nueva imagen
-    // Usar plantId en la ruta para organizar mejor
     const fileName = `${user.id}/${plantId}/${Date.now()}-${imageFile.name}`;
     const { error: uploadError, data: uploadData } = await supabase.storage
-      .from("plant_images") // Asegúrate que este es tu bucket correcto
+      .from("plant_images")
       .upload(fileName, imageFile);
 
     if (uploadError) {
@@ -120,13 +119,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Borrar la imagen antigua si existía
+    // Borrar la imagen antigua si existía
     if (oldImagePath) {
       const { error: removeError } = await supabase.storage
         .from("plant_images")
         .remove([oldImagePath]);
       if (removeError) {
-        // No fallar la request por esto, solo loguear el error
         console.error("Error al eliminar imagen antigua:", removeError.message);
       }
     }

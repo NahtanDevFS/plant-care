@@ -1,5 +1,4 @@
 // src/app/api/tasks/create-history/route.ts
-// Este endpoint crea registros en task_history cuando se guarda una planta
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
@@ -58,7 +57,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
-// --- EDGE FUNCTION PARA CREAR TAREAS DIARIAMENTE ---
-// Archivo: supabase/functions/create-daily-tasks/index.ts
-// Se ejecuta diariamente para crear registros de task_history

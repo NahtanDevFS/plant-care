@@ -1,15 +1,13 @@
 /* src/app/globals.css */
 
-/* Importamos una fuente limpia y moderna de Google Fonts */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
 
-/* Definimos nuestras variables de color para un tema consistente */
 :root {
   --font-main: "Poppins", sans-serif;
 
-  --color-primary: #4caf50; /* Un verde vibrante y natural */
+  --color-primary: #4caf50;
   --color-primary-dark: #45a049;
-  --color-secondary: #f4f4f4; /* Un gris muy claro para fondos */
+  --color-secondary: #f4f4f4;
   --color-background: #ffffff;
   --color-text: #333333;
   --color-text-light: #555555;
@@ -18,7 +16,6 @@
   --border-radius: 8px;
 }
 
-/* Reseteo básico y estilos globales */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -45,7 +42,6 @@ h2 {
   margin-bottom: 0.5em;
 }
 
-/* Media query para mejorar la legibilidad en dispositivos pequeños */
 @media (max-width: 768px) {
   html,
   body {

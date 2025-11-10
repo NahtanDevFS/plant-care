@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Si el usuario envía un string vacío, lo guardamos como NULL
+    // Si el usuario envía un string vacío lo guardamos como NULL
     const nameToUpdate = commonName.trim() === "" ? null : commonName.trim();
 
     const { data: updatedPlant, error: updateError } = await supabase
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       .update({ common_name: nameToUpdate })
       .eq("id", plantId)
       .eq("user_id", user.id)
-      .select("id, name, common_name") // Devuelve los nombres
+      .select("id, name, common_name")
       .single();
 
     if (updateError) {

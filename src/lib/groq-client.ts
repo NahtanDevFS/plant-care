@@ -22,7 +22,6 @@ export async function generateContent(
         temperature: 0.7,
         max_tokens: 4096,
       });
-      // Si tiene éxito, retorna el resultado inmediatamente
       return completion.choices[0]?.message?.content || "";
     } catch (error: any) {
       console.warn(

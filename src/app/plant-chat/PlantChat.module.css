@@ -18,14 +18,12 @@
   font-size: 2.5rem;
   color: var(--color-primary);
   margin-bottom: 0.5rem;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
 }
 
-/* --- AÑADIDO --- */
 .header h1 svg {
   stroke-width: 2.5;
   font-size: 2.2rem;
@@ -36,7 +34,6 @@
   font-size: 1.1rem;
 }
 
-/* SELECTOR DE PLANTA */
 .plantSelector {
   background-color: white;
   padding: 2rem;
@@ -125,7 +122,6 @@
   transform: none;
 }
 
-/* CONTENEDOR DEL CHAT */
 .chatContainer {
   flex: 1;
   display: flex;
@@ -191,7 +187,6 @@
   color: var(--color-primary);
 }
 
-/* MENSAJES */
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
@@ -240,7 +235,6 @@
   background-color: #2196f3;
 }
 
-/* --- AÑADIDO --- */
 .messageAvatar svg {
   font-size: 1.5rem;
   stroke-width: 2.5;
@@ -321,7 +315,6 @@
   }
 }
 
-/* INPUT DE MENSAJE */
 .inputContainer {
   padding: 1.5rem;
   background-color: white;
@@ -362,11 +355,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  /* --- AÑADIDO --- */
-  padding-left: 3px; /* Pequeño ajuste visual para centrar FiSend */
+  padding-left: 3px;
 }
 
-/* --- AÑADIDO --- */
 .sendButton svg {
   font-size: 1.3rem;
   stroke-width: 2.5;
@@ -383,7 +374,6 @@
   transform: none;
 }
 
-/* ESTADOS */
 .loadingSpinner {
   display: flex;
   flex-direction: column;
@@ -418,18 +408,15 @@
   font-size: 4rem;
   display: block;
   margin-bottom: 1rem;
-  /* --- AÑADIDO --- */
   color: var(--color-primary);
 }
 
-/* --- AÑADIDO --- */
 .emptyIcon svg {
   stroke-width: 1.5;
 }
 
-/* --- Barra de Búsqueda --- */
 .searchContainer {
-  margin-bottom: 1.5rem; /* Espacio antes de la cuadrícula */
+  margin-bottom: 1.5rem;
 }
 
 .searchInput {
@@ -447,15 +434,13 @@
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
-/* Mensaje si no hay resultados */
 .noResults {
   text-align: center;
   color: var(--color-text-light);
-  margin: 2rem 0; /* Espacio si no hay grid */
+  margin: 2rem 0;
   font-style: italic;
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -515,12 +500,11 @@
   }
 }
 
-/* --- NUEVO: Separador "O" --- */
 .separator {
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 2rem 1rem 1rem 1rem; /* Ajustado */
+  margin: 2rem 1rem 1rem 1rem;
   color: var(--color-text-light);
   font-weight: 500;
 }
@@ -535,9 +519,8 @@
   background-color: white;
 }
 
-/* --- NUEVO: Botón de Chat General --- */
 .generalChatContainer {
-  margin-bottom: 0rem; /* Ajustado */
+  margin-bottom: 0rem;
 }
 
 .generalChatButton {
@@ -581,18 +564,15 @@
   color: var(--color-text-light);
 }
 
-/* Ajuste al botón de chat específico */
 .selectButton {
   background-color: var(--color-primary);
 }
 
-/* --- MODIFICADO: Ajuste al avatar de IA en el chat --- */
 .messageAI .messageAvatar svg {
   font-size: 1.5rem;
   stroke-width: 2.5;
 }
 
-/* Ajuste responsive para los nuevos botones */
 @media (max-width: 768px) {
   .generalChatButton {
     padding: 1rem;

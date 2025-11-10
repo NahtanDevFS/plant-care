@@ -4,10 +4,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import PlantDiary from "@/components/PlantDiary"; // Reutilizaremos el componente
-import styles from "./PlantDiaryPage.module.css"; // Crearemos este CSS
+import PlantDiary from "@/components/PlantDiary";
+import styles from "./PlantDiaryPage.module.css";
 import Image from "next/image";
-import Link from "next/link"; // Para el botón de volver
+import Link from "next/link";
 import { FiBook, FiArrowLeft } from "react-icons/fi";
 
 type Plant = {
@@ -44,7 +44,7 @@ export default function PlantDiaryPage() {
           .from("plants")
           .select("id, name, image_url")
           .eq("id", plantId)
-          .eq("user_id", user.id) // Asegura que la planta pertenece al usuario
+          .eq("user_id", user.id)
           .single();
 
         if (error) {
@@ -79,12 +79,10 @@ export default function PlantDiaryPage() {
     return (
       <div className={styles.pageContainer}>
         <div className={styles.header}>
-          {/* --- 2. ÍCONO REEMPLAZADO --- */}
           <h1>
             <FiBook /> Diario de Planta
           </h1>
           <Link href="/my-plants" className={styles.backButton}>
-            {/* --- 3. ÍCONO REEMPLAZADO --- */}
             <FiArrowLeft /> Volver a Mis Plantas
           </Link>
         </div>

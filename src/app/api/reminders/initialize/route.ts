@@ -1,5 +1,4 @@
 // src/app/api/reminders/initialize/route.ts
-// Este endpoint crea los recordatorios iniciales cuando se guarda una planta
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       care_type: careType,
       next_reminder_date: today.toISOString().split("T")[0],
-      frequency_days: 7, // Default, se actualiza cuando el usuario configura
+      frequency_days: 7,
     }));
 
     const { error: insertError } = await supabase

@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
-// --- CORRECCIÓN DE RUTAS DE IMPORTACIÓN ---
 import { createClient } from "@/lib/supabase/client";
 import {
   compressImage,
@@ -11,13 +10,12 @@ import {
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
 import styles from "@/components/PlantDiary.module.css";
-// ------------------------------------------
 import { FiUpload, FiCamera, FiRefreshCw, FiX, FiTrash2 } from "react-icons/fi";
 import { toast } from "sonner";
 
 type DiaryEntry = {
   id: number;
-  entry_date: string; // Fecha en formato ISO string (UTC o con timezone)
+  entry_date: string;
   notes: string | null;
   image_url: string | null;
   created_at: string;
@@ -27,17 +25,13 @@ type PlantDiaryProps = {
   plantId: number;
 };
 
-// --- Tipos para filtros y ordenación ---
 type DateFilterType = "all" | "week" | "month" | "year" | "custom";
 type SortOrderType = "desc" | "asc";
-// ------------------------------------
 
 export default function PlantDiary({ plantId }: PlantDiaryProps) {
   const supabase = createClient();
-  const [allEntries, setAllEntries] = useState<DiaryEntry[]>([]); // Almacena todas las entradas
+  const [allEntries, setAllEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  // El estado de error ya no es necesario, usaremos toasts
-  // const [error, setError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [newImage, setNewImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -46,27 +40,22 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // --- Estados para la cámara ---
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">(
     "environment"
   );
-  // -----------------------------
 
-  // --- Estados para Filtros y Ordenación ---
   const [dateFilter, setDateFilter] = useState<DateFilterType>("all");
-  const [sortOrder, setSortOrder] = useState<SortOrderType>("desc"); // Descendente por defecto
+  const [sortOrder, setSortOrder] = useState<SortOrderType>("desc");
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
-  // ---------------------------------------
 
   useEffect(() => {
     fetchEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plantId]);
 
-  // Limpieza del stream de cámara
   useEffect(() => {
     return () => {
       if (cameraStream) {
@@ -93,7 +82,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     }
   };
 
-  // --- Lógica de Filtrado y Ordenación (useMemo) ---
   const filteredAndSortedEntries = useMemo(() => {
     let filtered = [...allEntries];
     const now = new Date();
@@ -147,7 +135,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
 
     return filtered;
   }, [allEntries, dateFilter, sortOrder, customStartDate, customEndDate]);
-  // -----------------------------------------------
 
   const processImageFile = async (file: File) => {
     setIsCompressing(true);
@@ -217,7 +204,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
       }
 
       const newEntry: DiaryEntry = await response.json();
-      setAllEntries((prevEntries) => [newEntry, ...prevEntries]); // Añadir al inicio
+      setAllEntries((prevEntries) => [newEntry, ...prevEntries]);
       clearForm();
       toast.success("Entrada del diario guardada.");
     } catch (err) {
@@ -287,7 +274,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     });
   };
 
-  // --- Funciones de Cámara ---
   const handleCameraCapture = () => {
     setShowCamera(true);
     openCamera(facingMode);
@@ -346,11 +332,9 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
     const newMode = facingMode === "environment" ? "user" : "environment";
     openCamera(newMode);
   };
-  // -------------------------
 
   return (
     <>
-      {/* --- Modal de Cámara --- */}
       {showCamera && (
         <div className={styles.cameraModal}>
           <div className={styles.cameraContainer}>
@@ -395,9 +379,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
           </div>
         </div>
       )}
-      {/* ----------------------- */}
 
-      {/* --- Formulario para Nueva Entrada --- */}
       <form onSubmit={handleSubmit} className={styles.entryForm}>
         <textarea
           placeholder="Escribe una nota sobre tu planta..."
@@ -444,7 +426,7 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
                 width={50}
                 height={50}
                 className={styles.imagePreview}
-                unoptimized // Añadido por si acaso
+                unoptimized
               />
               <button
                 type="button"
@@ -469,11 +451,8 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
             {isSubmitting ? "Guardando..." : "Guardar Entrada"}
           </button>
         </div>
-        {/* El 'error' ahora se maneja con toasts, no se necesita este <p> */}
-        {/* {error && <p className={styles.errorMessageForm}>{error}</p>} */}
       </form>
 
-      {/* --- Controles de Filtro y Ordenación --- */}
       <div className={styles.filterControls}>
         <div className={styles.filterGroup}>
           <label htmlFor={`date-filter-${plantId}`}>Mostrar:</label>
@@ -524,7 +503,6 @@ export default function PlantDiary({ plantId }: PlantDiaryProps) {
         </div>
       </div>
 
-      {/* --- Lista de Entradas --- */}
       {loading && <p>Cargando diario...</p>}
       {!loading && filteredAndSortedEntries.length === 0 && (
         <p className={styles.emptyMessage}>

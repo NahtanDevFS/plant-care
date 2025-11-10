@@ -22,7 +22,6 @@
   font-size: 1.1rem;
 }
 
-/* --- ESTADOS (LOADING, EMPTY, ERROR) --- */
 .loadingSpinner {
   display: flex;
   flex-direction: column;
@@ -75,7 +74,6 @@
   margin-top: 2rem;
 }
 
-/* --- CONTROLES DE BÚSQUEDA Y FILTRO --- */
 .controlsToggleButton {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -165,7 +163,6 @@
   font-size: 1rem;
 }
 
-/* --- GRID DE PLANTAS --- */
 .myPlantsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -180,7 +177,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: max-content;
-  border: 3px solid transparent; /* Borde para estado 'selected' */
+  border: 3px solid transparent;
 }
 
 .plantCardExpanded {
@@ -224,11 +221,10 @@
   margin: 0;
   font-size: 1.4rem;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  cursor: pointer; /* Para indicar que abre el acordeón */
+  cursor: pointer;
   word-break: break-word;
 }
 
-/* --- CONTENIDO DE LA TARJETA --- */
 .plantCardContent {
   padding: 1.5rem;
 }
@@ -328,7 +324,6 @@
   color: white;
 }
 
-/* --- SECCIÓN DE CUIDADOS (EXPANDIDA) --- */
 .careInstructionsWrapper {
   margin-top: 1.5rem;
   animation: slideDown 0.5s ease-out;
@@ -490,7 +485,6 @@
   transform: translateY(-2px);
 }
 
-/* Botón de editar sobre la imagen */
 .editImageButton {
   position: absolute;
   top: 10px;
@@ -525,7 +519,6 @@
   cursor: not-allowed;
 }
 
-/* Overlay de carga (pantalla completa) */
 .loadingOverlay {
   position: fixed;
   top: 0;
@@ -539,7 +532,6 @@
   z-index: 9999;
 }
 
-/* --- Estilos Modal de Cámara --- */
 .cameraModal {
   position: fixed;
   top: 0;
@@ -786,7 +778,6 @@
   stroke-width: 2.5;
 }
 
-/* Checkbox de selección en la tarjeta */
 .plantSelectCheckboxContainer {
   position: absolute;
   top: 10px;
@@ -852,7 +843,6 @@
   width: 1px;
 }
 
-/* --- DISEÑO RESPONSIVE --- */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -870,9 +860,6 @@
   }
 }
 
-/* --- NUEVO: Estilos para Edición de Nombre --- */
-
-/* Resaltar tarjeta cuando se edita el nombre */
 .plantCardEditing {
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 10px rgba(76, 175, 80, 0.4) !important;
@@ -880,12 +867,10 @@
 }
 
 .plantNameOverlay h3 {
-  /* h3 es el nombre científico */
-  cursor: pointer; /* Indica que abre el acordeón */
+  cursor: pointer;
   word-break: break-word;
 }
 
-/* Párrafo para mostrar el nombre común */
 .commonNameDisplay {
   font-size: 1rem;
   font-weight: 500;
@@ -896,7 +881,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 4px; /* Espacio del nombre científico */
+  margin-top: 4px;
   border-radius: 4px;
   padding: 2px 6px;
   transition: background-color 0.2s ease;
@@ -915,7 +900,6 @@
   opacity: 1;
 }
 
-/* Contenedor del input y botones de edición */
 .nameEditWrapper {
   display: flex;
   flex-direction: column;
@@ -928,7 +912,7 @@
 .nameEditInput {
   width: 100%;
   padding: 0.6rem 0.75rem;
-  font-size: 1.1rem; /* Ligeramente más pequeño que el h3 */
+  font-size: 1.1rem;
   font-weight: 600;
   border-radius: calc(var(--border-radius) / 2);
   border: 2px solid var(--color-primary);
@@ -987,11 +971,9 @@
   border-left-color: white;
   border-right-color: white;
   border-bottom-color: transparent;
-  animation: spin 0.6s linear infinite; /* Asegura que la animación esté definida */
+  animation: spin 0.6s linear infinite;
 }
 
-/* El nombre científico se vuelve itálico si hay un nombre común */
-/* Este estilo se aplica en el JSX, pero lo dejo aquí como referencia */
 .scientificName {
   font-size: 0.85rem;
   font-style: italic;
@@ -999,5 +981,5 @@
   margin: 0;
   padding: 0;
   font-weight: 400;
-  margin-top: -5px; /* Acerca al nombre principal */
+  margin-top: -5px;
 }
