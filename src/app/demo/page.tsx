@@ -59,7 +59,10 @@ export default function DemoPage() {
                 Esta es una vista previa de la aplicación. Para identificar,
                 guardar y chatear sobre tus plantas, necesitas una cuenta.
               </p>
-              <p>¡Es gratis y solo toma un minuto!</p>
+              <p>
+                Crea una nueva cuenta o inicia sesión en una cuenta que hayas
+                creado.
+              </p>
             </div>
             <div className={styles.modalActions}>
               <button
