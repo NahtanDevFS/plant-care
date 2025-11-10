@@ -60,8 +60,7 @@ export default function DemoPage() {
                 guardar y chatear sobre tus plantas, necesitas una cuenta.
               </p>
               <p>
-                Crea una nueva cuenta o inicia sesión en una cuenta que hayas
-                creado.
+                Crea una cuenta o inicia sesión en una cuenta que ya tengas.
               </p>
             </div>
             <div className={styles.modalActions}>
