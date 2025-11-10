@@ -30,10 +30,8 @@ async function createSupabaseClient() {
 function getPathFromUrl(url: string) {
   try {
     const { pathname } = new URL(url);
-    // Asumiendo una URL como: .../storage/v1/object/public/plant_images/user_id/file.jpg
-    // Queremos la parte: user_id/file.jpg
     const parts = pathname.split("/");
-    const bucketName = "plant_images"; // El nombre de tu bucket
+    const bucketName = "plant_images"; // El nombre del bucket de imágenes
     const bucketIndex = parts.indexOf(bucketName);
     if (bucketIndex === -1 || bucketIndex + 1 >= parts.length) {
       console.warn("No se pudo extraer el path del bucket de la URL:", url);
@@ -69,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Obtener la URL de la imagen antigua
+    // Obtener la URL de la imagen antigua
     const { data: plantData, error: fetchError } = await supabase
       .from("plants")
       .select("image_url")
@@ -85,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
     const oldImagePath = getPathFromUrl(plantData.image_url);
 
-    // 2. Subir la nueva imagen
+    // Subir la nueva imagen
     // Usar plantId en la ruta para organizar mejor
     const fileName = `${user.id}/${plantId}/${Date.now()}-${imageFile.name}`;
     const { error: uploadError, data: uploadData } = await supabase.storage
@@ -97,7 +95,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`Error al subir imagen: ${uploadError.message}`);
     }
 
-    // 3. Obtener la URL pública de la nueva imagen
+    // Obtener la URL pública de la nueva imagen
     const {
       data: { publicUrl: newImageUrl },
     } = supabase.storage.from("plant_images").getPublicUrl(uploadData.path);
@@ -106,12 +104,10 @@ export async function POST(request: NextRequest) {
       throw new Error("No se pudo obtener la URL pública de la nueva imagen");
     }
 
-    // 4. Actualizar la base de datos con la nueva URL
-    // --- CORRECCIÓN AQUÍ ---
-    // Se eliminó 'updated_at' ya que no existe en tu tabla 'plants'
+    // Actualizar la base de datos con la nueva URL
     const { error: updateError } = await supabase
       .from("plants")
-      .update({ image_url: newImageUrl }) // <-- LÍNEA CORREGIDA
+      .update({ image_url: newImageUrl })
       .eq("id", plantId)
       .eq("user_id", user.id);
 
@@ -124,7 +120,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Borrar la imagen antigua (si existía y se pudo extraer el path)
+    // 5. Borrar la imagen antigua si existía
     if (oldImagePath) {
       const { error: removeError } = await supabase.storage
         .from("plant_images")
@@ -135,7 +131,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 6. Devolver la nueva URL
+    //Devolver la nueva URL
     return NextResponse.json({ new_image_url: newImageUrl });
   } catch (error) {
     console.error("Error en POST update-image:", error);

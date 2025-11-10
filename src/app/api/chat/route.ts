@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     const { message, plantId, chatHistory } = await request.json();
 
-    // Modificamos la validación: plantId PUEDE ser 0 (para chat general)
+    //plantId puede ser 0 (para el chat general)
     if (!message || typeof plantId !== "number") {
       return NextResponse.json(
         { error: "Faltan datos requeridos (message o plantId)" },
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     let initialAssistantMessage: string;
 
     if (plantId === 0) {
-      // --- MODO: CHAT GENERAL ---
+      // MODO: CHAT GENERAL
       plantName = "Botánica General";
       plantContext = `
 Eres un experto botánico y jardinero profesional. Estás ayudando a un usuario con preguntas generales sobre botánica, jardinería, y recomendaciones de plantas.
@@ -65,7 +65,6 @@ El usuario está en Guatemala, con clima templado a subtropical. Ten esto en cue
 `;
       initialAssistantMessage = `¡Hola! Soy tu asistente de botánica general. ¿Qué te gustaría saber sobre el mundo de las plantas? 🌳 (Ej. "recomiéndame plantas de interior")`;
     } else {
-      // --- MODO: CHAT DE PLANTA ESPECÍFICA (Lógica existente) ---
       const { data: plant, error: plantError } = await supabase
         .from("plants")
         .select("*")
@@ -97,7 +96,7 @@ ${plant.care_instructions}
 INSTRUCCIONES PARA TI:
 1. Responde de forma clara, amigable y personalizada
 2. Usa la información de la planta para dar consejos específicos
-3. Si el usuario pregunta algo que ya está en la guía de cuidados, referencia esa información
+3. Si el usuario pregunta algo que ya está en la guía de cuidados, referencia esa información (pero recuerda que la información en la guía de cuidados es limitada, tu propósito es ampliar esa información respecto a lo que el usuario desea saber.)
 4. Si la pregunta es sobre síntomas (hojas amarillas, manchas, etc.), sé específico en el diagnóstico
 5. Proporciona soluciones prácticas y fáciles de implementar
 6. Si la pregunta no está relacionada con plantas o jardinería, gentilmente redirige al usuario

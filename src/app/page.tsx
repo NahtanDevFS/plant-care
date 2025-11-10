@@ -248,6 +248,14 @@ export default function HomePage() {
     formData.append("image", image);
     formData.append("plantName", suggestion.name);
 
+    // Obtener el primer nombre común si existe, si no, enviar string vacío
+    const commonName =
+      suggestion.details.common_names &&
+      suggestion.details.common_names.length > 0
+        ? suggestion.details.common_names[0]
+        : "";
+    formData.append("commonName", commonName);
+
     try {
       const response = await fetch("/api/save-plant", {
         method: "POST",

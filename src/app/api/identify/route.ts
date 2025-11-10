@@ -24,14 +24,12 @@ export async function POST(request: NextRequest) {
 
     const API_URL = "https://api.plant.id/v3/identification";
 
-    // --- PASO 1: Enviar la imagen y obtener el access_token ---
     const initialResponse = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Api-Key": apiKey,
       },
-      // En esta primera llamada solo pedimos las imágenes similares
       body: JSON.stringify({
         images: [imageBase64],
         similar_images: true,
@@ -59,7 +57,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- PASO 2: Usar el access_token para obtener los detalles completos ---
     const detailsUrl = `${API_URL}/${accessToken}?details=common_names,url&language=es`;
 
     const detailsResponse = await fetch(detailsUrl, {
@@ -82,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     const finalData = await detailsResponse.json();
 
-    // Devolvemos las sugerencias del resultado final, que ya incluyen los detalles.
+    // Devolvemos las sugerencias del resultado final que ya incluyen los detalles.
     return NextResponse.json({
       suggestions: finalData.result.classification.suggestions,
     });

@@ -20,7 +20,7 @@ export default function ReminderSetup({
   careType,
   initialFrequency,
   onSave,
-  onDelete, // <-- Prop nueva
+  onDelete,
 }: ReminderSetupProps) {
   const supabase = createClient();
   const [frequency, setFrequency] = useState<number | null>(initialFrequency);
@@ -52,7 +52,6 @@ export default function ReminderSetup({
         .eq("user_id", user.id)
         .single();
 
-      // --- INICIO DE LA MODIFICACIÓN (GTM-6) ---
       // Obtenemos la fecha y hora local del navegador
       const today = new Date();
 

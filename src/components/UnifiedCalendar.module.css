@@ -15,14 +15,12 @@
   font-size: 2.5rem;
   color: var(--color-primary);
   margin-bottom: 0.5rem;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
 }
 
-/* --- AÑADIDO --- */
 .header h1 svg {
   stroke-width: 2.5;
 }
@@ -32,7 +30,6 @@
   font-size: 1.1rem;
 }
 
-/* --- LOADING --- */
 .loadingSpinner {
   display: flex;
   flex-direction: column;
@@ -57,7 +54,6 @@
   }
 }
 
-/* --- LEGEND --- */
 .legend {
   display: flex;
   gap: 2rem;
@@ -88,16 +84,13 @@
   border-radius: calc(var(--border-radius) / 2);
   font-weight: bold;
   color: var(--color-text);
-  /* --- MODIFICADO --- */
-  font-size: 1.1rem; /* Tamaño del ícono */
+  font-size: 1.1rem;
 }
 
-/* --- AÑADIDO --- */
 .legendSymbol svg {
   stroke-width: 2.5;
 }
 
-/* --- AÑADIDO --- */
 .legendCompleted {
   color: #4caf50;
   border-color: #a5d6a7;
@@ -121,7 +114,6 @@
   color: #ff9800;
 }
 
-/* --- CALENDAR WRAPPER --- */
 .calendarWrapper {
   display: grid;
   grid-template-columns: 1fr 380px;
@@ -132,7 +124,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* --- CALENDAR --- */
 .calendar {
   background-color: #fafafa;
   border-radius: var(--border-radius);
@@ -162,17 +153,14 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  /* font-size: 1.2rem; <-- REEMPLAZADO */
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: bold;
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* --- AÑADIDO --- */
 .navButton svg {
   font-size: 1.3rem;
   stroke-width: 3;
@@ -183,7 +171,6 @@
   transform: scale(1.1);
 }
 
-/* --- WEEK DAYS --- */
 .weekDays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -200,7 +187,6 @@
   font-size: 0.85rem;
 }
 
-/* --- DAYS GRID --- */
 .days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -256,34 +242,28 @@
   gap: 0.25rem;
   margin-top: 0.25rem;
   justify-content: center;
-  /* --- AÑADIDO --- */
   font-size: 0.7rem; /* Tamaño de íconos pequeños */
 }
 
-/* --- AÑADIDO --- */
 .taskIndicators svg {
   stroke-width: 3;
 }
 
 .completed {
-  /* --- REEMPLAZADO --- */
   color: #4caf50;
   display: inline-flex;
 }
 
 .pending {
-  /* --- REEMPLAZADO --- */
   color: #ff9800;
   display: inline-flex;
 }
 
 .future {
-  /* --- REEMPLAZADO --- */
   color: #2196f3;
   display: inline-flex;
 }
 
-/* --- TASK DETAIL PANEL --- */
 .taskDetail {
   background-color: white;
   border: 1px solid var(--color-border);
@@ -349,13 +329,11 @@
 .taskCare {
   font-size: 0.85rem;
   color: var(--color-text-light);
-  /* --- AÑADIDO --- */
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-/* --- AÑADIDO --- */
 .taskCare svg {
   font-size: 0.9rem;
   stroke-width: 2.5;
@@ -379,7 +357,6 @@
   font-weight: bold;
 }
 
-/* --- AÑADIDO --- */
 .completedBadge svg {
   stroke-width: 3;
 }
@@ -404,8 +381,8 @@
 
 /* Estilo para items de recordatorios futuros en el panel de detalle */
 .taskFuture {
-  background-color: #e3f2fd; /* Fondo azul claro */
-  border-left-color: #2196f3; /* Borde azul */
+  background-color: #e3f2fd;
+  border-left-color: #2196f3;
   opacity: 0.85; /* Ligeramente transparente para indicar que no es accionable */
 }
 
@@ -418,34 +395,30 @@
   font-weight: 600;
 }
 
-/* Estilo para el indicador '◇' en el panel de detalle */
 .futureBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px; /* Mismo tamaño que completedBadge */
+  width: 40px;
   height: 40px;
-  background-color: #bbdefb; /* Fondo azul más claro */
-  color: #1e88e5; /* Azul más oscuro */
+  background-color: #bbdefb;
+  color: #1e88e5;
   border-radius: 50%;
-  font-size: 1.5rem; /* Tamaño del rombo */
+  font-size: 1.5rem;
   font-weight: bold;
   opacity: 0.9;
 }
 
-/* --- AÑADIDO --- */
 .futureBadge svg {
   stroke-width: 3;
 }
 
-/* Separador opcional */
 .detailSeparator {
   border: none;
   border-top: 1px dashed var(--color-border);
   margin: 1.5rem 0;
 }
 
-/* Mensaje si no hay tareas (opcional pero bueno tenerlo) */
 .noTasksMessage {
   text-align: center;
   color: var(--color-text-light);
@@ -454,7 +427,6 @@
   padding: 1rem;
 }
 
-/* --- RESPONSIVE --- */
 @media (max-width: 1024px) {
   .calendarWrapper {
     grid-template-columns: 1fr;
