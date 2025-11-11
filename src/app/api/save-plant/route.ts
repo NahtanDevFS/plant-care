@@ -58,7 +58,6 @@ IMPORTANTE:
 - Cada sección debe empezar exactamente con "### " 
 - En Plagas y Enfermedades, numera con 1. 2. etc
 - No incluyas texto introductorio ni final`;
-    // --- FIN DE LA MODIFICACIÓN (PROMPT) ---
 
     if (CURRENT_LLM_PROVIDER === "groq") {
       const response = await GroqClient.generateContent(
