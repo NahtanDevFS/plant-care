@@ -843,6 +843,84 @@
   width: 1px;
 }
 
+.diaryLinkContainer {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.diaryLinkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.8rem 1.5rem;
+  background-color: var(--color-primary-dark);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  font-size: 0.95rem;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.diaryLinkButton svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
+}
+
+.diaryLinkButton:hover {
+  background-color: #388e3c;
+  transform: translateY(-2px);
+}
+
+.regenerateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.8rem 1.5rem;
+  background-color: transparent;
+  color: #f57c00;
+  border: 2px solid #f57c00;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  cursor: pointer;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.regenerateButton svg {
+  font-size: 1.1rem;
+  stroke-width: 2.5;
+}
+
+.regenerateButton:hover:not(:disabled) {
+  background-color: #f57c00;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(245, 124, 0, 0.3);
+}
+
+.regenerateButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #f0f0f0;
+  color: #a0a0a0;
+  border-color: var(--color-border);
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;

@@ -7,5 +7,5 @@ export const CURRENT_LLM_PROVIDER: LLMProvider = "groq"; //'groq' o 'gemini'
 
 export const LLM_MODELS = {
   gemini: "gemini-2.5-flash",
-  groq: "llama-3.3-70b-versatile",
+  groq: "openai/gpt-oss-120b", //llama-3.3-70b-versatile o openai/gpt-oss-120b
 } as const;

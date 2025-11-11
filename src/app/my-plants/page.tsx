@@ -43,11 +43,12 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import LoadingScreen from "@/components/LoadingScreen";
 
 type PlantFromDB = {
   id: number;
   created_at: string;
-  name: string;
+  name: string; // Nombre científico
   common_name: string | null;
   image_url: string;
   care_instructions: string;
@@ -235,6 +236,9 @@ export default function MyPlants() {
   const [editingNameId, setEditingNameId] = useState<number | null>(null);
   const [editingNameValue, setEditingNameValue] = useState("");
   const [isUpdatingName, setIsUpdatingName] = useState(false);
+
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regeneratingPlantName, setRegeneratingPlantName] = useState("");
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -592,6 +596,59 @@ export default function MyPlants() {
     }
   };
 
+  const handleRegenerateGuide = (plant: Plant) => {
+    setError(null);
+    toast.warning(`¿Actualizar la guía de cuidados para "${plant.name}"?`, {
+      description:
+        "Esto generará una nueva guía basada en tu país actual. La guía anterior se sobrescribirá.",
+      action: {
+        label: "Actualizar",
+        onClick: async () => {
+          setIsRegenerating(true);
+          setRegeneratingPlantName(plant.name);
+          setExpandedPlant(null);
+          try {
+            const response = await fetch("/api/my-plants/regenerate-guide", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                plantId: plant.id,
+                plantName: plant.name,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || "Error al regenerar la guía.");
+            }
+
+            const updatedPlant: Plant = await response.json();
+
+            setPlants((prevPlants) =>
+              prevPlants.map((p) =>
+                p.id === updatedPlant.id ? { ...p, ...updatedPlant } : p
+              )
+            );
+
+            toast.success("¡Guía de cuidados actualizada!");
+          } catch (err) {
+            console.error("Error regenerating guide:", err);
+            const errorMsg =
+              err instanceof Error ? err.message : "Error desconocido.";
+            toast.error(`Error al actualizar: ${errorMsg}`);
+          } finally {
+            setIsRegenerating(false);
+            setRegeneratingPlantName("");
+          }
+        },
+      },
+      cancel: {
+        label: "Cancelar",
+        onClick: () => {},
+      },
+    });
+  };
+
   const handlePlantSelect = (plantId: number) => {
     setSelectedPlants((prev) => {
       const newSet = new Set(prev);
@@ -769,6 +826,13 @@ export default function MyPlants() {
 
   return (
     <>
+      {isRegenerating && (
+        <LoadingScreen
+          message="Regenerando guía..."
+          plantName={regeneratingPlantName}
+        />
+      )}
+
       {isUpdatingImage && (
         <div className={styles.loadingOverlay}>
           <div className={styles.loadingSpinner}>
@@ -918,7 +982,7 @@ export default function MyPlants() {
               <button
                 onClick={handleSelectAll}
                 className={styles.selectButton}
-                disabled={isExporting}
+                disabled={isExporting || isRegenerating}
               >
                 <FiCheckSquare /> Seleccionar{" "}
                 {processedPlants.length > 0
@@ -928,21 +992,27 @@ export default function MyPlants() {
               <button
                 onClick={handleDeselectAll}
                 className={styles.selectButton}
-                disabled={isExporting || selectedPlants.size === 0}
+                disabled={
+                  isExporting || selectedPlants.size === 0 || isRegenerating
+                }
               >
                 <FiSquare /> Deseleccionar
               </button>
               <button
                 onClick={handleExportExcel}
                 className={styles.exportButton}
-                disabled={isExporting || selectedPlants.size === 0}
+                disabled={
+                  isExporting || selectedPlants.size === 0 || isRegenerating
+                }
               >
                 <FiGrid /> Exportar Excel ({selectedPlants.size})
               </button>
               <button
                 onClick={handleExportPDF}
                 className={styles.exportButton}
-                disabled={isExporting || selectedPlants.size === 0}
+                disabled={
+                  isExporting || selectedPlants.size === 0 || isRegenerating
+                }
               >
                 <FiFileText /> Exportar PDF ({selectedPlants.size})
               </button>
@@ -961,6 +1031,12 @@ export default function MyPlants() {
             {processedPlants.map((plant) => {
               const isSelected = selectedPlants.has(plant.id);
               const isEditingName = editingNameId === plant.id;
+              const isBusy =
+                isUpdatingImage ||
+                isCompressing ||
+                isEditingName ||
+                isRegenerating;
+
               return (
                 <div
                   key={plant.id}
@@ -979,6 +1055,7 @@ export default function MyPlants() {
                       onChange={() => handlePlantSelect(plant.id)}
                       onClick={(e) => e.stopPropagation()}
                       title="Seleccionar para exportar"
+                      disabled={isBusy}
                     />
                   </div>
                   <label
@@ -1007,16 +1084,18 @@ export default function MyPlants() {
                         e.stopPropagation();
                         handleOpenUpdateModal(plant.id);
                       }}
-                      disabled={
-                        isUpdatingImage || isCompressing || isEditingName
-                      }
+                      disabled={isBusy}
                     >
                       <FiEdit2 />
                     </button>
 
                     <div className={styles.plantNameOverlay}>
                       <h3
-                        onClick={() => !isEditingName && togglePlant(plant.id)}
+                        onClick={() =>
+                          !isEditingName &&
+                          !isRegenerating &&
+                          togglePlant(plant.id)
+                        }
                       >
                         {plant.name}
                       </h3>
@@ -1069,7 +1148,7 @@ export default function MyPlants() {
                           className={styles.commonNameDisplay}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleEditNameClick(plant);
+                            if (!isRegenerating) handleEditNameClick(plant);
                           }}
                         >
                           {plant.common_name || "Añadir apodo"}
@@ -1113,6 +1192,7 @@ export default function MyPlants() {
                         <button
                           onClick={() => togglePlant(plant.id)}
                           className={styles.toggleButton}
+                          disabled={isRegenerating}
                         >
                           {expandedPlant === plant.id
                             ? "Ocultar"
@@ -1124,6 +1204,7 @@ export default function MyPlants() {
                           }
                           className={styles.deleteButton}
                           title="Eliminar planta"
+                          disabled={isRegenerating}
                         >
                           <FiTrash2 />
                         </button>
@@ -1170,8 +1251,20 @@ export default function MyPlants() {
                               href={`/plant-diary/${plant.id}`}
                               className={styles.diaryLinkButton}
                             >
-                              Ver Diario de la Planta <FiBookOpen />
+                              Ver Diario <FiBookOpen />
                             </Link>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRegenerateGuide(plant);
+                              }}
+                              className={styles.regenerateButton}
+                              title="Regenerar guía de cuidados"
+                              disabled={isRegenerating}
+                            >
+                              <FiRefreshCw /> Regenerar Guía
+                            </button>
                           </div>
                           <h3 className={styles.careTitle}>Guía de Cuidados</h3>
                           <CareInstructions text={plant.care_instructions} />
