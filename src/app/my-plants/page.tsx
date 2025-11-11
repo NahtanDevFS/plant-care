@@ -170,15 +170,22 @@ const CareInstructions = ({ text }: { text: string }) => {
 const parseCareInstructionsForExport = (text: string) => {
   const sections = text.split("### ").filter((s) => s);
   const careData: { [key: string]: string } = {};
+
   sections.forEach((section) => {
     const [title, ...contentParts] = section.split(":");
-    const content = contentParts
-      .join(":")
-      .trim()
-      .replace(/\s+/g, " ")
-      .replace(/\n/g, " ");
+    let content = contentParts.join(":").trim();
+
+    content = content
+      .replace(/\n+/g, " ")
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .replace(/_([^_]+)_/g, "$1")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+
     careData[title.trim()] = content;
   });
+
   return careData;
 };
 
@@ -702,107 +709,251 @@ export default function MyPlants() {
   const handleExportPDF = async () => {
     setIsExporting(true);
     const plantsToExport = getSelectedPlantsData();
+
     if (plantsToExport.length === 0) {
       toast.info("Por favor, selecciona al menos una planta para exportar.");
       setIsExporting(false);
       return;
     }
-    const pdf = new jsPDF("p", "mm", "a4");
-    const margin = 15;
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const contentWidth = pageWidth - margin * 2;
-    let yPos = margin;
-    pdf.setFontSize(18);
-    pdf.setTextColor(69, 160, 73);
-    pdf.text("Reporte de Mis Plantas", pageWidth / 2, yPos, {
-      align: "center",
-    });
-    yPos += 15;
-    for (let i = 0; i < plantsToExport.length; i++) {
-      const plant = plantsToExport[i];
-      const plantHeaderHeight = 10;
-      if (i > 0) yPos += 8;
-      if (yPos + plantHeaderHeight > pageHeight - margin) {
-        pdf.addPage();
-        yPos = margin;
-      }
-      if (i > 0) {
-        pdf.setDrawColor(200, 200, 200);
-        pdf.line(margin, yPos - 4, pageWidth - margin, yPos - 4);
-      }
-      pdf.setFontSize(16);
-      pdf.setTextColor(69, 160, 73);
-      pdf.text(plant.common_name || plant.name, margin, yPos);
-      yPos += 7;
-      if (plant.common_name) {
-        pdf.setFontSize(11);
-        pdf.setTextColor(100, 100, 100);
-        pdf.setFont("helvetica", "italic");
-        pdf.text(plant.name, margin, yPos);
-        pdf.setFont("helvetica", "normal");
-        yPos += 3;
-      }
-      yPos += 3;
-      try {
-        const imgData = await getImageAsBase64(plant.image_url);
-        const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = contentWidth * 0.4;
-        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-        if (yPos + imgHeight > pageHeight - margin) {
-          pdf.addPage();
-          yPos = margin;
+
+    try {
+      const container = document.createElement("div");
+      container.style.width = "794px";
+      container.style.padding = "40px";
+      container.style.fontFamily = "Arial, sans-serif";
+      container.style.fontSize = "12px";
+      container.style.backgroundColor = "white";
+      container.style.boxSizing = "border-box";
+
+      // Título del reporte
+      const title = document.createElement("h1");
+      title.textContent = "Reporte de Mis Plantas";
+      title.style.color = "#45A049";
+      title.style.textAlign = "center";
+      title.style.marginBottom = "30px";
+      title.style.fontSize = "28px";
+      container.appendChild(title);
+
+      // Array para guardar promesas de carga de imágenes
+      const imagePromises: Promise<void>[] = [];
+
+      for (const plant of plantsToExport) {
+        const plantSection = document.createElement("div");
+        plantSection.style.marginBottom = "40px";
+        plantSection.style.borderTop = "2px solid #ccc";
+        plantSection.style.paddingTop = "20px";
+
+        const plantName = document.createElement("h2");
+        plantName.textContent = plant.common_name || plant.name;
+        plantName.style.color = "#45A049";
+        plantName.style.marginBottom = "8px";
+        plantName.style.fontSize = "22px";
+        plantSection.appendChild(plantName);
+
+        if (plant.common_name) {
+          const scientificName = document.createElement("p");
+          scientificName.textContent = plant.name;
+          scientificName.style.fontStyle = "italic";
+          scientificName.style.color = "#666";
+          scientificName.style.marginBottom = "15px";
+          scientificName.style.fontSize = "14px";
+          plantSection.appendChild(scientificName);
         }
-        pdf.addImage(imgData, "PNG", margin, yPos, imgWidth, imgHeight);
-        const textX = margin + imgWidth + 8;
-        const textWidth = contentWidth - imgWidth - 8;
-        let textY = yPos;
-        pdf.setFontSize(10);
-        pdf.setTextColor(51, 51, 51);
-        const careData = parseCareInstructionsForExport(
-          plant.care_instructions
-        );
+
+        const flexContainer = document.createElement("div");
+        flexContainer.style.display = "flex";
+        flexContainer.style.gap = "20px";
+        flexContainer.style.marginBottom = "20px";
+
+        const imgContainer = document.createElement("div");
+        imgContainer.style.flex = "0 0 40%";
+        const img = document.createElement("img");
+
+        const imagePromise = new Promise<void>(async (resolve) => {
+          try {
+            const base64Image = await getImageAsBase64(plant.image_url);
+            img.src = base64Image;
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          } catch (error) {
+            console.error("Error loading image:", error);
+            resolve();
+          }
+        });
+
+        imagePromises.push(imagePromise);
+
+        img.style.width = "100%";
+        img.style.height = "auto";
+        img.style.borderRadius = "8px";
+        img.style.display = "block";
+        imgContainer.appendChild(img);
+        flexContainer.appendChild(imgContainer);
+
+        const generalContainer = document.createElement("div");
+        generalContainer.style.flex = "1";
+
+        const generalTitle = document.createElement("h3");
+        generalTitle.textContent = "General";
+        generalTitle.style.fontSize = "16px";
+        generalTitle.style.marginBottom = "10px";
+        generalTitle.style.marginTop = "0";
+        generalContainer.appendChild(generalTitle);
+
         const generalInfo = [
           `Dificultad de cuidar: ${plant.care_level || "N/A"}`,
           `Mascotas: ${plant.pet_friendly ? "Sí" : "No"}`,
           `Tóxica: ${plant.is_toxic ? "Sí" : "No"}`,
         ];
-        pdf.setFont("helvetica", "bold");
-        pdf.text("General", textX, textY);
-        textY += 5;
-        pdf.setFont("helvetica", "normal");
+
         generalInfo.forEach((info) => {
-          pdf.text(info, textX, textY);
-          textY += 5;
+          const p = document.createElement("p");
+          p.textContent = info;
+          p.style.margin = "5px 0";
+          p.style.fontSize = "12px";
+          generalContainer.appendChild(p);
         });
-        yPos = Math.max(yPos + imgHeight + 8, textY + 8);
-        const tableBody = Object.entries(careData)
+
+        flexContainer.appendChild(generalContainer);
+        plantSection.appendChild(flexContainer);
+
+        const careData = parseCareInstructionsForExport(
+          plant.care_instructions
+        );
+        const table = document.createElement("table");
+        table.style.width = "100%";
+        table.style.borderCollapse = "collapse";
+        table.style.marginTop = "20px";
+        table.style.fontSize = "11px";
+
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        const th1 = document.createElement("th");
+        th1.textContent = "Aspecto";
+        th1.style.backgroundColor = "#45A049";
+        th1.style.color = "white";
+        th1.style.padding = "10px";
+        th1.style.textAlign = "left";
+        th1.style.width = "30%";
+        th1.style.fontWeight = "bold";
+        th1.style.fontSize = "12px";
+        headerRow.appendChild(th1);
+
+        const th2 = document.createElement("th");
+        th2.textContent = "Instrucción";
+        th2.style.backgroundColor = "#45A049";
+        th2.style.color = "white";
+        th2.style.padding = "10px";
+        th2.style.textAlign = "left";
+        th2.style.fontWeight = "bold";
+        th2.style.fontSize = "12px";
+        headerRow.appendChild(th2);
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+
+        Object.entries(careData)
           .filter(([key]) => key !== "General" && key !== "Nombre Común")
-          .map(([key, value]) => [key, value]);
-        if (yPos + 20 > pageHeight - margin) {
-          pdf.addPage();
-          yPos = margin;
-        }
-        autoTable(pdf, {
-          startY: yPos,
-          head: [["Aspecto", "Instrucción"]],
-          body: tableBody,
-          theme: "grid",
-          headStyles: { fillColor: [69, 160, 73] },
-          margin: { left: margin, right: margin },
-        });
-        // @ts-expect-error jspdf-autotable no tipa correctamente 'finalY'
-        yPos = pdf.lastAutoTable.finalY + 10;
-      } catch (imgError) {
-        console.error("Error al procesar imagen para PDF:", imgError);
-        pdf.setFontSize(9);
-        pdf.setTextColor(255, 0, 0);
-        pdf.text("Error al cargar imagen.", margin, yPos);
-        yPos += 6;
+          .forEach(([key, value]) => {
+            const row = document.createElement("tr");
+
+            const td1 = document.createElement("td");
+            td1.textContent = key;
+            td1.style.border = "1px solid #ddd";
+            td1.style.padding = "10px";
+            td1.style.fontWeight = "bold";
+            td1.style.verticalAlign = "top";
+            td1.style.fontSize = "11px";
+            row.appendChild(td1);
+
+            const td2 = document.createElement("td");
+            td2.textContent = value;
+            td2.style.border = "1px solid #ddd";
+            td2.style.padding = "10px";
+            td2.style.verticalAlign = "top";
+            td2.style.lineHeight = "1.5";
+            td2.style.fontSize = "11px";
+            row.appendChild(td2);
+
+            tbody.appendChild(row);
+          });
+
+        table.appendChild(tbody);
+        plantSection.appendChild(table);
+
+        container.appendChild(plantSection);
       }
+
+      container.style.position = "absolute";
+      container.style.top = "-99999px";
+      container.style.left = "0";
+      document.body.appendChild(container);
+
+      console.log("Esperando imágenes...");
+      await Promise.all(imagePromises);
+      console.log("Imágenes cargadas");
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      console.log("Capturando contenido...");
+      console.log("Container height:", container.scrollHeight, "px");
+
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        width: container.scrollWidth,
+        height: container.scrollHeight,
+        windowWidth: container.scrollWidth,
+        windowHeight: container.scrollHeight,
+      });
+
+      console.log("Canvas creado:", canvas.width, "x", canvas.height);
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      const imgData = canvas.toDataURL("image/png");
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      console.log("Guardando PDF con", pdf.getNumberOfPages(), "páginas...");
+      pdf.save("mis_plantas.pdf");
+
+      document.body.removeChild(container);
+
+      toast.success(
+        `PDF exportado correctamente con ${plantsToExport.length} planta(s)`
+      );
+    } catch (error) {
+      console.error("Error al exportar PDF:", error);
+      toast.error(
+        "Error al exportar PDF: " +
+          (error instanceof Error ? error.message : "desconocido")
+      );
+    } finally {
+      setIsExporting(false);
     }
-    pdf.save("mis_plantas.pdf");
-    setIsExporting(false);
   };
 
   if (loading) {
