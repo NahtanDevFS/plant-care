@@ -783,7 +783,7 @@ export default function MyPlants() {
 
         imagePromises.push(imagePromise);
 
-        img.style.width = "100%";
+        img.style.width = "70%";
         img.style.height = "auto";
         img.style.borderRadius = "8px";
         img.style.display = "block";
