@@ -19,9 +19,9 @@ export async function getCareInstructions(
     const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando las condiciones climáticas predominantes de ${userCountry}. La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
 
 ### General:
-- Dificultad: [Fácil/Media/Difícil]
-- Apta para mascotas: [Sí/No]
-- Venenosa: [Sí/No - si es Sí, especificar para quién]
+- Dificultad: [Fácil/Media/Difícil - basado en: frecuencia de riego, tolerancia a errores, requisitos específicos]
+- Apta para mascotas: [Sí/No - verificar toxicidad para perros y gatos específicamente]
+- Venenosa: [Sí/No - si es Sí (solo pon Sí, si por ingerir una pequeña cantidad ya puede causar malestar), especificar para quién]
 
 ### Riego:
 [Descripción clara del riego. Incluye frecuencia específica en días]

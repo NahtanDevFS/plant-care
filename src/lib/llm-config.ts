@@ -3,7 +3,7 @@
 export type LLMProvider = "gemini" | "groq";
 
 //alternar entre APIs
-export const CURRENT_LLM_PROVIDER: LLMProvider = "gemini"; //'groq' o 'gemini'
+export const CURRENT_LLM_PROVIDER: LLMProvider = "groq"; //'groq' o 'gemini'
 
 export const LLM_MODELS = {
   gemini: "gemini-2.5-flash",
