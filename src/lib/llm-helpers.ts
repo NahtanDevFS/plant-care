@@ -16,7 +16,7 @@ export async function getCareInstructions(
   userCountry: string
 ): Promise<string> {
   try {
-    const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando las condiciones climáticas predominantes de ${userCountry}. La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
+    const prompt = `Proporciona una guía de cuidados para un jardinero casero sobre la planta "${plantName}", considerando las condiciones climáticas predominantes de ${userCountry} (IMPORTANTE: Usa fuentes botánicas confiables para confirmar los datos). La guía debe ser clara, específica y fácil de seguir. Utiliza EXACTAMENTE el siguiente formato, sin desviaciones:
 
 ### General:
 - Dificultad: [Fácil/Media/Difícil - basado en: frecuencia de riego, tolerancia a errores, requisitos específicos]
