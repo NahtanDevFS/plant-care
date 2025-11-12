@@ -717,30 +717,47 @@ export default function MyPlants() {
     }
 
     try {
-      const container = document.createElement("div");
-      container.style.width = "794px";
-      container.style.padding = "40px";
-      container.style.fontFamily = "Arial, sans-serif";
-      container.style.fontSize = "12px";
-      container.style.backgroundColor = "white";
-      container.style.boxSizing = "border-box";
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
 
-      // Título del reporte
-      const title = document.createElement("h1");
-      title.textContent = "Reporte de Mis Plantas";
-      title.style.color = "#45A049";
-      title.style.textAlign = "center";
-      title.style.marginBottom = "30px";
-      title.style.fontSize = "28px";
-      container.appendChild(title);
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
+      const imgWidth = 210;
+      const pageHeight = 297;
+      let isFirstPage = true;
 
-      // Array para guardar promesas de carga de imágenes
-      const imagePromises: Promise<void>[] = [];
+      for (let index = 0; index < plantsToExport.length; index++) {
+        const plant = plantsToExport[index];
 
-      for (const plant of plantsToExport) {
+        console.log(
+          `Procesando planta ${index + 1}/${plantsToExport.length}: ${
+            plant.name
+          }`
+        );
+
+        const plantContainer = document.createElement("div");
+        plantContainer.style.width = "794px";
+        plantContainer.style.padding = "40px";
+        plantContainer.style.fontFamily = "Arial, sans-serif";
+        plantContainer.style.fontSize = "12px";
+        plantContainer.style.backgroundColor = "white";
+        plantContainer.style.boxSizing = "border-box";
+
+        if (index === 0) {
+          const title = document.createElement("h1");
+          title.textContent = "Reporte de Mis Plantas";
+          title.style.color = "#45A049";
+          title.style.textAlign = "center";
+          title.style.marginBottom = "30px";
+          title.style.fontSize = "28px";
+          plantContainer.appendChild(title);
+        }
+
         const plantSection = document.createElement("div");
-        plantSection.style.marginBottom = "40px";
-        plantSection.style.borderTop = "2px solid #ccc";
         plantSection.style.paddingTop = "20px";
 
         const plantName = document.createElement("h2");
@@ -769,19 +786,13 @@ export default function MyPlants() {
         imgContainer.style.flex = "0 0 40%";
         const img = document.createElement("img");
 
-        const imagePromise = new Promise<void>(async (resolve) => {
-          try {
-            const base64Image = await getImageAsBase64(plant.image_url);
-            img.src = base64Image;
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-          } catch (error) {
-            console.error("Error loading image:", error);
-            resolve();
-          }
-        });
+        const base64Image = await getImageAsBase64(plant.image_url);
+        img.src = base64Image;
 
-        imagePromises.push(imagePromise);
+        await new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        });
 
         img.style.width = "70%";
         img.style.height = "auto";
@@ -835,7 +846,7 @@ export default function MyPlants() {
         th1.style.color = "white";
         th1.style.padding = "10px";
         th1.style.textAlign = "left";
-        th1.style.width = "30%";
+        th1.style.width = "24%";
         th1.style.fontWeight = "bold";
         th1.style.fontSize = "12px";
         headerRow.appendChild(th1);
@@ -883,64 +894,53 @@ export default function MyPlants() {
 
         table.appendChild(tbody);
         plantSection.appendChild(table);
+        plantContainer.appendChild(plantSection);
 
-        container.appendChild(plantSection);
-      }
+        plantContainer.style.position = "absolute";
+        plantContainer.style.top = "-99999px";
+        plantContainer.style.left = "0";
+        document.body.appendChild(plantContainer);
 
-      container.style.position = "absolute";
-      container.style.top = "-99999px";
-      container.style.left = "0";
-      document.body.appendChild(container);
+        await new Promise((resolve) => setTimeout(resolve, 300));
 
-      console.log("Esperando imágenes...");
-      await Promise.all(imagePromises);
-      console.log("Imágenes cargadas");
+        const canvas = await html2canvas(plantContainer, {
+          scale: 1.75,
+          useCORS: true,
+          logging: false,
+          allowTaint: false,
+          backgroundColor: "#ffffff",
+          width: plantContainer.scrollWidth,
+          height: plantContainer.scrollHeight,
+          windowWidth: plantContainer.scrollWidth,
+          windowHeight: plantContainer.scrollHeight,
+        });
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+        document.body.removeChild(plantContainer);
 
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imgData = canvas.toDataURL("image/jpeg");
 
-      console.log("Capturando contenido...");
-      console.log("Container height:", container.scrollHeight, "px");
+        if (!isFirstPage) {
+          pdf.addPage();
+        }
+        isFirstPage = false;
 
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        width: container.scrollWidth,
-        height: container.scrollHeight,
-        windowWidth: container.scrollWidth,
-        windowHeight: container.scrollHeight,
-      });
+        let heightLeft = imgHeight;
+        let position = 0;
 
-      console.log("Canvas creado:", canvas.width, "x", canvas.height);
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      const imgData = canvas.toDataURL("image/png");
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
       }
 
       console.log("Guardando PDF con", pdf.getNumberOfPages(), "páginas...");
       pdf.save("mis_plantas.pdf");
-
-      document.body.removeChild(container);
 
       toast.success(
         `PDF exportado correctamente con ${plantsToExport.length} planta(s)`
