@@ -11,7 +11,7 @@ import {
   getCameraStream,
   capturePhotoFromVideo,
 } from "@/lib/imageCompression";
-import { FiUpload, FiCamera, FiRefreshCw } from "react-icons/fi";
+import { FiUpload, FiCamera, FiRefreshCw, FiAlertCircle } from "react-icons/fi";
 import { toast } from "sonner";
 
 type PlantSuggestion = {
@@ -87,6 +87,8 @@ export default function HomePage() {
   const [facingMode, setFacingMode] = useState<"user" | "environment">(
     "environment"
   );
+  const [manualPlantName, setManualPlantName] = useState<string>("");
+  const [showManualModal, setShowManualModal] = useState(false);
   const router = useRouter();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,6 +281,60 @@ export default function HomePage() {
     }
   };
 
+  const handleManualSave = async () => {
+    if (!manualPlantName.trim()) {
+      toast.error("Por favor, ingresa el nombre científico de la planta.");
+      return;
+    }
+
+    if (!image) {
+      toast.error("Por favor, sube una imagen de la planta.");
+      return;
+    }
+
+    setShowManualModal(false);
+    setIsSavingPlant(true);
+    setSavingPlantName(manualPlantName.trim());
+
+    const formData = new FormData();
+    formData.append("image", image);
+    formData.append("plantName", manualPlantName.trim());
+    formData.append("commonName", "");
+
+    try {
+      const response = await fetch("/api/save-plant", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Falló al guardar la planta");
+      }
+
+      const data = await response.json();
+      toast.success(`Planta "${manualPlantName.trim()}" guardada con éxito.`);
+
+      setTimeout(() => {
+        router.push("/my-plants");
+      }, 1000);
+    } catch (error) {
+      console.error(error);
+      setIsSavingPlant(false);
+      const errorMsg =
+        error instanceof Error ? error.message : "Error desconocido";
+      toast.error(`Ocurrió un error: ${errorMsg}`);
+    }
+  };
+
+  const handleManualEntry = () => {
+    if (!image) {
+      toast.error("Por favor, sube primero una imagen de tu planta.");
+      return;
+    }
+    setShowManualModal(true);
+  };
+
   if (isSavingPlant) {
     return <LoadingScreen plantName={savingPlantName} />;
   }
@@ -332,6 +388,67 @@ export default function HomePage() {
                     <FiCamera /> Capturar
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showManualModal && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setShowManualModal(false)}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className={styles.modalCloseButton}
+              onClick={() => setShowManualModal(false)}
+            >
+              ✕
+            </button>
+            <div className={styles.modalHeader}>
+              <FiAlertCircle />
+              <h3>Generar Cuidados Directamente</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p>
+                <strong>
+                  ¿Estás seguro del nombre científico de tu planta?
+                </strong>
+              </p>
+              <p>
+                Si conoces con certeza el nombre científico, puedes generar la
+                guía de cuidados sin necesidad de identificarla.
+              </p>
+              <input
+                type="text"
+                placeholder="Ej: Monstera deliciosa"
+                value={manualPlantName}
+                onChange={(e) => setManualPlantName(e.target.value)}
+                className={styles.manualInput}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleManualSave();
+                  if (e.key === "Escape") setShowManualModal(false);
+                }}
+              />
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                onClick={() => setShowManualModal(false)}
+                className={styles.modalButtonSecondary}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleManualSave}
+                className={styles.modalButtonPrimary}
+                disabled={!manualPlantName.trim()}
+              >
+                Generar Cuidados
               </button>
             </div>
           </div>
@@ -439,6 +556,31 @@ export default function HomePage() {
           <div className={styles.careInfo}>
             <h2>Cuidados para: {selectedPlant.name}</h2>
             <CareInstructions text={careInfo} />
+          </div>
+        )}
+
+        {image && !results && !loading && (
+          <div className={styles.manualEntrySection}>
+            <div className={styles.divider}>
+              <span>o</span>
+            </div>
+            <div className={styles.manualEntryCard}>
+              <div className={styles.manualEntryIcon}>
+                <FiAlertCircle />
+              </div>
+              <h3>¿Ya conoces el nombre de tu planta?</h3>
+              <p>
+                Si estás seguro del nombre científico, puedes generar la guía de
+                cuidados directamente sin necesidad de identificarla.
+              </p>
+              <button
+                onClick={handleManualEntry}
+                className={styles.manualEntryButton}
+                disabled={!image}
+              >
+                Generar Cuidados Directamente
+              </button>
+            </div>
           </div>
         )}
       </main>

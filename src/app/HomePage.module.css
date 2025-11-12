@@ -900,6 +900,122 @@
   color: #333;
 }
 
+.manualEntrySection {
+  margin-top: 3rem;
+  width: 100%;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.divider span {
+  padding: 0 1rem;
+  color: var(--color-text-light);
+  font-weight: 500;
+}
+
+.manualEntryCard {
+  background-color: #f8fff8;
+  border: 2px solid #d1e7d2;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+}
+
+.manualEntryIcon {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.manualEntryCard h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: 0.75rem;
+  font-size: 1.3rem;
+}
+
+.manualEntryCard p {
+  color: var(--color-text-light);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.manualEntryButton {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  padding: 0.875rem 2rem;
+  border-radius: var(--border-radius);
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.manualEntryButton:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.manualEntryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.manualInput {
+  width: 100%;
+  padding: 0.875rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-family: var(--font-main);
+  margin-top: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.manualInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+@media (max-width: 480px) {
+  .manualEntryCard {
+    padding: 1.5rem;
+  }
+
+  .manualEntryCard h3 {
+    font-size: 1.1rem;
+  }
+
+  .manualEntryCard p {
+    font-size: 0.95rem;
+  }
+
+  .manualEntryButton {
+    width: 100%;
+  }
+}
+
 @media (min-width: 500px) {
   .modalActions {
     flex-direction: row;
