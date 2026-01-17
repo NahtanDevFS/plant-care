@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Configura el transportador de Nodemailer
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -28,7 +27,7 @@ export async function POST(request: NextRequest) {
     const subject = `${careEmoji} Recordatorio de cuidado para ${plantName} | PlantCare`;
     const greetingName = userName || "amante de las plantas";
 
-    // Cuerpo del correo en HTML
+    //Cuerpo del correo en HTML
     const emailHtml = `
     <!DOCTYPE html>
     <html>
